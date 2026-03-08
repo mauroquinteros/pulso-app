@@ -4,7 +4,7 @@
 
 Pulso is a personal portfolio tracker for US stocks/ETFs traded through the Hapi broker. Hapi doesn't show real profit/loss, total invested, fees, or net performance — Pulso fills that gap. The app complements Hapi by showing only what Hapi doesn't: net P&L, accumulated costs, and movement history with portfolio impact.
 
-The project is a fresh Expo ~54 template with React 19, TypeScript, and Expo Router. It needs to be restructured from the default 2-tab template into a 4-tab portfolio tracker with Supabase backend.
+The project is a fresh Expo ~54 template with React 19, TypeScript, and Expo Router. It needs to be restructured from the default 2-tab template into a 5-element tab bar (4 tabs + center FAB) portfolio tracker with Supabase backend.
 
 ---
 
@@ -195,7 +195,7 @@ Stack navigator wrapping tabs + push screens:
 - `add-movement` — modal presentation flow
 
 ### 3.2 Custom tab bar (`components/ui/tab-bar.tsx`)
-4 elements: Home | Movements | (+) FAB | Holdings
+5 elements: Home | Movements | (+) FAB | Holdings | Settings
 - The FAB is a circular cyan button in the center
 - Pressing it calls `router.push('/add-movement/')`
 - FAB uses Reanimated for scale animation on press
@@ -203,10 +203,11 @@ Stack navigator wrapping tabs + push screens:
 ### 3.3 Tab layout (`app/(tabs)/_layout.tsx`)
 ```
 app/(tabs)/
-  _layout.tsx      # 3 tab screens + custom tabBar with FAB
+  _layout.tsx      # 4 tab screens + custom tabBar with FAB
   index.tsx        # Home
   movements.tsx    # Movements
   holdings.tsx     # Holdings
+  settings.tsx     # Settings (user info, log out)
 ```
 
 ### 3.4 Modal flow (`app/add-movement/`)
@@ -311,7 +312,15 @@ Build this first so we can populate data for other screens.
 
 ---
 
-## Phase 8: Polish
+## Phase 8: Settings Screen
+
+### 8.1 Screen (`app/(tabs)/settings.tsx`)
+- User info section: display anonymous user ID (or email when real auth is added)
+- Log out button: calls `supabase.auth.signOut()`, clears session, re-triggers anonymous auth
+
+---
+
+## Phase 9: Polish
 
 - Empty states for all lists
 - Loading skeletons
@@ -347,4 +356,5 @@ Build this first so we can populate data for other screens.
 5. **After Phase 5:** Home shows aggregated data from movements, summary cards update after adding movements
 6. **After Phase 6:** Movements list shows all entries grouped by month, filters work, detail view shows correct data
 7. **After Phase 7:** Holdings list shows aggregated positions, stock detail shows position card and movement history
-8. **After Phase 8:** App feels polished — empty states, loading states, haptics, animations
+8. **After Phase 8:** Settings shows user info and log out works correctly
+9. **After Phase 9:** App feels polished — empty states, loading states, haptics, animations
