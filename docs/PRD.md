@@ -146,8 +146,8 @@ CREATE TABLE movements (
   fee           NUMERIC(12,2) DEFAULT 0,       -- all types can have a fee
   transfer_fee  NUMERIC(12,2) DEFAULT 0,       -- deposit only
   regulatory_fees NUMERIC(12,2) DEFAULT 0,     -- sell only
-  tax           NUMERIC(12,2) DEFAULT 0,       -- sell & dividend (WHT)
-  date          DATE NOT NULL,
+  tax           NUMERIC(12,2) DEFAULT 0,       -- dividend only (WHT)
+  executed_at   DATE NOT NULL,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -155,7 +155,7 @@ CREATE TABLE movements (
 CREATE INDEX idx_movements_user ON movements(user_id);
 CREATE INDEX idx_movements_type ON movements(type);
 CREATE INDEX idx_movements_ticker ON movements(ticker);
-CREATE INDEX idx_movements_date ON movements(date);
+CREATE INDEX idx_movements_executed_at ON movements(executed_at);
 
 -- RLS: users can only access their own data
 ALTER TABLE movements ENABLE ROW LEVEL SECURITY;
@@ -242,11 +242,11 @@ Build this first so we can populate data for other screens.
 - Modal header with close (X) button
 
 ### 4.3 Form components (one per type in `components/add-movement/`)
-- **Buy:** Ticker, Execution Price, Shares, Fee ($0.15/$0.10), Date
-- **Sell:** Ticker, Shares, Execution Price, Fee ($0.15), Regulatory Fees, Tax, Date
-- **Dividend:** Ticker, Gross Amount, Tax (WHT), Date
-- **Deposit:** Amount Received, Transfer Fee, Date
-- **Withdrawal:** Amount, Fee, Date
+- **Buy:** Ticker, Execution Price, Shares, Fee ($0.15/$0.10), Executed At
+- **Sell:** Ticker, Shares, Execution Price, Fee ($0.15), Regulatory Fees, Executed At
+- **Dividend:** Ticker, Gross Amount, Tax (WHT), Executed At
+- **Deposit:** Amount Received, Transfer Fee, Executed At
+- **Withdrawal:** Amount, Fee, Executed At
 
 ### 4.4 Shared UI components
 - `input-field.tsx` — styled numeric/text input
@@ -255,7 +255,7 @@ Build this first so we can populate data for other screens.
 
 ### 4.5 Total calculation logic
 - Buy: `-(price × shares + fee)`
-- Sell: `+(price × shares - fee - regulatory - tax)`
+- Sell: `+(price × shares - fee - regulatory_fees)`
 - Dividend: `+(gross - tax)`
 - Deposit: `+(amount - transfer_fee)`
 - Withdrawal: `-(amount + fee)`
