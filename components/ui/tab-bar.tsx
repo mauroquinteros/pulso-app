@@ -1,5 +1,5 @@
-import { Colors } from "@/constants/theme";
 import { Spacing } from "@/constants/layout";
+import { Colors } from "@/constants/theme";
 import { Typography } from "@/constants/typography";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -15,19 +15,22 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TAB_ICONS: Record<
   string,
-  { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }
+  {
+    active: keyof typeof Ionicons.glyphMap;
+    inactive: keyof typeof Ionicons.glyphMap;
+  }
 > = {
   index: { active: "home", inactive: "home-outline" },
-  movements: { active: "swap-horizontal", inactive: "swap-horizontal-outline" },
-  holdings: { active: "pie-chart", inactive: "pie-chart-outline" },
+  movements: { active: "swap-vertical", inactive: "swap-vertical-outline" },
+  holdings: { active: "wallet", inactive: "wallet-outline" },
   settings: { active: "settings", inactive: "settings-outline" },
 };
 
 const TAB_LABELS: Record<string, string> = {
   index: "Home",
-  movements: "Movements",
-  holdings: "Holdings",
-  settings: "Settings",
+  movements: "Movimientos",
+  holdings: "Portafolio",
+  settings: "Ajustes",
 };
 
 const FAB_SIZE = 56;
@@ -88,7 +91,11 @@ function FabButton() {
   );
 }
 
-export default function TabBar({ state, navigation, insets }: BottomTabBarProps) {
+export default function TabBar({
+  state,
+  navigation,
+  insets,
+}: BottomTabBarProps) {
   const routeNames = state.routes.map((route) => route.name);
 
   // Find the index where we insert the FAB (after the second tab)
