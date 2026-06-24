@@ -72,9 +72,45 @@ export interface Holding {
   totalDividends: number;
 }
 
-export interface PortfolioSummary {
-  costBasis: number;
+/**
+ * A Holding with price-applied figures layered on. When no current price is
+ * available for the ticker, the price-applied fields are null and
+ * priceAvailable is false (missing-price policy "exclude + flag").
+ */
+export interface ValuedHolding extends Holding {
+  priceAvailable: boolean;
+  marketValue: number | null;
+  netPnl: number | null;
+  netPnlPercent: number | null;
+}
+
+/** Total Return broken into its four components, plus the headline and %. */
+export interface TotalReturn {
+  total: number;
+  unrealizedPnl: number;
+  realizedPnl: number;
+  netDividends: number;
   totalFees: number;
+  percent: number;
+}
+
+/**
+ * The full portfolio: movement facts (deterministic from movements alone) kept
+ * distinct from price-applied facts (which need a current-price map).
+ */
+export interface Portfolio {
+  // Movement facts
+  cash: number;
+  costBasis: number;
+  realizedPnl: number;
   totalDividends: number;
-  holdings: Holding[];
+  totalFees: number;
+  netContributedCapital: number;
+  // Price-applied facts
+  marketValue: number;
+  totalPortfolioValue: number;
+  totalReturn: TotalReturn;
+  holdingsMissingPrice: number;
+  // Per-ticker holdings carry both layers
+  holdings: ValuedHolding[];
 }

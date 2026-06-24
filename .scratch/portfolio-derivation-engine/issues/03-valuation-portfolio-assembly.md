@@ -31,14 +31,14 @@ values.
 
 ## Acceptance criteria
 
-- [ ] Engine accepts a current-price map and computes per-holding Market Value, Net P&L, and Net P&L % (of Cost Basis).
-- [ ] Total Portfolio Value = `Cash + Market Value`.
-- [ ] Total Return = `Net P&L + Realized P&L + net dividends − total fees`, with its four components individually available, and Total Return % = `Total Return ÷ (deposits − withdrawals)`.
-- [ ] Total fees include account-level deposit/withdrawal fees (not attributed to any ticker).
-- [ ] Output separates movement facts (Cash, Cost Basis, Realized P&L, dividends, fees) from price-applied facts (Market Value, Net P&L, Total Portfolio Value, Total Return).
-- [ ] Missing price: holding's Market Value/Net P&L reported unavailable, excluded from price-applied totals, unavailability exposed per-holding and as a portfolio-level count; movement facts unaffected.
-- [ ] `lib/mock-data.ts` produces engine-derived holdings + summary from a hardcoded price map; no hand-computed values remain.
-- [ ] Tests cover: per-holding and portfolio valuation figures for a known portfolio; a reconciliation property test asserting `Cash + Market Value == (deposits − withdrawals) + Total Return`; the missing-price case.
+- [x] Engine accepts a current-price map and computes per-holding Market Value, Net P&L, and Net P&L % (of Cost Basis).
+- [x] Total Portfolio Value = `Cash + Market Value`.
+- [x] Total Return = `Net P&L + Realized P&L + net dividends − total fees`, with its four components individually available, and Total Return % = `Total Return ÷ (deposits − withdrawals)`.
+- [x] Total fees include account-level deposit/withdrawal fees (not attributed to any ticker).
+- [x] Output separates movement facts (Cash, Cost Basis, Realized P&L, dividends, fees) from price-applied facts (Market Value, Net P&L, Total Portfolio Value, Total Return).
+- [x] Missing price: holding's Market Value/Net P&L reported unavailable, excluded from price-applied totals, unavailability exposed per-holding and as a portfolio-level count; movement facts unaffected.
+- [x] `lib/mock-data.ts` produces engine-derived holdings + summary from a hardcoded price map; no hand-computed values remain.
+- [x] Tests cover: per-holding and portfolio valuation figures for a known portfolio; a reconciliation property test asserting `Cash + Market Value == (deposits − withdrawals) + Total Return`; the missing-price case.
 
 ## Blocked by
 

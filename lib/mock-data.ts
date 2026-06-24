@@ -2,14 +2,11 @@ import type {
   BuyMovement,
   DepositMovement,
   DividendMovement,
-  Holding,
   Movement,
-  PortfolioSummary,
   SellMovement,
   WithdrawalMovement,
 } from "@/types/models";
-import { computeNetDividends, computeTotalFees } from "@/utils/calculations";
-import { deriveHoldingFacts } from "@/utils/portfolio/reducer";
+import { assemblePortfolio, type PriceMap } from "@/utils/portfolio/valuation";
 
 // ---------------------------------------------------------------------------
 // MOCK_MOVEMENTS
@@ -175,33 +172,27 @@ export const MOCK_MOVEMENTS: Movement[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// MOCK_HOLDINGS
-// Derived from MOCK_MOVEMENTS via the portfolio engine (per-ticker reducer).
-// Only tickers with net positive shares: AAPL and VOO (MSFT fully sold).
+// MOCK_PRICES
+// Hardcoded current prices for the mock-data phase. MSFT is absent — it was
+// fully sold, so it holds no shares to value.
 // ---------------------------------------------------------------------------
 
-const aaplFacts = deriveHoldingFacts(
-  MOCK_MOVEMENTS.filter((m) => "ticker" in m && m.ticker === "AAPL"),
-);
-const vooFacts = deriveHoldingFacts(
-  MOCK_MOVEMENTS.filter((m) => "ticker" in m && m.ticker === "VOO"),
-);
-
-export const MOCK_HOLDINGS: Holding[] = [
-  { ticker: "AAPL", ...aaplFacts },
-  { ticker: "VOO", ...vooFacts },
-];
-
-// ---------------------------------------------------------------------------
-// MOCK_PORTFOLIO_SUMMARY
-// Aggregated from MOCK_HOLDINGS and MOCK_MOVEMENTS
-// ---------------------------------------------------------------------------
-
-export const MOCK_PORTFOLIO_SUMMARY: PortfolioSummary = {
-  costBasis:
-    Math.round(MOCK_HOLDINGS.reduce((sum, h) => sum + h.costBasis, 0) * 100) /
-    100,
-  totalFees: computeTotalFees(MOCK_MOVEMENTS),
-  totalDividends: computeNetDividends(MOCK_MOVEMENTS),
-  holdings: MOCK_HOLDINGS,
+export const MOCK_PRICES: PriceMap = {
+  AAPL: 198.4,
+  VOO: 458.6,
 };
+
+// ---------------------------------------------------------------------------
+// MOCK_PORTFOLIO_SUMMARY / MOCK_HOLDINGS
+// Derived end-to-end by the portfolio engine from MOCK_MOVEMENTS + MOCK_PRICES.
+// No hand-computed values: holdings (AAPL, VOO) and every portfolio figure come
+// from assemblePortfolio. MSFT is fully exited, so its realized P&L flows into
+// Total Return without listing as a holding.
+// ---------------------------------------------------------------------------
+
+export const MOCK_PORTFOLIO_SUMMARY = assemblePortfolio(
+  MOCK_MOVEMENTS,
+  MOCK_PRICES,
+);
+
+export const MOCK_HOLDINGS = MOCK_PORTFOLIO_SUMMARY.holdings;
