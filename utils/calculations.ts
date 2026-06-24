@@ -8,19 +8,6 @@ import {
 } from "@/types/models";
 
 /**
- * Computes the unrealized profit or loss for a position.
- * Formula: (currentPrice - avgCost) * shares
- */
-export function computeUnrealizedPnL(
-  avgCost: number,
-  currentPrice: number,
-  shares: number,
-): number {
-  const result = (currentPrice - avgCost) * shares;
-  return Math.round(result * 100) / 100;
-}
-
-/**
  * Sums fees across ALL movements, per subtype:
  * - BuyMovement: fee
  * - SellMovement: fee + regulatoryFees
