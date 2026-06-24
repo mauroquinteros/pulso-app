@@ -12,4 +12,22 @@ export const Colors = {
   icon: "#8E8E93",
   tabIconDefault: "#8E8E93",
   tabIconSelected: "#00E5CC",
+
+  // Home redesign tokens (Pulso Home.dc.html)
+  cardElevated: "#12173B", // worth-card surface (linear-gradient approx)
+  avatarFill: "#00CFBA", // avatar disc (linear-gradient approx)
+  avatarText: "#04211E",
+  investedBar: "#5B63A0", // "En activos" swatch + composition segment
+  textMuted: "#5A6080",
+  textLight: "#C5C9DA",
+  textBright: "#E8EAF2",
 };
+
+/** Per-holding badge colors, assigned by position (wraps). First two match the
+ * design (AAPL teal, VOO blue). */
+export const HoldingBadgePalette: { bg: string; color: string }[] = [
+  { bg: "rgba(0,229,204,0.14)", color: "#4FE9D6" },
+  { bg: "rgba(120,160,255,0.16)", color: "#9DB8FF" },
+  { bg: "rgba(255,184,108,0.16)", color: "#FFC078" },
+  { bg: "rgba(190,140,255,0.16)", color: "#C9A2FF" },
+];
