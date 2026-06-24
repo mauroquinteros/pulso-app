@@ -1,4 +1,5 @@
-import { Colors } from "@/constants/theme";
+import { Colors, Gradients } from "@/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 import type { HomeView } from "./view-model";
 
@@ -8,7 +9,12 @@ type Props = {
 
 export function WorthCard({ worth }: Props) {
   return (
-    <View style={styles.card}>
+    <LinearGradient
+      colors={Gradients.card}
+      start={{ x: 0.37, y: 0.02 }}
+      end={{ x: 0.63, y: 0.98 }}
+      style={styles.card}
+    >
       <Text style={styles.label}>Valor total</Text>
       <Text style={styles.value}>{worth.total}</Text>
 
@@ -48,7 +54,7 @@ export function WorthCard({ worth }: Props) {
           {worth.cash.amount}
         </Text>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -56,7 +62,6 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     marginBottom: 14,
-    backgroundColor: Colors.cardElevated,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 20,

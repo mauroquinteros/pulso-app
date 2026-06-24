@@ -14,13 +14,18 @@ export const Colors = {
   tabIconSelected: "#00E5CC",
 
   // Home redesign tokens (Pulso Home.dc.html)
-  cardElevated: "#12173B", // worth-card surface (linear-gradient approx)
-  avatarFill: "#00CFBA", // avatar disc (linear-gradient approx)
   avatarText: "#04211E",
   investedBar: "#5B63A0", // "En activos" swatch + composition segment
   textMuted: "#5A6080",
   textLight: "#C5C9DA",
   textBright: "#E8EAF2",
+};
+
+/** Gradient stops from the design (Pulso Home.dc.html), consumed by
+ * expo-linear-gradient. */
+export const Gradients = {
+  card: ["#141A42", "#0F1433"] as const, // worth-card surface, 165deg
+  avatar: [Colors.accent, "#1C9C8F"] as const, // avatar disc, 135deg teal
 };
 
 /** Per-holding badge colors, assigned by position (wraps). First two match the

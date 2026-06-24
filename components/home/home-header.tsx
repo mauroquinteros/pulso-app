@@ -1,14 +1,20 @@
 import { BorderRadius } from "@/constants/layout";
-import { Colors } from "@/constants/theme";
+import { Colors, Gradients } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
 export function HomeHeader() {
   return (
     <View style={styles.container}>
-      <View style={styles.avatar}>
+      <LinearGradient
+        colors={Gradients.avatar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.avatar}
+      >
         <Text style={styles.avatarLetter}>P</Text>
-      </View>
+      </LinearGradient>
       <View style={styles.search}>
         <Ionicons name="search" size={16} color={Colors.textMuted} />
         <Text style={styles.searchText}>Buscar activo o ticker</Text>
@@ -38,7 +44,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.avatarFill,
     alignItems: "center",
     justifyContent: "center",
   },
