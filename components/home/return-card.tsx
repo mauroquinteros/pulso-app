@@ -1,10 +1,4 @@
 import { Colors } from "@/constants/theme";
-import type { TotalReturn } from "@/types/models";
-import {
-  formatSignedPercent,
-  formatSignedUSD,
-  formatUSD,
-} from "@/utils/format";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
@@ -21,6 +15,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import type { HomeView, Tone } from "./view-model";
 
 if (
   Platform.OS === "android" &&
@@ -30,26 +25,13 @@ if (
 }
 
 type Props = {
-  totalReturn: TotalReturn;
-  netContributedCapital: number;
-  totalPortfolioValue: number;
+  return: HomeView["return"];
 };
 
-type ReturnComponent = {
-  key: string;
-  label: string;
-  sub?: string;
-  amount: number;
-};
+const toneColor = (tone: Tone) =>
+  tone === "negative" ? Colors.negative : Colors.positive;
 
-const signColor = (n: number) =>
-  n < -0.005 ? Colors.negative : Colors.positive;
-
-export function ReturnCard({
-  totalReturn,
-  netContributedCapital,
-  totalPortfolioValue,
-}: Props) {
+export function ReturnCard({ return: ret }: Props) {
   const [open, setOpen] = useState(false);
   const rotation = useSharedValue(0);
 
@@ -63,23 +45,7 @@ export function ReturnCard({
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
-  const components: ReturnComponent[] = [
-    {
-      key: "unrealized",
-      label: "No realizado",
-      sub: "· Net P&L",
-      amount: totalReturn.unrealizedPnl,
-    },
-    { key: "realized", label: "Realizado", amount: totalReturn.realizedPnl },
-    {
-      key: "dividends",
-      label: "Dividendos netos",
-      amount: totalReturn.netDividends,
-    },
-    { key: "fees", label: "Comisiones", amount: -totalReturn.totalFees },
-  ];
-  const maxAbs = Math.max(...components.map((c) => Math.abs(c.amount)), 0.0001);
-  const totalColor = signColor(totalReturn.total);
+  const totalColor = toneColor(ret.tone);
 
   return (
     <View style={styles.card}>
@@ -91,10 +57,10 @@ export function ReturnCard({
           </View>
           <View style={styles.valueRow}>
             <Text style={[styles.total, { color: totalColor }]}>
-              {formatSignedUSD(totalReturn.total)}
+              {ret.total}
             </Text>
             <Text style={[styles.totalPct, { color: totalColor }]}>
-              {formatSignedPercent(totalReturn.percent)}
+              {ret.percent}
             </Text>
           </View>
         </View>
@@ -111,26 +77,21 @@ export function ReturnCard({
       <View style={styles.bridge}>
         <View style={styles.bridgeSide}>
           <Text style={styles.bridgeLabel}>Aportado</Text>
-          <Text style={styles.bridgeValueMuted}>
-            {formatUSD(netContributedCapital)}
-          </Text>
+          <Text style={styles.bridgeValueMuted}>{ret.aportado}</Text>
         </View>
         <Text style={styles.bridgeArrow}>→</Text>
         <View style={[styles.bridgeSide, styles.bridgeSideRight]}>
           <Text style={styles.bridgeLabel}>Vale hoy</Text>
-          <Text style={styles.bridgeValue}>
-            {formatUSD(totalPortfolioValue)}
-          </Text>
+          <Text style={styles.bridgeValue}>{ret.valeHoy}</Text>
         </View>
       </View>
 
       {open && (
         <View style={styles.breakdown}>
-          {components.map((c) => {
-            const color = signColor(c.amount);
-            const fill = Math.abs(c.amount);
+          {ret.components.map((c) => {
+            const color = toneColor(c.tone);
             return (
-              <View key={c.key}>
+              <View key={c.label}>
                 <View style={styles.compRow}>
                   <Text style={styles.compLabel}>
                     {c.label}
@@ -138,19 +99,17 @@ export function ReturnCard({
                       <Text style={styles.compSub}> {c.sub}</Text>
                     ) : null}
                   </Text>
-                  <Text style={[styles.compValue, { color }]}>
-                    {formatSignedUSD(c.amount)}
-                  </Text>
+                  <Text style={[styles.compValue, { color }]}>{c.value}</Text>
                 </View>
                 <View style={styles.track}>
                   <View
                     style={{
-                      flex: fill,
+                      flex: c.fill,
                       backgroundColor: color,
-                      opacity: c.amount < 0 ? 0.8 : 0.85,
+                      opacity: c.tone === "negative" ? 0.8 : 0.85,
                     }}
                   />
-                  <View style={{ flex: Math.max(maxAbs - fill, 0) }} />
+                  <View style={{ flex: Math.max(1 - c.fill, 0) }} />
                 </View>
               </View>
             );

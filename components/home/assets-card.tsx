@@ -1,44 +1,34 @@
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
-import type { ValuedHolding } from "@/types/models";
-import {
-  formatSharesLabel,
-  formatSignedPercent,
-  formatSignedUSD,
-  formatUSD,
-} from "@/utils/format";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { HomeView, Tone } from "./view-model";
 
 type Props = {
-  holdings: ValuedHolding[];
-  netPnl: number;
-  netPnlPercent: number;
+  assets: HomeView["assets"];
   onPressHolding?: (ticker: string) => void;
 };
 
-export function AssetsCard({
-  holdings,
-  netPnl,
-  netPnlPercent,
-  onPressHolding,
-}: Props) {
-  const statColor = netPnl < -0.005 ? Colors.negative : Colors.positive;
+const toneColor = (tone: Tone) =>
+  tone === "negative" ? Colors.negative : Colors.positive;
 
+export function AssetsCard({ assets, onPressHolding }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Activos</Text>
         <Text style={styles.headerStat}>
           Net P&L{" "}
-          <Text style={[styles.headerStatValue, { color: statColor }]}>
-            {formatSignedUSD(netPnl)} · {formatSignedPercent(netPnlPercent)}
+          <Text
+            style={[styles.headerStatValue, { color: toneColor(assets.netPnlTone) }]}
+          >
+            {assets.netPnl}
           </Text>
         </Text>
       </View>
-      {holdings.map((h, i) => (
+      {assets.holdings.map((h) => (
         <HoldingRow
           key={h.ticker}
           holding={h}
-          palette={HoldingBadgePalette[i % HoldingBadgePalette.length]}
+          palette={HoldingBadgePalette[h.badge % HoldingBadgePalette.length]}
           onPress={() => onPressHolding?.(h.ticker)}
         />
       ))}
@@ -51,13 +41,10 @@ function HoldingRow({
   palette,
   onPress,
 }: {
-  holding: ValuedHolding;
+  holding: HomeView["assets"]["holdings"][number];
   palette: { bg: string; color: string };
   onPress?: () => void;
 }) {
-  const pnlColor =
-    (holding.netPnl ?? 0) < -0.005 ? Colors.negative : Colors.positive;
-
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={[styles.badge, { backgroundColor: palette.bg }]}>
@@ -67,15 +54,14 @@ function HoldingRow({
       </View>
       <View style={styles.middle}>
         <Text style={styles.ticker}>{holding.ticker}</Text>
-        <Text style={styles.shares}>{formatSharesLabel(holding.shares)}</Text>
+        <Text style={styles.shares}>{holding.shares}</Text>
       </View>
       <View style={styles.right}>
-        {holding.priceAvailable && holding.marketValue !== null ? (
+        {holding.priceAvailable && holding.value !== null ? (
           <>
-            <Text style={styles.value}>{formatUSD(holding.marketValue)}</Text>
-            <Text style={[styles.pnl, { color: pnlColor }]}>
-              {formatSignedUSD(holding.netPnl ?? 0)} ·{" "}
-              {formatSignedPercent(holding.netPnlPercent ?? 0)}
+            <Text style={styles.value}>{holding.value}</Text>
+            <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>
+              {holding.pnl}
             </Text>
           </>
         ) : (

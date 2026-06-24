@@ -1,6 +1,7 @@
 import { AssetsCard } from "@/components/home/assets-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { ReturnCard } from "@/components/home/return-card";
+import { buildHomeView } from "@/components/home/view-model";
 import { WorthCard } from "@/components/home/worth-card";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -9,11 +10,7 @@ import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const portfolio = usePortfolio();
-  const netPnlPercent =
-    portfolio.costBasis !== 0
-      ? (portfolio.totalReturn.unrealizedPnl / portfolio.costBasis) * 100
-      : 0;
+  const view = buildHomeView(usePortfolio());
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -23,20 +20,10 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <HomeHeader />
-        <WorthCard
-          totalPortfolioValue={portfolio.totalPortfolioValue}
-          marketValue={portfolio.marketValue}
-          cash={portfolio.cash}
-        />
-        <ReturnCard
-          totalReturn={portfolio.totalReturn}
-          netContributedCapital={portfolio.netContributedCapital}
-          totalPortfolioValue={portfolio.totalPortfolioValue}
-        />
+        <WorthCard worth={view.worth} />
+        <ReturnCard return={view.return} />
         <AssetsCard
-          holdings={portfolio.holdings}
-          netPnl={portfolio.totalReturn.unrealizedPnl}
-          netPnlPercent={netPnlPercent}
+          assets={view.assets}
           onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
         />
       </ScrollView>

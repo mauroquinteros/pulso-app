@@ -1,34 +1,28 @@
 import { Colors } from "@/constants/theme";
-import { formatUSD } from "@/utils/format";
 import { StyleSheet, Text, View } from "react-native";
+import type { HomeView } from "./view-model";
 
 type Props = {
-  totalPortfolioValue: number;
-  marketValue: number;
-  cash: number;
+  worth: HomeView["worth"];
 };
 
-export function WorthCard({ totalPortfolioValue, marketValue, cash }: Props) {
-  const total = marketValue + cash;
-  const mvPct = total !== 0 ? ((marketValue / total) * 100).toFixed(1) : "0.0";
-  const cashPct = total !== 0 ? ((cash / total) * 100).toFixed(1) : "0.0";
-
+export function WorthCard({ worth }: Props) {
   return (
     <View style={styles.card}>
       <Text style={styles.label}>Valor total</Text>
-      <Text style={styles.value}>{formatUSD(totalPortfolioValue)}</Text>
+      <Text style={styles.value}>{worth.total}</Text>
 
       <View style={styles.bar}>
         <View
           style={[
             styles.barSeg,
-            { flex: Math.max(marketValue, 0.0001), backgroundColor: Colors.investedBar },
+            { flex: worth.invested.flex, backgroundColor: Colors.investedBar },
           ]}
         />
         <View
           style={[
             styles.barSeg,
-            { flex: Math.max(cash, 0.0001), backgroundColor: Colors.accent },
+            { flex: worth.cash.flex, backgroundColor: Colors.accent },
           ]}
         />
       </View>
@@ -36,22 +30,22 @@ export function WorthCard({ totalPortfolioValue, marketValue, cash }: Props) {
       <View style={[styles.row, styles.rowGap]}>
         <View style={styles.legend}>
           <View style={[styles.swatch, { backgroundColor: Colors.investedBar }]} />
-          <Text style={styles.legendLabel}>En activos</Text>
-          <Text style={styles.legendPct}>{mvPct}%</Text>
+          <Text style={styles.legendLabel}>{worth.invested.label}</Text>
+          <Text style={styles.legendPct}>{worth.invested.pct}</Text>
         </View>
         <Text style={[styles.amount, { color: Colors.textBright }]}>
-          {formatUSD(marketValue)}
+          {worth.invested.amount}
         </Text>
       </View>
 
       <View style={styles.row}>
         <View style={styles.legend}>
           <View style={[styles.swatch, { backgroundColor: Colors.accent }]} />
-          <Text style={styles.legendLabel}>Efectivo</Text>
-          <Text style={styles.legendPct}>{cashPct}%</Text>
+          <Text style={styles.legendLabel}>{worth.cash.label}</Text>
+          <Text style={styles.legendPct}>{worth.cash.pct}</Text>
         </View>
         <Text style={[styles.amount, { color: Colors.accent }]}>
-          {formatUSD(cash)}
+          {worth.cash.amount}
         </Text>
       </View>
     </View>
