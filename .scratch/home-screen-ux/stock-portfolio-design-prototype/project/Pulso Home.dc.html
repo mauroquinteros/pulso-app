@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;">
+
+      <!-- HEADER -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 20px 16px;">
+        <div style="width:38px;height:38px;border-radius:9999px;background:linear-gradient(135deg,#00E5CC,#1C9C8F);display:flex;align-items:center;justify-content:center;color:#04211E;font-weight:800;font-size:15px;flex:none;">P</div>
+        <div style="flex:1;height:38px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;padding:0 14px;gap:8px;">
+          <span style="color:#5A6080;font-size:16px;">⌕</span><span style="color:#5A6080;font-size:13px;">Buscar activo o ticker</span>
+        </div>
+        <div style="width:38px;height:38px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;color:#8E8E93;font-size:17px;flex:none;position:relative;">
+          <span>◔</span><span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:9999px;background:#00E5CC;border:2px solid #111638;"></span>
+        </div>
+      </div>
+
+      <!-- WORTH CARD (A3 · composition bar) -->
+      <div style="margin:0 16px 14px;background:linear-gradient(165deg,#141A42 0%,#0F1433 100%);border:1px solid #1C224D;border-radius:20px;padding:20px;">
+        <div style="font-size:13px;font-weight:500;color:#8E8E93;letter-spacing:0.2px;">Valor total</div>
+        <div class="mono" style="font-size:40px;font-weight:800;color:#fff;letter-spacing:-1.4px;line-height:1.05;margin:3px 0 18px;">$4,854.40</div>
+        <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:13px;">
+          <div style="width:94.68%;background:#5B63A0;"></div>
+          <div style="width:5.32%;background:#00E5CC;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:7px;"><span style="width:9px;height:9px;border-radius:3px;background:#5B63A0;flex:none;"></span><span style="font-size:13px;color:#C5C9DA;font-weight:500;">En activos</span><span style="font-size:11px;color:#5A6080;">94.7%</span></div>
+          <span class="mono" style="font-size:14px;font-weight:700;color:#E8EAF2;">$4,596.31</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:7px;"><span style="width:9px;height:9px;border-radius:3px;background:#00E5CC;flex:none;"></span><span style="font-size:13px;color:#C5C9DA;font-weight:500;">Efectivo</span><span style="font-size:11px;color:#5A6080;">5.3%</span></div>
+          <span class="mono" style="font-size:14px;font-weight:700;color:#00E5CC;">$258.09</span>
+        </div>
+      </div>
+
+      <!-- RETURN CARD (disclosure) -->
+      <div style="margin:0 16px 14px;background:#111638;border:1px solid #1C224D;border-radius:20px;padding:18px 20px;">
+        <div onClick="{{ toggle }}" style="display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#8E8E93;display:flex;align-items:center;gap:6px;">
+              <span style="width:6px;height:6px;border-radius:9999px;background:#00E5CC;display:inline-block;"></span>Rendimiento total
+            </div>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:5px;">
+              <span class="mono" style="font-size:27px;font-weight:800;color:#00C853;letter-spacing:-0.6px;">+$354.40</span>
+              <span class="mono" style="font-size:14px;font-weight:700;color:#00C853;">+7.88%</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;color:#8E8E93;font-size:12px;font-weight:600;padding-top:4px;">
+            <span>{{ toggleLabel }}</span>
+            <span style="font-size:11px;transform:{{ chevronRot }};transition:transform .2s;display:inline-block;">▾</span>
+          </div>
+        </div>
+
+        <!-- B2 · base del % siempre visible -->
+        <div style="display:flex;align-items:center;gap:10px;background:#0A0E27;border:1px solid #1C224D;border-radius:12px;padding:10px 13px;margin-top:13px;">
+          <div style="flex:1;"><div style="font-size:10px;color:#8E8E93;letter-spacing:0.2px;">Aportado</div><div class="mono" style="font-size:14px;font-weight:700;color:#C5C9DA;margin-top:1px;">$4,500.00</div></div>
+          <span style="color:#00C853;font-size:16px;font-weight:700;flex:none;">→</span>
+          <div style="flex:1;text-align:right;"><div style="font-size:10px;color:#8E8E93;letter-spacing:0.2px;">Vale hoy</div><div class="mono" style="font-size:14px;font-weight:700;color:#fff;margin-top:1px;">$4,854.40</div></div>
+        </div>
+
+        <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:14px;border-top:1px solid #1C224D;padding-top:14px;display:flex;flex-direction:column;gap:13px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:13px;color:#C5C9DA;font-weight:500;">No realizado <span style="color:#5A6080;font-size:11px;">· Net P&amp;L</span></span><span class="mono" style="font-size:13px;font-weight:700;color:#00C853;">+$275.68</span></div>
+            <div style="height:5px;background:#0A0E27;border-radius:3px;margin-top:5px;overflow:hidden;"><div style="width:100%;height:5px;background:#00C853;opacity:.85;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:13px;color:#C5C9DA;font-weight:500;">Realizado</span><span class="mono" style="font-size:13px;font-weight:700;color:#00C853;">+$67.29</span></div>
+            <div style="height:5px;background:#0A0E27;border-radius:3px;margin-top:5px;overflow:hidden;"><div style="width:24%;height:5px;background:#00C853;opacity:.85;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:13px;color:#C5C9DA;font-weight:500;">Dividendos netos</span><span class="mono" style="font-size:13px;font-weight:700;color:#00C853;">+$21.56</span></div>
+            <div style="height:5px;background:#0A0E27;border-radius:3px;margin-top:5px;overflow:hidden;"><div style="width:8%;height:5px;background:#00C853;opacity:.85;"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:13px;color:#C5C9DA;font-weight:500;">Comisiones</span><span class="mono" style="font-size:13px;font-weight:700;color:#FF5252;">−$10.13</span></div>
+            <div style="height:5px;background:#0A0E27;border-radius:3px;margin-top:5px;overflow:hidden;"><div style="width:4%;height:5px;background:#FF5252;opacity:.8;"></div></div>
+          </div>
+          <div style="font-size:11px;color:#5A6080;margin-top:1px;">Los componentes suman el Rendimiento total · % sobre capital aportado</div>
+        </div>
+        </sc-if>
+      </div>
+
+      <!-- ACTIVOS CARD -->
+      <div style="margin:0 16px;background:#111638;border:1px solid #1C224D;border-radius:20px;padding:16px 18px 8px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+          <span style="font-size:18px;font-weight:700;color:#fff;">Activos</span>
+          <span style="font-size:11px;color:#8E8E93;font-weight:500;">Net P&amp;L <span class="mono" style="color:#00C853;font-weight:700;">+$275.68 · +6.38%</span></span>
+        </div>
+
+        <sc-for list="{{ holdings }}" as="h" hint-placeholder-count="2">
+          <div onClick="{{ h.open }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #1C224D;cursor:pointer;">
+            <div style="width:40px;height:40px;border-radius:12px;background:{{ h.badgeBg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:{{ h.badgeColor }};flex:none;letter-spacing:-0.3px;">{{ h.ticker }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:15px;font-weight:700;color:#fff;">{{ h.ticker }}</div>
+              <div class="mono" style="font-size:12px;color:#8E8E93;margin-top:1px;">{{ h.sharesLabel }}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="mono" style="font-size:15px;font-weight:700;color:#E8EAF2;">{{ h.value }}</div>
+              <div class="mono" style="font-size:12px;font-weight:700;color:{{ h.pnlColor }};margin-top:1px;">{{ h.pnl }} · {{ h.pnlPct }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { open: false };
+
+  HOLDINGS = [
+    { ticker:'AAPL', shares:15.07666, value:2991.21, pnl:240.18, pnlPct:8.73,
+      badgeBg:'rgba(0,229,204,0.14)', badgeColor:'#4FE9D6' },
+    { ticker:'VOO', shares:3.5, value:1605.10, pnl:35.50, pnlPct:2.26,
+      badgeBg:'rgba(120,160,255,0.16)', badgeColor:'#9DB8FF' },
+  ];
+
+  usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signed(n){ return (n<-0.005?'−':'+') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  pct(n){ return (n<-0.005?'−':'+') + Math.abs(n).toFixed(2) + '%'; }
+  shares(n){ return n.toLocaleString('en-US',{maximumFractionDigits:5}) + ' acc'; }
+
+  renderVals(){
+    return {
+      open: this.state.open,
+      toggle: () => this.setState(s => ({ open: !s.open })),
+      toggleLabel: this.state.open ? 'Ocultar' : 'Ver desglose',
+      chevronRot: this.state.open ? 'rotate(180deg)' : 'rotate(0deg)',
+      holdings: this.HOLDINGS.map(h => ({
+        ticker: h.ticker,
+        sharesLabel: this.shares(h.shares),
+        value: this.usd(h.value),
+        pnl: this.signed(h.pnl),
+        pnlPct: this.pct(h.pnlPct),
+        pnlColor: h.pnl >= 0 ? '#00C853' : '#FF5252',
+        badgeBg: h.badgeBg, badgeColor: h.badgeColor,
+        open: () => {},
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>
