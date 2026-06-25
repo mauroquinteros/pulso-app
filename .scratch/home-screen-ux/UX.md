@@ -42,17 +42,17 @@ The whole screen consumes **one** `Portfolio` object. Field meanings (from `CONT
 | **Market Value** | `marketValue` | Current worth of all holdings (`price × shares`, summed). | $4,596.31 |
 | **Cash** / Buying Power | `cash` | Uninvested money available to trade. | $258.09 |
 | **Total Return** | `totalReturn.total` | All-in gain/loss = Unrealized + Realized + Net Dividends − Fees. **The headline transparency figure.** | **+$354.40** |
-| — as % | `totalReturn.percent` | Total Return ÷ **net contributed capital**. | **+7.88%** |
+| — as % | `totalReturn.percent` | Total Return ÷ **net contributions**. | **+7.88%** |
 | ↳ Unrealized P&L (**= Net P&L**) | `totalReturn.unrealizedPnl` | Unrealized gain on currently-held shares. Equals the sum of per-holding P&L. | +$275.68 |
 | ↳ Realized P&L | `totalReturn.realizedPnl` | Gross locked-in gain from shares sold (before sell fees). | +$67.29 |
 | ↳ Net Dividends | `totalReturn.netDividends` | Dividend income after withholding tax. | +$21.56 |
 | ↳ Fees | `totalReturn.totalFees` | All commissions/fees paid, ever. Always shown as a subtraction. | −$10.13 |
-| Net contributed capital | `netContributedCapital` | Deposits − withdrawals. The base for Total Return %. | $4,500.00 |
+| Net contributions | `netContributions` | Deposits − withdrawals. The base for Total Return %. | $4,500.00 |
 | Cost Basis | `costBasis` | What the user paid for shares currently held (excludes fees). | $4,320.63 |
 | Holdings missing a price | `holdingsMissingPrice` | Count of held tickers with no current price (excluded from value figures). | 0 |
 
 > **Reconciliation invariant** (holds when every held ticker is priced):
-> `Cash + Market Value == net contributed capital + Total Return`
+> `Cash + Market Value == net contributions + Total Return`
 > → `258.09 + 4,596.31 == 4,500 + 354.40 == 4,854.40` ✓
 
 ### Per-holding (`holdings: ValuedHolding[]`)
@@ -117,7 +117,7 @@ converge on one prescribed layout; explore genuinely different ways to express t
 | Return breakdown | `unrealizedPnl`, `realizedPnl`, `netDividends`, `totalFees` | the transparency story; parts that sum to the total |
 | Holdings performance | aggregate Net P&L + % (`= unrealizedPnl`, over `costBasis`) | how current bets are doing |
 | Holding rows | per-`ValuedHolding` `marketValue` + `netPnl` + `netPnlPercent` | per-position detail; tap → stock detail (`/stock/[ticker]`) |
-| Context (optional) | `netContributedCapital`, `costBasis` | denominators / "what I put in" |
+| Context (optional) | `netContributions`, `costBasis` | denominators / "what I put in" |
 
 **Axes worth varying across options** (pick different points per option):
 - Return breakdown always visible vs. progressively disclosed.
@@ -150,7 +150,7 @@ The header (account avatar + search + notifications) already exists and can be r
 - **Color:** gains → `positive` (#00C853); losses → `negative` (#FF5252). Fees always shown as a
   subtraction; neutral or negative color.
 - **Percent bases (don't mix these up in labels):**
-  - Total Return % → over **net contributed capital**.
+  - Total Return % → over **net contributions**.
   - Net P&L % (aggregate and per-holding) → over **Cost Basis**.
 
 ---

@@ -105,7 +105,7 @@ export interface Portfolio {
   realizedPnl: number;
   totalDividends: number;
   totalFees: number;
-  netContributedCapital: number;
+  netContributions: number;
   // Price-applied facts
   marketValue: number;
   totalPortfolioValue: number;

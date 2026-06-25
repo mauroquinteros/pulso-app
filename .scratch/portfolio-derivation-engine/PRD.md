@@ -35,8 +35,8 @@ isolated — no UI, no network, no database — so every figure is testable agai
 4. As an investor, I want **Average Cost** as a moving weighted average of my buys — **unchanged by partial sells** and **reset on full exit** — so that it matches my Hapi account.
 5. As an investor, I want **Cost Basis** to exclude commissions (fees tracked separately), so that it equals what I actually paid for the shares.
 6. As an investor, I want gross **Realized P&L** from shares I've sold — still counting for tickers I've **fully exited** — so that locked-in profit is visible and never disappears.
-7. As an investor, I want **Total Return** = unrealized + realized + net dividends − fees, broken into those **four components** and shown as a % of **net contributed capital**, so that I see my true all-in performance and where it came from.
-8. As an investor, I want the figures to **reconcile** (`Cash + Market Value` = `net contributed capital + Total Return`), so that I can trust they tie out.
+7. As an investor, I want **Total Return** = unrealized + realized + net dividends − fees, broken into those **four components** and shown as a % of **net contributions**, so that I see my true all-in performance and where it came from.
+8. As an investor, I want the figures to **reconcile** (`Cash + Market Value` = `net contributions + Total Return`), so that I can trust they tie out.
 9. As an investor, I want **per-ticker trade fees** and **net dividends**, plus total fees that include **account-level** deposit/withdrawal fees (not attributed to any ticker), so that costs and income are transparent and honestly attributed.
 10. As an investor, I want each **Holding** to expose shares (accurate to **fractional** amounts), Average Cost, Cost Basis, Market Value, Net P&L, net dividends, and fees, so that the holdings and stock-detail screens render without re-deriving anything.
 11. As a developer, I want the engine to be a **pure, deterministic function** of movements plus an explicit **current-price map**, with **movement facts separated from price-applied facts**, so that I can unit-test every figure and swap the price source without touching it.

@@ -92,7 +92,7 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
     total: formatSignedUSD(totalReturn.total),
     tone: toneOf(totalReturn.total),
     percent: formatSignedPercent(totalReturn.percent),
-    aportado: formatUSD(portfolio.netContributedCapital),
+    aportado: formatUSD(portfolio.netContributions),
     valeHoy: formatUSD(total),
     components: componentAmounts.map((c) => ({
       label: c.label,

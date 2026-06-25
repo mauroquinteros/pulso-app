@@ -46,7 +46,7 @@ export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding 
  * exclude any held ticker missing a price and expose that gap.
  *
  * Reconciliation invariant (holds when every held ticker is priced):
- *   Cash + Market Value == net contributed capital + Total Return.
+ *   Cash + Market Value == net contributions + Total Return.
  */
 export function assemblePortfolio(
   movements: Movement[],
@@ -55,7 +55,7 @@ export function assemblePortfolio(
   const cash = computeCash(movements);
   const totalFees = computeTotalFees(movements);
   const totalDividends = computeNetDividends(movements);
-  const netContributedCapital = round2(contributedCapital(movements));
+  const netContributions = round2(computeNetContributions(movements));
 
   // Derive facts per ticker. Realized P&L accumulates across every ticker —
   // including ones fully exited — while only currently-held tickers list as
@@ -94,8 +94,8 @@ export function assemblePortfolio(
     netDividends: totalDividends,
     totalFees,
     percent:
-      netContributedCapital !== 0
-        ? round2((totalReturnTotal / netContributedCapital) * 100)
+      netContributions !== 0
+        ? round2((totalReturnTotal / netContributions) * 100)
         : 0,
   };
 
@@ -105,7 +105,7 @@ export function assemblePortfolio(
     realizedPnl,
     totalDividends,
     totalFees,
-    netContributedCapital,
+    netContributions,
     marketValue,
     totalPortfolioValue: round2(cash + marketValue),
     totalReturn,
@@ -114,9 +114,9 @@ export function assemblePortfolio(
   };
 }
 
-/** Net contributed capital: gross deposit amounts minus gross withdrawal amounts
+/** Net contributions: gross deposit amounts minus gross withdrawal amounts
  * (transfer/withdrawal fees are captured in Total Return's fees, not here). */
-function contributedCapital(movements: Movement[]): number {
+function computeNetContributions(movements: Movement[]): number {
   let total = 0;
   for (const m of movements) {
     if (isDepositMovement(m)) total += m.amount;

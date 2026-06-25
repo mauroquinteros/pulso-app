@@ -31,11 +31,11 @@ now), reading in Spanish with precise glossary labels:
   bar splitting **Market Value** ("En activos") vs **Cash** ("Efectivo"), each
   with its amount and share-of-total. Cash is finally visible.
 - **Return card** — **Total Return** + % as the primary performance figure, an
-  always-visible "Aportado → Vale hoy" bridge (**net contributed capital** vs
+  always-visible "Aportado → Vale hoy" bridge (**net contributions** vs
   **Total Portfolio Value**), and a collapsible breakdown of the four components
   — **No realizado** (Net P&L), **Realizado**, **Dividendos netos**, **Comisiones**
   — drawn as proportional bars that sum to the total, with the % taken over net
-  contributed capital.
+  contributions.
 - **Activos card** — per-holding rows (ticker badge, shares held, **Market Value**,
   **Net P&L** + %), with aggregate **Net P&L** (over **Cost Basis**) as the
   section stat.
@@ -51,8 +51,8 @@ and the breakdown's top line — which is exactly where it's true, since it equa
 3. As an investor, I want a composition bar splitting **Market Value** vs **Cash** with their amounts and shares-of-total, so that I can see invested vs uninvested at a glance.
 4. As an investor, I want **Cash** ("Efectivo") shown explicitly, so that I know my buying power — it was previously invisible.
 5. As an investor, I want **Total Return** shown as the primary performance number with its %, so that I see my true all-in gain, not just paper gains.
-6. As an investor, I want the **Total Return** % expressed over my **net contributed capital**, so that the percentage reflects what I actually put in.
-7. As an investor, I want an always-visible "Aportado → Vale hoy" bridge, so that I can compare contributed capital with current worth without expanding anything.
+6. As an investor, I want the **Total Return** % expressed over my **net contributions**, so that the percentage reflects what I actually put in.
+7. As an investor, I want an always-visible "Aportado → Vale hoy" bridge, so that I can compare contributions with current worth without expanding anything.
 8. As an investor, I want to expand the Return card to see the four components, so that I understand where my return came from.
 9. As an investor, I want the four components to visibly sum to **Total Return**, with a note stating so, so that I trust the breakdown ties out.
 10. As an investor, I want each component drawn with a proportional bar, so that I can compare their magnitudes at a glance.
@@ -67,7 +67,7 @@ and the breakdown's top line — which is exactly where it's true, since it equa
 19. As an investor, I want monetary and share figures rendered with tabular figures, so that columns line up and are easy to scan.
 20. As an investor, when a holding has no current price, I want it shown without a fabricated value (a "Sin precio" state), so that missing data is never presented as real.
 21. As an investor, I want the screen in Spanish with precise labels (Valor total, Rendimiento total, Efectivo, No realizado, Realizado, Dividendos netos, Comisiones), so that terminology is consistent and never uses the banned "invertido".
-22. As an investor, I want the figures to reconcile (**Cash** + **Market Value** = net contributed capital + **Total Return**), so that the Home screen ties out with the engine.
+22. As an investor, I want the figures to reconcile (**Cash** + **Market Value** = net contributions + **Total Return**), so that the Home screen ties out with the engine.
 23. As a developer, I want the Home screen fed by a single `usePortfolio()` seam, so that swapping mock data for a store/Supabase later touches one place.
 24. As a developer, I want all display derivations in a pure, isolated view-model, so that I can unit-test the screen's math and formatting without rendering anything.
 
@@ -144,7 +144,7 @@ component internals.
 math and the formatting, its tests transitively cover the signed-format rules and
 the composition / return / Net P&L derivations — that is the screen's full external
 behavior in one pure surface. Cases:
-- `MOCK_PORTFOLIO_SUMMARY` — every figure matches and reconciles (composition %s, the four components and their fills, aggregate Net P&L %, Total Return % over contributed capital).
+- `MOCK_PORTFOLIO_SUMMARY` — every figure matches and reconciles (composition %s, the four components and their fills, aggregate Net P&L %, Total Return % over contributions).
 - A holding with `priceAvailable === false` ⇒ `value`/`pnl` null, flagged for the "Sin precio" state.
 - An all-cash portfolio (deposits, no holdings) ⇒ Market Value 0, composition all-cash.
 - A negative **Total Return** ⇒ negative `tone` and a unicode-minus string.
@@ -175,5 +175,5 @@ fixed fixtures; the same shape applies (`components/home/view-model.test.ts`).
   view-model extraction is the agreed refactor of that code into a tested, isolated
   module, leaving the components as pure renderers of `HomeView`.
 - The reconciliation invariant from the engine (`Cash + Market Value = net
-  contributed capital + Total Return`) holds for the mock data and should remain
+  contributions + Total Return`) holds for the mock data and should remain
   visible in the numbers shown (`$258.09 + $4,596.31 = $4,500 + $354.40 = $4,854.40`).

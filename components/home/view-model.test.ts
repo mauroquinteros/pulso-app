@@ -102,7 +102,7 @@ describe("buildHomeView", () => {
     expect(275.68 + 67.29 + 21.56 - 10.13).toBeCloseTo(354.4, 8);
 
     // Assets — aggregate Net P&L over Cost Basis + per-holding rows.
-    // 275.68 / 4320.63 = 6.38% (over Cost Basis, not net contributed capital).
+    // 275.68 / 4320.63 = 6.38% (over Cost Basis, not net contributions).
     expect(view.assets.netPnl).toBe("+$275.68 · +6.38%");
     expect(view.assets.netPnlTone).toBe("positive");
 

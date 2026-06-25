@@ -36,8 +36,12 @@ The **gross** locked-in gain or loss from shares the user has sold — price gai
 _Avoid_: capital gain (a tax term), booked profit, net realized
 
 **Total Return**:
-The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − (total deposits − total withdrawals)`. As a percentage: `Total Return ÷ net contributed capital (total deposits − total withdrawals)`. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
+The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − (total deposits − total withdrawals)`. As a percentage: `Total Return ÷ net contributions (total deposits − total withdrawals)`. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
 _Avoid_: real P&L (informal; pending UI-label decision), total gain, profit
+
+**Net Contributions** (a.k.a. **Aportado**):
+What the user has actually put in: `total deposits − total withdrawals`, using the **gross** amounts — **Fees are excluded** (they erode **Total Return**, not what was contributed). It is the base the **Total Return** percentage is taken over, and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge.
+_Avoid_: principal, capital invested, net deposited
 
 **Net Dividends**:
 Dividend income actually received, after withholding tax: `gross amount − tax`. Shown as its own figure so the user can see dividend earnings separately from **Net P&L**.
@@ -50,3 +54,4 @@ _Avoid_: commission (unqualified), charge
 ## Flagged ambiguities
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
+- **A deposit's net (`amount − transferFee`) is Cash/Efectivo, not Aportado.** **Net Contributions** uses the gross `amount`; the transfer fee reduces **Cash** and **Total Return**, never what was contributed.

@@ -91,7 +91,7 @@ describe("assemblePortfolio", () => {
     expect(p.realizedPnl).toBe(100);
     expect(p.totalDividends).toBe(15);
     expect(p.totalFees).toBe(3);
-    expect(p.netContributedCapital).toBe(1000);
+    expect(p.netContributions).toBe(1000);
 
     // Per-holding price-applied facts
     expect(p.holdings).toHaveLength(1);
@@ -114,7 +114,7 @@ describe("assemblePortfolio", () => {
     expect(p.holdingsMissingPrice).toBe(0);
   });
 
-  it("reconciles Cash + Market Value with net contributed capital + Total Return", () => {
+  it("reconciles Cash + Market Value with net contributions + Total Return", () => {
     // Multi-ticker, including a fully-exited ticker (MSFT) whose realized P&L
     // must still count even though it lists no holding.
     const movements: Movement[] = [
@@ -129,7 +129,7 @@ describe("assemblePortfolio", () => {
     expect(p.realizedPnl).toBe(200); // 100 AAPL + 100 MSFT
 
     expect(p.cash + p.marketValue).toBeCloseTo(
-      p.netContributedCapital + p.totalReturn.total,
+      p.netContributions + p.totalReturn.total,
       8,
     );
   });
