@@ -11,10 +11,12 @@ type RowSpec = {
   iconColor: string;
   title: string;
   subtitle: string;
+  disabled: boolean;
+  onPress?: () => void;
 };
 
-// Operaciones and Retiro are visible but inert this slice — only Depósito is
-// wired (the tracer bullet). The other forms arrive in later PRDs.
+// Only Depósito is wired (the tracer bullet). The other four read as
+// not-yet-built ("Pronto") and get re-enabled as their forms land.
 const OPERACIONES: RowSpec[] = [
   {
     icon: "arrow-down",
@@ -22,6 +24,7 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#9DB8FF",
     title: "Compra",
     subtitle: "Adquirir acciones o ETF",
+    disabled: true,
   },
   {
     icon: "arrow-up",
@@ -29,6 +32,7 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#FF9D9D",
     title: "Venta",
     subtitle: "Vender una posición",
+    disabled: true,
   },
   {
     icon: "cash-outline",
@@ -36,20 +40,33 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#4FE9D6",
     title: "Dividendo",
     subtitle: "Ingreso por dividendos",
+    disabled: true,
   },
 ];
 
-const RETIRO: RowSpec = {
-  icon: "arrow-up",
-  iconBg: "rgba(142,142,147,0.14)",
-  iconColor: "#B8BCCB",
-  title: "Retiro",
-  subtitle: "Retirar efectivo de tu cuenta",
-};
+const EFECTIVO: RowSpec[] = [
+  {
+    icon: "arrow-down",
+    iconBg: "rgba(0,229,204,0.14)",
+    iconColor: "#4FE9D6",
+    title: "Depósito",
+    subtitle: "Agregar efectivo a tu cuenta",
+    disabled: false,
+    onPress: () => router.push("/add-movement/form"),
+  },
+  {
+    icon: "arrow-up",
+    iconBg: "rgba(142,142,147,0.14)",
+    iconColor: "#B8BCCB",
+    title: "Retiro",
+    subtitle: "Retirar efectivo de tu cuenta",
+    disabled: true,
+  },
+];
 
 function TypeRow({ spec }: { spec: RowSpec }) {
-  return (
-    <View style={styles.row}>
+  const inner = (
+    <>
       <View style={[styles.rowIcon, { backgroundColor: spec.iconBg }]}>
         <Ionicons name={spec.icon} size={18} color={spec.iconColor} />
       </View>
@@ -57,8 +74,23 @@ function TypeRow({ spec }: { spec: RowSpec }) {
         <Text style={styles.rowTitle}>{spec.title}</Text>
         <Text style={styles.rowSubtitle}>{spec.subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#3E4470" />
-    </View>
+      {spec.disabled ? (
+        <View style={styles.prontoTag}>
+          <Text style={styles.prontoText}>Pronto</Text>
+        </View>
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color={Colors.accent} />
+      )}
+    </>
+  );
+
+  if (spec.disabled) {
+    return <View style={[styles.row, styles.rowDisabled]}>{inner}</View>;
+  }
+  return (
+    <Pressable style={styles.row} onPress={spec.onPress}>
+      {inner}
+    </Pressable>
   );
 }
 
@@ -83,22 +115,9 @@ export default function SelectMovementTypeScreen() {
 
         <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>EFECTIVO</Text>
         <View style={styles.group}>
-          <Pressable
-            style={[styles.row, styles.rowHighlight]}
-            onPress={() => router.push("/add-movement/form")}
-          >
-            <View style={[styles.rowIcon, styles.rowIconDeposit]}>
-              <Ionicons name="arrow-down" size={18} color="#04211E" />
-            </View>
-            <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>Depósito</Text>
-              <Text style={[styles.rowSubtitle, styles.rowSubtitleDeposit]}>
-                Agregar efectivo a tu cuenta
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.accent} />
-          </Pressable>
-          <TypeRow spec={RETIRO} />
+          {EFECTIVO.map((spec) => (
+            <TypeRow key={spec.title} spec={spec} />
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -165,10 +184,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: 14,
   },
-  rowHighlight: {
-    backgroundColor: "rgba(0,229,204,0.06)",
-    borderWidth: 1.5,
-    borderColor: "rgba(0,229,204,0.45)",
+  rowDisabled: {
+    opacity: 0.45,
   },
   rowIcon: {
     width: 38,
@@ -176,9 +193,6 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-  },
-  rowIconDeposit: {
-    backgroundColor: Colors.accent,
   },
   rowText: {
     flex: 1,
@@ -193,7 +207,17 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 1,
   },
-  rowSubtitleDeposit: {
-    color: "#7FE9DC",
+  prontoTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
+    backgroundColor: "rgba(142,142,147,0.14)",
+  },
+  prontoText: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    color: Colors.textSecondary,
+    textTransform: "uppercase",
   },
 });
