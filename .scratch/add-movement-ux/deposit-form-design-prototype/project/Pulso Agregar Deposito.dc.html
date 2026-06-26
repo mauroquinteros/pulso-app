@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    .pin{width:100%;border:none;outline:none;background:transparent;font-family:'Manrope',sans-serif;font-variant-numeric:tabular-nums;padding:0;}
+    .pin::placeholder{color:#3E4470;}
+    .ndate{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;flex-direction:column;align-items:center;gap:18px;padding:44px;font-family:'Manrope',system-ui,sans-serif;">
+  <div style="color:#5A6080;font-size:13px;font-weight:500;letter-spacing:0.2px;text-align:center;max-width:380px;">Toca <span style="color:#00E5CC;">Depósito</span> en el selector → llena el form → el resumen calcula en vivo → Guardar dispara el loop hacia el Home.</div>
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+
+    <!-- ============ SCREEN 1 · PICKER ============ -->
+    <sc-if value="{{ isPicker }}" hint-placeholder-val="{{ true }}">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 18px;">
+        <div onClick="{{ dismiss }}" style="width:34px;height:34px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;color:#8E8E93;font-size:15px;cursor:pointer;">✕</div>
+        <span style="font-size:17px;font-weight:700;color:#fff;">Nuevo movimiento</span>
+        <span style="width:34px;"></span>
+      </div>
+
+      <div style="padding:6px 20px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#5A6080;margin:14px 4px 10px;">OPERACIONES</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#111638;border:1px solid #1C224D;border-radius:14px;">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(120,160,255,0.14);display:flex;align-items:center;justify-content:center;color:#9DB8FF;font-size:17px;font-weight:700;flex:none;">↓</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#fff;">Compra</div><div style="font-size:12px;color:#8E8E93;margin-top:1px;">Adquirir acciones o ETF</div></div>
+            <span style="color:#3E4470;font-size:18px;">›</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#111638;border:1px solid #1C224D;border-radius:14px;">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(255,140,140,0.14);display:flex;align-items:center;justify-content:center;color:#FF9D9D;font-size:17px;font-weight:700;flex:none;">↑</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#fff;">Venta</div><div style="font-size:12px;color:#8E8E93;margin-top:1px;">Vender una posición</div></div>
+            <span style="color:#3E4470;font-size:18px;">›</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#111638;border:1px solid #1C224D;border-radius:14px;">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(0,229,204,0.12);display:flex;align-items:center;justify-content:center;color:#4FE9D6;font-size:16px;font-weight:700;flex:none;">＄</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#fff;">Dividendo</div><div style="font-size:12px;color:#8E8E93;margin-top:1px;">Ingreso por dividendos</div></div>
+            <span style="color:#3E4470;font-size:18px;">›</span>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#5A6080;margin:22px 4px 10px;">EFECTIVO</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div onClick="{{ goForm }}" style="display:flex;align-items:center;gap:13px;padding:14px;background:rgba(0,229,204,0.06);border:1.5px solid rgba(0,229,204,0.45);border-radius:14px;cursor:pointer;">
+            <div style="width:38px;height:38px;border-radius:11px;background:#00E5CC;display:flex;align-items:center;justify-content:center;color:#04211E;font-size:18px;font-weight:800;flex:none;">↓</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#fff;">Depósito</div><div style="font-size:12px;color:#7FE9DC;margin-top:1px;">Agregar efectivo a tu cuenta</div></div>
+            <span style="color:#00E5CC;font-size:18px;">›</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;padding:14px;background:#111638;border:1px solid #1C224D;border-radius:14px;">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(142,142,147,0.14);display:flex;align-items:center;justify-content:center;color:#B8BCCB;font-size:17px;font-weight:700;flex:none;">↗</div>
+            <div style="flex:1;"><div style="font-size:15px;font-weight:700;color:#fff;">Retiro</div><div style="font-size:12px;color:#8E8E93;margin-top:1px;">Retirar efectivo de tu cuenta</div></div>
+            <span style="color:#3E4470;font-size:18px;">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ SCREEN 2 · DEPOSIT FORM ============ -->
+    <sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 0;display:flex;flex-direction:column;position:relative;">
+      <!-- header -->
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px 20px;">
+        <div onClick="{{ back }}" style="width:34px;height:34px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;color:#00E5CC;font-size:20px;cursor:pointer;line-height:1;">‹</div>
+        <span style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-0.3px;">Depósito</span>
+      </div>
+
+      <div style="flex:1;padding:0 20px;">
+        <!-- MONTO -->
+        <div style="font-size:13px;font-weight:600;color:#8E8E93;margin-bottom:8px;">Monto</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:16px 16px;border-radius:14px;background:#111638;border:1.5px solid {{ amountBorder }};margin-bottom:7px;">
+          <span class="mono" style="font-size:22px;font-weight:700;color:{{ amountDollar }};">$</span>
+          <input class="pin mono" style="font-size:22px;font-weight:700;color:#fff;" inputmode="decimal" placeholder="0.00" value="{{ amount }}" onInput="{{ onAmount }}" onBlur="{{ blurAmount }}">
+        </div>
+        <sc-if value="{{ amountError }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12px;color:#FF5252;margin:0 2px 0;font-weight:500;">{{ amountErrorMsg }}</div>
+        </sc-if>
+
+        <!-- COMISIÓN + FECHA -->
+        <div style="display:flex;gap:12px;margin-top:18px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#8E8E93;margin-bottom:8px;">Comisión transf.</div>
+            <div style="display:flex;align-items:center;gap:6px;padding:13px 14px;border-radius:14px;background:#111638;border:1.5px solid {{ feeBorder }};">
+              <span class="mono" style="font-size:16px;font-weight:700;color:#5A6080;">$</span>
+              <input class="pin mono" style="font-size:16px;font-weight:700;color:#fff;" inputmode="decimal" placeholder="0.00" value="{{ fee }}" onInput="{{ onFee }}" onBlur="{{ blurFee }}">
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#8E8E93;margin-bottom:8px;">Fecha</div>
+            <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:14px;background:#111638;border:1.5px solid #1C224D;">
+              <span class="mono" style="font-size:15px;font-weight:600;color:#fff;">{{ dateDisplay }}</span>
+              <span style="font-size:14px;color:#8E8E93;">▦</span>
+              <input class="ndate" type="date" max="{{ todayISO }}" value="{{ executedAt }}" onInput="{{ onDate }}">
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO HINT -->
+        <div style="display:flex;gap:10px;background:rgba(91,134,196,0.08);border:1px solid rgba(91,134,196,0.25);border-radius:12px;padding:12px 14px;margin-top:18px;">
+          <span style="color:#7BA7E8;font-size:15px;flex:none;line-height:1.2;">ⓘ</span>
+          <span style="font-size:12.5px;line-height:1.4;color:#A9B7D0;">Revisa la comisión que aplica tu banco; se descuenta del monto, no se suma.</span>
+        </div>
+      </div>
+
+      <!-- LIVE SUMMARY + BUTTON -->
+      <div style="padding:20px;background:linear-gradient(0deg,#0A0E27 70%,rgba(10,14,39,0));position:sticky;bottom:0;">
+        <div style="text-align:center;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8E8E93;">SE SUMARÁ A TU EFECTIVO</div>
+          <div class="mono" style="font-size:28px;font-weight:800;color:{{ summaryColor }};letter-spacing:-0.6px;margin-top:3px;">{{ summary }}</div>
+        </div>
+        <div onClick="{{ save }}" style="text-align:center;padding:16px;border-radius:15px;background:{{ btnBg }};cursor:{{ btnCursor }};box-shadow:{{ btnShadow }};">
+          <span style="font-size:16px;font-weight:800;color:{{ btnColor }};">Guardar movimiento</span>
+        </div>
+      </div>
+
+      <!-- SUCCESS TOAST -->
+      <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(7,10,28,0.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(2px);">
+          <div style="width:78px;height:78px;border-radius:9999px;background:rgba(0,200,83,0.16);border:1.5px solid #00C853;display:flex;align-items:center;justify-content:center;color:#00C853;font-size:38px;">✓</div>
+          <div style="text-align:center;">
+            <div style="font-size:18px;font-weight:800;color:#fff;">Movimiento guardado</div>
+            <div class="mono" style="font-size:13px;color:#8E8E93;margin-top:4px;">Efectivo {{ savedEfectivo }} · Aportado {{ savedAportado }}</div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'picker',
+    amount: '',
+    fee: '',
+    executedAt: this.todayISO(),
+    touchedAmount: false,
+    touchedFee: false,
+    saved: false,
+  };
+
+  todayISO(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  parse(s){ const n = parseFloat(String(s).replace(/,/g,'')); return isNaN(n) ? 0 : n; }
+  usd(n){ const neg = n < -0.005; return (neg?'−':'') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  sanitize(s){ s = String(s).replace(/[^0-9.]/g,''); const i = s.indexOf('.'); if(i>=0){ s = s.slice(0,i+1) + s.slice(i+1).replace(/\./g,''); } return s; }
+  fmtDate(iso){ if(!iso) return '—'; const [y,m,d] = iso.split('-'); return d + '/' + m + '/' + y; }
+
+  renderVals(){
+    const a = this.parse(this.state.amount);
+    const f = this.parse(this.state.fee);
+    const efectivo = a - f;
+
+    const amountInvalid = this.state.amount !== '' && a <= 0;
+    const feeTooBig = this.state.fee !== '' && f >= a && a > 0;
+    const feeNeg = f < 0;
+    const amountOk = a > 0;
+    const feeOk = !feeNeg && (this.state.fee === '' || f < a);
+    const canSave = amountOk && feeOk;
+
+    const showAmountError = this.state.touchedAmount && amountInvalid;
+    const showFeeError = this.state.touchedFee && feeTooBig;
+
+    const teal = '#00E5CC';
+    const summaryColor = efectivo < -0.005 ? '#FF5252' : (a > 0 ? teal : '#3E4470');
+
+    return {
+      isPicker: this.state.screen === 'picker',
+      isForm: this.state.screen === 'form',
+      goForm: () => this.setState({ screen: 'form' }),
+      back: () => this.setState({ screen: 'picker' }),
+      dismiss: () => {},
+
+      amount: this.state.amount,
+      fee: this.state.fee,
+      executedAt: this.state.executedAt,
+      todayISO: this.todayISO(),
+      dateDisplay: this.fmtDate(this.state.executedAt),
+
+      onAmount: (e) => this.setState({ amount: this.sanitize(e.target.value) }),
+      onFee: (e) => this.setState({ fee: this.sanitize(e.target.value) }),
+      onDate: (e) => { const v = e.target.value; if(v && v <= this.todayISO()) this.setState({ executedAt: v }); },
+      blurAmount: () => this.setState({ touchedAmount: true }),
+      blurFee: () => this.setState({ touchedFee: true }),
+
+      amountBorder: showAmountError ? '#FF5252' : (a > 0 ? 'rgba(0,229,204,0.5)' : '#1C224D'),
+      amountDollar: a > 0 ? '#fff' : '#5A6080',
+      amountError: showAmountError,
+      amountErrorMsg: 'Ingresa un monto mayor a $0.',
+      feeBorder: showFeeError ? '#FF5252' : '#1C224D',
+
+      summary: this.usd(this.state.amount === '' ? 0 : efectivo),
+      summaryColor,
+
+      btnBg: canSave ? teal : '#161B3D',
+      btnColor: canSave ? '#04211E' : '#4A5070',
+      btnCursor: canSave ? 'pointer' : 'default',
+      btnShadow: canSave ? '0 6px 20px rgba(0,229,204,0.28)' : 'none',
+
+      save: () => {
+        if(!canSave) return;
+        this.setState({ saved: true });
+        setTimeout(() => this.setState({
+          saved: false, screen: 'picker', amount: '', fee: '',
+          touchedAmount: false, touchedFee: false, executedAt: this.todayISO(),
+        }), 1900);
+      },
+      saved: this.state.saved,
+      savedEfectivo: this.usd(efectivo),
+      savedAportado: '+' + this.usd(a).replace('−',''),
+    };
+  }
+}
+</script>
+</body>
+</html>
