@@ -1,4 +1,4 @@
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import {
   Manrope_400Regular,
   Manrope_500Medium,
@@ -6,17 +6,17 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
   useFonts,
-} from '@expo-google-fonts/manrope';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { Text } from 'react-native';
+} from "@expo-google-fonts/manrope";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { Text } from "react-native";
 
-import { Colors } from '@/constants/theme';
+import { Colors } from "@/constants/theme";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 // Keep the splash screen visible until the fonts are loaded so there is no
@@ -29,7 +29,7 @@ const TextWithDefault = Text as typeof Text & {
   defaultProps?: { style?: { fontFamily: string } };
 };
 TextWithDefault.defaultProps = TextWithDefault.defaultProps ?? {};
-TextWithDefault.defaultProps.style = { fontFamily: 'Manrope_400Regular' };
+TextWithDefault.defaultProps.style = { fontFamily: "Manrope_400Regular" };
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -57,7 +57,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="stock/[ticker]"
           options={{
-            title: 'Stock Detail',
+            title: "Stock Detail",
             headerStyle: { backgroundColor: Colors.background },
             headerTintColor: Colors.textPrimary,
           }}
@@ -65,14 +65,14 @@ export default function RootLayout() {
         <Stack.Screen
           name="movement/[id]"
           options={{
-            title: 'Movement Detail',
+            title: "Movement Detail",
             headerStyle: { backgroundColor: Colors.background },
             headerTintColor: Colors.textPrimary,
           }}
         />
         <Stack.Screen
           name="add-movement"
-          options={{ presentation: 'modal', headerShown: false }}
+          options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
       <StatusBar style="light" />

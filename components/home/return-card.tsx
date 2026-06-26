@@ -69,7 +69,11 @@ export function ReturnCard({ return: ret }: Props) {
             {open ? "Ocultar" : "Ver desglose"}
           </Text>
           <Animated.View style={chevronStyle}>
-            <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
+            <Ionicons
+              name="chevron-down"
+              size={12}
+              color={Colors.textSecondary}
+            />
           </Animated.View>
         </View>
       </Pressable>
@@ -115,7 +119,8 @@ export function ReturnCard({ return: ret }: Props) {
             );
           })}
           <Text style={styles.footnote}>
-            Los componentes suman el Rendimiento total · % sobre capital aportado
+            Los componentes suman el Rendimiento total · % sobre capital
+            aportado
           </Text>
         </View>
       )}

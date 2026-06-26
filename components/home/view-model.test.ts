@@ -1,9 +1,5 @@
 import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
-import type {
-  BuyMovement,
-  DepositMovement,
-  Movement,
-} from "@/types/models";
+import type { BuyMovement, DepositMovement, Movement } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
 import { buildHomeView } from "./view-model";
@@ -132,10 +128,7 @@ describe("buildHomeView", () => {
   });
 
   it("leaves value/pnl null for a holding without a current price", () => {
-    const movements: Movement[] = [
-      deposit(1000),
-      buy("AAPL", 100, 10, 1),
-    ];
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 10, 1)];
     const portfolio = assemblePortfolio(movements, {}); // no price for AAPL
     const view = buildHomeView(portfolio);
 
@@ -163,10 +156,7 @@ describe("buildHomeView", () => {
 
   it("uses a negative tone and a unicode-minus string for a negative Total Return", () => {
     // Bought high, priced low: every figure on the loss side.
-    const movements: Movement[] = [
-      deposit(1000),
-      buy("AAPL", 100, 5, 1),
-    ];
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
     const portfolio = assemblePortfolio(movements, { AAPL: 60 });
     const view = buildHomeView(portfolio);
 

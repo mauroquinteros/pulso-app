@@ -18,7 +18,10 @@ export function AssetsCard({ assets, onPressHolding }: Props) {
         <Text style={styles.headerStat}>
           Net P&L{" "}
           <Text
-            style={[styles.headerStatValue, { color: toneColor(assets.netPnlTone) }]}
+            style={[
+              styles.headerStatValue,
+              { color: toneColor(assets.netPnlTone) },
+            ]}
           >
             {assets.netPnl}
           </Text>

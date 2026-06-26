@@ -20,7 +20,10 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * price, the price-applied figures are reported as null and priceAvailable is
  * false — never fabricated (missing-price policy "exclude + flag").
  */
-export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding {
+export function valueHolding(
+  holding: Holding,
+  prices: PriceMap,
+): ValuedHolding {
   const price = prices[holding.ticker];
   if (price === undefined) {
     return {
@@ -35,7 +38,13 @@ export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding 
   const netPnl = round2(marketValue - holding.costBasis);
   const netPnlPercent =
     holding.costBasis !== 0 ? round2((netPnl / holding.costBasis) * 100) : 0;
-  return { ...holding, priceAvailable: true, marketValue, netPnl, netPnlPercent };
+  return {
+    ...holding,
+    priceAvailable: true,
+    marketValue,
+    netPnl,
+    netPnlPercent,
+  };
 }
 
 /**

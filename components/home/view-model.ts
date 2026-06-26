@@ -79,7 +79,11 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
 
   // Return — Total Return + the four proportional components.
   const componentAmounts = [
-    { label: "No realizado", sub: "· Net P&L", amount: totalReturn.unrealizedPnl },
+    {
+      label: "No realizado",
+      sub: "· Net P&L",
+      amount: totalReturn.unrealizedPnl,
+    },
     { label: "Realizado", amount: totalReturn.realizedPnl },
     { label: "Dividendos netos", amount: totalReturn.netDividends },
     { label: "Comisiones", amount: -totalReturn.totalFees },
@@ -114,12 +118,14 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
       ticker: h.ticker,
       shares: formatSharesLabel(h.shares),
       priceAvailable: h.priceAvailable,
-      value: h.priceAvailable && h.marketValue !== null
-        ? formatUSD(h.marketValue)
-        : null,
-      pnl: h.priceAvailable && h.netPnl !== null
-        ? `${formatSignedUSD(h.netPnl)} · ${formatSignedPercent(h.netPnlPercent ?? 0)}`
-        : null,
+      value:
+        h.priceAvailable && h.marketValue !== null
+          ? formatUSD(h.marketValue)
+          : null,
+      pnl:
+        h.priceAvailable && h.netPnl !== null
+          ? `${formatSignedUSD(h.netPnl)} · ${formatSignedPercent(h.netPnlPercent ?? 0)}`
+          : null,
       pnlTone: toneOf(h.netPnl ?? 0),
       badge: i,
     })),

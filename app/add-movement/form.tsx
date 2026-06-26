@@ -97,7 +97,11 @@ export default function DepositFormScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.header}>
-          <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={8}>
+          <Pressable
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            hitSlop={8}
+          >
             <Ionicons name="chevron-back" size={22} color={Colors.accent} />
           </Pressable>
           <Text style={styles.headerTitle}>Depósito</Text>
@@ -115,7 +119,11 @@ export default function DepositFormScreen() {
             <Text
               style={[
                 styles.amountDollar,
-                { color: summary.amountPositive ? Colors.textPrimary : "#5A6080" },
+                {
+                  color: summary.amountPositive
+                    ? Colors.textPrimary
+                    : "#5A6080",
+                },
               ]}
             >
               $
@@ -158,9 +166,16 @@ export default function DepositFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
+              <Pressable
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+              >
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Colors.textSecondary}
+                />
               </Pressable>
             </View>
           </View>
@@ -235,7 +250,10 @@ export default function DepositFormScreen() {
             disabled={!canSave}
           >
             <Text
-              style={[styles.buttonText, { color: canSave ? "#04211E" : "#4A5070" }]}
+              style={[
+                styles.buttonText,
+                { color: canSave ? "#04211E" : "#4A5070" },
+              ]}
             >
               Guardar movimiento
             </Text>

@@ -45,7 +45,8 @@ export function summarizeDeposit(input: DepositInput): DepositSummary {
   const amountPositive = amount > 0;
   const amountInvalid = input.amount !== "" && amount <= 0;
   // A fee ≥ the deposit makes Efectivo ≤ 0 — nonsense. Empty fee is fine (→ 0).
-  const feeInvalid = input.transferFee !== "" && amountPositive && fee >= amount;
+  const feeInvalid =
+    input.transferFee !== "" && amountPositive && fee >= amount;
   const feeOk = fee >= 0 && (input.transferFee === "" || fee < amount);
 
   return {

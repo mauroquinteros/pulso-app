@@ -1,4 +1,9 @@
-export type MovementType = 'buy' | 'sell' | 'dividend' | 'deposit' | 'withdrawal';
+export type MovementType =
+  | "buy"
+  | "sell"
+  | "dividend"
+  | "deposit"
+  | "withdrawal";
 
 export interface BaseMovement {
   id: string;
@@ -9,7 +14,7 @@ export interface BaseMovement {
 }
 
 export interface BuyMovement extends BaseMovement {
-  type: 'buy';
+  type: "buy";
   ticker: string;
   executionPrice: number;
   shares: number;
@@ -17,7 +22,7 @@ export interface BuyMovement extends BaseMovement {
 }
 
 export interface SellMovement extends BaseMovement {
-  type: 'sell';
+  type: "sell";
   ticker: string;
   shares: number;
   executionPrice: number;
@@ -26,20 +31,20 @@ export interface SellMovement extends BaseMovement {
 }
 
 export interface DividendMovement extends BaseMovement {
-  type: 'dividend';
+  type: "dividend";
   ticker: string;
   grossAmount: number;
   tax: number;
 }
 
 export interface DepositMovement extends BaseMovement {
-  type: 'deposit';
+  type: "deposit";
   amount: number;
   transferFee: number;
 }
 
 export interface WithdrawalMovement extends BaseMovement {
-  type: 'withdrawal';
+  type: "withdrawal";
   amount: number;
   fee: number;
 }
@@ -56,11 +61,16 @@ export type Movement =
 // (execution_price, executed_at, …) into these camelCase domain fields — snake_case
 // must not leak past this boundary — and (b) coerce DB NULLs to 0 for non-nullable
 // fields (e.g. regulatoryFees, transferFee), mapping the flat row to the correct subtype.
-export const isBuyMovement = (m: Movement): m is BuyMovement => m.type === 'buy';
-export const isSellMovement = (m: Movement): m is SellMovement => m.type === 'sell';
-export const isDividendMovement = (m: Movement): m is DividendMovement => m.type === 'dividend';
-export const isDepositMovement = (m: Movement): m is DepositMovement => m.type === 'deposit';
-export const isWithdrawalMovement = (m: Movement): m is WithdrawalMovement => m.type === 'withdrawal';
+export const isBuyMovement = (m: Movement): m is BuyMovement =>
+  m.type === "buy";
+export const isSellMovement = (m: Movement): m is SellMovement =>
+  m.type === "sell";
+export const isDividendMovement = (m: Movement): m is DividendMovement =>
+  m.type === "dividend";
+export const isDepositMovement = (m: Movement): m is DepositMovement =>
+  m.type === "deposit";
+export const isWithdrawalMovement = (m: Movement): m is WithdrawalMovement =>
+  m.type === "withdrawal";
 
 export interface Holding {
   ticker: string;

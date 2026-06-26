@@ -35,7 +35,9 @@ export function WorthCard({ worth }: Props) {
 
       <View style={[styles.row, styles.rowGap]}>
         <View style={styles.legend}>
-          <View style={[styles.swatch, { backgroundColor: Colors.investedBar }]} />
+          <View
+            style={[styles.swatch, { backgroundColor: Colors.investedBar }]}
+          />
           <Text style={styles.legendLabel}>{worth.invested.label}</Text>
           <Text style={styles.legendPct}>{worth.invested.pct}</Text>
         </View>
