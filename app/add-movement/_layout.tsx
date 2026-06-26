@@ -1,15 +1,6 @@
-import { Stack } from 'expo-router';
-
-import { Colors } from '@/constants/theme';
+import { Stack } from "expo-router";
 
 export default function AddMovementLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: Colors.surface },
-        headerTintColor: Colors.textPrimary,
-      }}
-    />
-  );
+  // Both screens render their own in-screen header (✕ picker, ‹ Depósito).
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
