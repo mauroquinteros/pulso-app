@@ -1,3 +1,6 @@
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
@@ -5,6 +8,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -35,19 +39,41 @@ export default function DepositFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
-  // Fecha defaults to today; the interactive native picker arrives in slice 03.
-  const [executedAt] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [executedAt, setExecutedAt] = useState(() =>
+    format(new Date(), "yyyy-MM-dd"),
+  );
+  const [touchedAmount, setTouchedAmount] = useState(false);
+  const [touchedFee, setTouchedFee] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const summary = summarizeDeposit({ amount, transferFee: fee, executedAt });
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
 
+  // Errors surface only after a field is touched-then-invalid (no typing spam).
+  const showAmountError = touchedAmount && summary.amountInvalid;
+  const showFeeError = touchedFee && summary.feeInvalid;
+
+  const amountBorderColor = showAmountError
+    ? Colors.negative
+    : summary.amountPositive
+      ? "rgba(0,229,204,0.5)"
+      : Colors.border;
+
   const summaryColor =
     summary.efectivo < -0.005
       ? Colors.negative
-      : canSave
+      : summary.amountPositive
         ? Colors.accent
         : "#3E4470";
+
+  const onChangeDate = (event: DateTimePickerEvent, selected?: Date) => {
+    // Android dialog closes itself on any action; commit only on "set".
+    if (Platform.OS === "android") setShowPicker(false);
+    if (event.type === "set" && selected) {
+      setExecutedAt(format(selected, "yyyy-MM-dd"));
+    }
+  };
 
   const onSave = () => {
     if (!canSave) return;
@@ -85,16 +111,11 @@ export default function DepositFormScreen() {
         >
           {/* MONTO */}
           <Text style={styles.label}>Monto</Text>
-          <View
-            style={[
-              styles.amountBox,
-              { borderColor: canSave ? "rgba(0,229,204,0.5)" : Colors.border },
-            ]}
-          >
+          <View style={[styles.amountBox, { borderColor: amountBorderColor }]}>
             <Text
               style={[
                 styles.amountDollar,
-                { color: canSave ? Colors.textPrimary : "#5A6080" },
+                { color: summary.amountPositive ? Colors.textPrimary : "#5A6080" },
               ]}
             >
               $
@@ -106,14 +127,23 @@ export default function DepositFormScreen() {
               placeholderTextColor="#3E4470"
               value={amount}
               onChangeText={(t) => setAmount(sanitizeDecimal(t))}
+              onBlur={() => setTouchedAmount(true)}
             />
           </View>
+          {showAmountError && (
+            <Text style={styles.errorText}>Ingresa un monto mayor a $0.</Text>
+          )}
 
           {/* COMISIÓN + FECHA */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Comisión transf.</Text>
-              <View style={styles.smallBox}>
+              <View
+                style={[
+                  styles.smallBox,
+                  showFeeError && { borderColor: Colors.negative },
+                ]}
+              >
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -122,17 +152,55 @@ export default function DepositFormScreen() {
                   placeholderTextColor="#3E4470"
                   value={fee}
                   onChangeText={(t) => setFee(sanitizeDecimal(t))}
+                  onBlur={() => setTouchedFee(true)}
                 />
               </View>
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <View style={styles.dateBox}>
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
                 <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
-              </View>
+              </Pressable>
             </View>
           </View>
+
+          {showPicker &&
+            (Platform.OS === "ios" ? (
+              <Modal transparent animationType="fade" visible>
+                <Pressable
+                  style={styles.modalBackdrop}
+                  onPress={() => setShowPicker(false)}
+                >
+                  <Pressable style={styles.modalSheet}>
+                    <DateTimePicker
+                      value={parseISO(executedAt)}
+                      mode="date"
+                      display="inline"
+                      maximumDate={new Date()}
+                      themeVariant="dark"
+                      accentColor={Colors.accent}
+                      onChange={(_, d) =>
+                        d && setExecutedAt(format(d, "yyyy-MM-dd"))
+                      }
+                    />
+                    <Pressable
+                      style={styles.modalDone}
+                      onPress={() => setShowPicker(false)}
+                    >
+                      <Text style={styles.modalDoneText}>Listo</Text>
+                    </Pressable>
+                  </Pressable>
+                </Pressable>
+              </Modal>
+            ) : (
+              <DateTimePicker
+                value={parseISO(executedAt)}
+                mode="date"
+                maximumDate={new Date()}
+                onChange={onChangeDate}
+              />
+            ))}
 
           {/* INFO HINT */}
           <View style={styles.hint}>
@@ -242,6 +310,13 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
     padding: 0,
   },
+  errorText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.negative,
+    marginTop: 6,
+    marginHorizontal: 2,
+  },
   pairRow: {
     flexDirection: "row",
     gap: 12,
@@ -346,5 +421,31 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "800",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(7,10,28,0.7)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  modalSheet: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 12,
+  },
+  modalDone: {
+    alignSelf: "center",
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderRadius: 12,
+    backgroundColor: Colors.accent,
+  },
+  modalDoneText: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#04211E",
   },
 });

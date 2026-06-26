@@ -9,8 +9,14 @@ export interface DepositInput {
 export interface DepositSummary {
   /** Monto − Comisión; what the live summary shows (0 when Monto is blank). */
   efectivo: number;
-  /** Save-gate. The only hard rule this slice enforces is Monto > 0. */
+  /** Save-gate: Monto > 0 and a valid Comisión (≥ 0 and < Monto). */
   saveEnabled: boolean;
+  /** Monto > 0 — drives the teal accent on the Monto field. */
+  amountPositive: boolean;
+  /** A Monto was entered but is ≤ 0 — drives the error once the field is touched. */
+  amountInvalid: boolean;
+  /** A Comisión ≥ Monto (would push Efectivo ≤ 0) — error once touched. */
+  feeInvalid: boolean;
 }
 
 export interface DepositDeps {
@@ -35,7 +41,20 @@ export function summarizeDeposit(input: DepositInput): DepositSummary {
   const amount = parseAmount(input.amount);
   const fee = parseAmount(input.transferFee);
   const efectivo = input.amount === "" ? 0 : amount - fee;
-  return { efectivo, saveEnabled: amount > 0 };
+
+  const amountPositive = amount > 0;
+  const amountInvalid = input.amount !== "" && amount <= 0;
+  // A fee ≥ the deposit makes Efectivo ≤ 0 — nonsense. Empty fee is fine (→ 0).
+  const feeInvalid = input.transferFee !== "" && amountPositive && fee >= amount;
+  const feeOk = fee >= 0 && (input.transferFee === "" || fee < amount);
+
+  return {
+    efectivo,
+    saveEnabled: amountPositive && feeOk,
+    amountPositive,
+    amountInvalid,
+    feeInvalid,
+  };
 }
 
 /**

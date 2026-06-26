@@ -55,6 +55,47 @@ describe("summarizeDeposit", () => {
         .saveEnabled,
     ).toBe(true);
   });
+
+  it("flags a Monto entered as 0 as invalid (but blank is not)", () => {
+    const date = "2025-06-25";
+    expect(
+      summarizeDeposit({ amount: "0", transferFee: "", executedAt: date })
+        .amountInvalid,
+    ).toBe(true);
+    expect(
+      summarizeDeposit({ amount: "", transferFee: "", executedAt: date })
+        .amountInvalid,
+    ).toBe(false);
+  });
+
+  it("rejects a Comisión ≥ Monto and flags it invalid", () => {
+    const date = "2025-06-25";
+    const atLimit = summarizeDeposit({
+      amount: "100",
+      transferFee: "100",
+      executedAt: date,
+    });
+    expect(atLimit.saveEnabled).toBe(false);
+    expect(atLimit.feeInvalid).toBe(true);
+
+    const tooBig = summarizeDeposit({
+      amount: "100",
+      transferFee: "150",
+      executedAt: date,
+    });
+    expect(tooBig.saveEnabled).toBe(false);
+    expect(tooBig.feeInvalid).toBe(true);
+  });
+
+  it("accepts a Comisión below Monto", () => {
+    const ok = summarizeDeposit({
+      amount: "100",
+      transferFee: "5",
+      executedAt: "2025-06-25",
+    });
+    expect(ok.saveEnabled).toBe(true);
+    expect(ok.feeInvalid).toBe(false);
+  });
 });
 
 describe("buildDepositMovement", () => {
