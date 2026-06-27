@@ -15,8 +15,8 @@ type RowSpec = {
   onPress?: () => void;
 };
 
-// Only Depósito is wired (the tracer bullet). The other four read as
-// not-yet-built ("Pronto") and get re-enabled as their forms land.
+// The cash movements (Depósito, Retiro) are wired. The three OPERACIONES read
+// as not-yet-built ("Pronto") and get re-enabled as their forms land.
 const OPERACIONES: RowSpec[] = [
   {
     icon: "arrow-down",
@@ -60,7 +60,8 @@ const EFECTIVO: RowSpec[] = [
     iconColor: "#B8BCCB",
     title: "Retiro",
     subtitle: "Retirar efectivo de tu cuenta",
-    disabled: true,
+    disabled: false,
+    onPress: () => router.push("/add-movement/withdrawal"),
   },
 ];
 
