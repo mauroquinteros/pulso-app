@@ -1,0 +1,145 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  buildWithdrawalMovement,
+  summarizeWithdrawal,
+  type WithdrawalDeps,
+} from "./withdrawal-view-model";
+
+const deps: WithdrawalDeps = {
+  id: () => "wd-1",
+  userId: () => "mock-user-001",
+  now: () => "2025-06-25T12:00:00Z",
+};
+
+describe("summarizeWithdrawal", () => {
+  it("recibiras is Monto minus Comisión", () => {
+    const { recibiras } = summarizeWithdrawal(
+      { amount: "200", fee: "1", executedAt: "2025-06-25" },
+      1000,
+    );
+    expect(recibiras).toBe(199);
+  });
+
+  it("treats a blank Comisión as 0", () => {
+    const { recibiras } = summarizeWithdrawal(
+      { amount: "200", fee: "", executedAt: "2025-06-25" },
+      1000,
+    );
+    expect(recibiras).toBe(200);
+  });
+
+  it("shows 0 recibiras when Monto is blank, ignoring any fee", () => {
+    const { recibiras } = summarizeWithdrawal(
+      { amount: "", fee: "5", executedAt: "2025-06-25" },
+      1000,
+    );
+    expect(recibiras).toBe(0);
+  });
+
+  it("enables save only when Monto > 0", () => {
+    const date = "2025-06-25";
+    expect(
+      summarizeWithdrawal({ amount: "", fee: "", executedAt: date }, 1000)
+        .saveEnabled,
+    ).toBe(false);
+    expect(
+      summarizeWithdrawal({ amount: "0", fee: "", executedAt: date }, 1000)
+        .saveEnabled,
+    ).toBe(false);
+    expect(
+      summarizeWithdrawal({ amount: "100", fee: "", executedAt: date }, 1000)
+        .saveEnabled,
+    ).toBe(true);
+  });
+
+  it("flags a Monto entered as 0 as invalid (but blank is not)", () => {
+    const date = "2025-06-25";
+    expect(
+      summarizeWithdrawal({ amount: "0", fee: "", executedAt: date }, 1000)
+        .amountInvalid,
+    ).toBe(true);
+    expect(
+      summarizeWithdrawal({ amount: "", fee: "", executedAt: date }, 1000)
+        .amountInvalid,
+    ).toBe(false);
+  });
+
+  it("rejects a Comisión ≥ Monto and flags it invalid", () => {
+    const date = "2025-06-25";
+    const atLimit = summarizeWithdrawal(
+      { amount: "100", fee: "100", executedAt: date },
+      1000,
+    );
+    expect(atLimit.saveEnabled).toBe(false);
+    expect(atLimit.feeInvalid).toBe(true);
+
+    const tooBig = summarizeWithdrawal(
+      { amount: "100", fee: "150", executedAt: date },
+      1000,
+    );
+    expect(tooBig.saveEnabled).toBe(false);
+    expect(tooBig.feeInvalid).toBe(true);
+  });
+
+  it("accepts a Comisión below Monto", () => {
+    const ok = summarizeWithdrawal(
+      { amount: "100", fee: "5", executedAt: "2025-06-25" },
+      1000,
+    );
+    expect(ok.saveEnabled).toBe(true);
+    expect(ok.feeInvalid).toBe(false);
+  });
+
+  it("blocks save and flags insufficientFunds when Monto exceeds available Cash", () => {
+    const over = summarizeWithdrawal(
+      { amount: "500", fee: "1", executedAt: "2025-06-25" },
+      267.07,
+    );
+    expect(over.insufficientFunds).toBe(true);
+    expect(over.saveEnabled).toBe(false);
+  });
+
+  it("allows withdrawing exactly the available Cash", () => {
+    const exact = summarizeWithdrawal(
+      { amount: "267.07", fee: "1", executedAt: "2025-06-25" },
+      267.07,
+    );
+    expect(exact.insufficientFunds).toBe(false);
+    expect(exact.saveEnabled).toBe(true);
+  });
+
+  it("does not flag insufficientFunds for a blank Monto", () => {
+    const blank = summarizeWithdrawal(
+      { amount: "", fee: "", executedAt: "2025-06-25" },
+      0,
+    );
+    expect(blank.insufficientFunds).toBe(false);
+  });
+});
+
+describe("buildWithdrawalMovement", () => {
+  it("maps fields to a typed WithdrawalMovement with injected system fields", () => {
+    const movement = buildWithdrawalMovement(
+      { amount: "200", fee: "1", executedAt: "2023-10-24" },
+      deps,
+    );
+    expect(movement).toEqual({
+      id: "wd-1",
+      userId: "mock-user-001",
+      type: "withdrawal",
+      amount: 200,
+      fee: 1,
+      executedAt: "2023-10-24",
+      createdAt: "2025-06-25T12:00:00Z",
+    });
+  });
+
+  it("defaults an empty Comisión to 0", () => {
+    const movement = buildWithdrawalMovement(
+      { amount: "500", fee: "", executedAt: "2025-06-25" },
+      deps,
+    );
+    expect(movement.fee).toBe(0);
+  });
+});
