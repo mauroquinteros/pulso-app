@@ -11,9 +11,11 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * Computes Cash / Buying Power from all movements:
- *   deposits − withdrawals − buy cost + sell proceeds + net dividends,
- * with every fee subtracted as it occurs (deposit transferFee, buy fee, sell
- * fee + regulatoryFees, withdrawal fee). Dividend tax is netted into dividends
+ *   deposit amounts − withdrawal amounts − buy cost + sell proceeds + net dividends.
+ * A deposit/withdrawal `amount` is the cash-side figure (what lands in or leaves
+ * Buying Power), so transfer fees are NOT subtracted here — they live in Net
+ * Contributions (see computeNetContributions). Trading fees still reduce cash:
+ * buy fee, sell fee + regulatoryFees. Dividend tax is netted into dividends
  * (gross − tax) and is never treated as a fee. Order-independent.
  */
 export function computeCash(movements: Movement[]): number {
@@ -21,9 +23,9 @@ export function computeCash(movements: Movement[]): number {
 
   for (const m of movements) {
     if (isDepositMovement(m)) {
-      cash += m.amount - m.transferFee;
+      cash += m.amount;
     } else if (isWithdrawalMovement(m)) {
-      cash -= m.amount + m.fee;
+      cash -= m.amount;
     } else if (isBuyMovement(m)) {
       cash -= m.executionPrice * m.shares + m.fee;
     } else if (isSellMovement(m)) {

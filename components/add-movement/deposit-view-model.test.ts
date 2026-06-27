@@ -13,31 +13,31 @@ const deps: DepositDeps = {
 };
 
 describe("summarizeDeposit", () => {
-  it("efectivo is Monto minus Comisión", () => {
-    const { efectivo } = summarizeDeposit({
+  it("aportado is Monto plus Comisión", () => {
+    const { aportado } = summarizeDeposit({
       amount: "1250",
       transferFee: "5",
       executedAt: "2025-06-25",
     });
-    expect(efectivo).toBe(1245);
+    expect(aportado).toBe(1255);
   });
 
   it("treats a blank Comisión as 0", () => {
-    const { efectivo } = summarizeDeposit({
+    const { aportado } = summarizeDeposit({
       amount: "1250",
       transferFee: "",
       executedAt: "2025-06-25",
     });
-    expect(efectivo).toBe(1250);
+    expect(aportado).toBe(1250);
   });
 
-  it("shows 0 efectivo when Monto is blank, ignoring any fee", () => {
-    const { efectivo } = summarizeDeposit({
+  it("shows 0 aportado when Monto is blank, ignoring any fee", () => {
+    const { aportado } = summarizeDeposit({
       amount: "",
       transferFee: "5",
       executedAt: "2025-06-25",
     });
-    expect(efectivo).toBe(0);
+    expect(aportado).toBe(0);
   });
 
   it("enables save only when Monto > 0", () => {
@@ -68,33 +68,24 @@ describe("summarizeDeposit", () => {
     ).toBe(false);
   });
 
-  it("rejects a Comisión ≥ Monto and flags it invalid", () => {
+  it("accepts any non-negative Comisión, even one larger than Monto", () => {
     const date = "2025-06-25";
-    const atLimit = summarizeDeposit({
-      amount: "100",
-      transferFee: "100",
-      executedAt: date,
-    });
-    expect(atLimit.saveEnabled).toBe(false);
-    expect(atLimit.feeInvalid).toBe(true);
-
-    const tooBig = summarizeDeposit({
+    // The fee no longer competes with the amount — it adds on top to form Aportado.
+    const big = summarizeDeposit({
       amount: "100",
       transferFee: "150",
       executedAt: date,
     });
-    expect(tooBig.saveEnabled).toBe(false);
-    expect(tooBig.feeInvalid).toBe(true);
-  });
+    expect(big.saveEnabled).toBe(true);
+    expect(big.aportado).toBe(250);
 
-  it("accepts a Comisión below Monto", () => {
-    const ok = summarizeDeposit({
+    const small = summarizeDeposit({
       amount: "100",
       transferFee: "5",
-      executedAt: "2025-06-25",
+      executedAt: date,
     });
-    expect(ok.saveEnabled).toBe(true);
-    expect(ok.feeInvalid).toBe(false);
+    expect(small.saveEnabled).toBe(true);
+    expect(small.aportado).toBe(105);
   });
 });
 

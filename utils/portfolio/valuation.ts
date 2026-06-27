@@ -123,13 +123,15 @@ export function assemblePortfolio(
   };
 }
 
-/** Net contributions: gross deposit amounts minus gross withdrawal amounts
- * (transfer/withdrawal fees are captured in Total Return's fees, not here). */
+/** Net contributions (out of pocket, measured at the bank boundary): a deposit
+ * contributes amount + transferFee (what left your bank); a withdrawal removes
+ * amount − fee (what reached your bank). The transfer fee thus lives here, in the
+ * gap between Cash and Net Contributions, which is what makes it erode Total Return. */
 function computeNetContributions(movements: Movement[]): number {
   let total = 0;
   for (const m of movements) {
-    if (isDepositMovement(m)) total += m.amount;
-    else if (isWithdrawalMovement(m)) total -= m.amount;
+    if (isDepositMovement(m)) total += m.amount + m.transferFee;
+    else if (isWithdrawalMovement(m)) total -= m.amount - m.fee;
   }
   return total;
 }

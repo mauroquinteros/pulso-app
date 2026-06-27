@@ -1,7 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -43,7 +43,6 @@ export default function DepositFormScreen() {
     format(new Date(), "yyyy-MM-dd"),
   );
   const [touchedAmount, setTouchedAmount] = useState(false);
-  const [touchedFee, setTouchedFee] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
   const summary = summarizeDeposit({ amount, transferFee: fee, executedAt });
@@ -52,7 +51,6 @@ export default function DepositFormScreen() {
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showAmountError = touchedAmount && summary.amountInvalid;
-  const showFeeError = touchedFee && summary.feeInvalid;
 
   const amountBorderColor = showAmountError
     ? Colors.negative
@@ -60,12 +58,7 @@ export default function DepositFormScreen() {
       ? "rgba(0,229,204,0.5)"
       : Colors.border;
 
-  const summaryColor =
-    summary.efectivo < -0.005
-      ? Colors.negative
-      : summary.amountPositive
-        ? Colors.accent
-        : "#3E4470";
+  const summaryColor = summary.amountPositive ? Colors.accent : "#3E4470";
 
   const onChangeDate = (event: DateTimePickerEvent, selected?: Date) => {
     // Android dialog closes itself on any action; commit only on "set".
@@ -146,12 +139,7 @@ export default function DepositFormScreen() {
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Comisión transf.</Text>
-              <View
-                style={[
-                  styles.smallBox,
-                  showFeeError && { borderColor: Colors.negative },
-                ]}
-              >
+              <View style={styles.smallBox}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -160,7 +148,6 @@ export default function DepositFormScreen() {
                   placeholderTextColor="#3E4470"
                   value={fee}
                   onChangeText={(t) => setFee(sanitizeDecimal(t))}
-                  onBlur={() => setTouchedFee(true)}
                 />
               </View>
             </View>
@@ -226,8 +213,7 @@ export default function DepositFormScreen() {
               style={styles.hintIcon}
             />
             <Text style={styles.hintText}>
-              Revisa la comisión que aplica tu banco; se descuenta del monto, no
-              se suma.
+              Revisa la comisión. Se suma a tu monto para formar lo que aportas.
             </Text>
           </View>
         </ScrollView>
@@ -235,9 +221,9 @@ export default function DepositFormScreen() {
         {/* LIVE SUMMARY + BUTTON */}
         <View style={styles.bottom}>
           <View style={styles.summaryWrap}>
-            <Text style={styles.summaryLabel}>SE SUMARÁ A TU EFECTIVO</Text>
+            <Text style={styles.summaryLabel}>APORTARÁS</Text>
             <Text style={[styles.summaryValue, { color: summaryColor }]}>
-              {formatUSD(summary.efectivo)}
+              {formatUSD(summary.aportado)}
             </Text>
           </View>
           <Pressable

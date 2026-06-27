@@ -12,7 +12,7 @@ What the account is worth right now: **Market Value** of all holdings plus **Cas
 _Avoid_: balance, net worth, total amount
 
 **Cash** (a.k.a. **Buying Power**):
-Uninvested money available to trade. It is `deposits − withdrawals − buy cost + sell proceeds + net dividends`, with every **Fee** subtracted as it occurs. Realized gains and dividends flow into Cash and are not re-counted as profit.
+Uninvested money available to trade. It is `deposit amounts − withdrawal amounts − buy cost + sell proceeds + net dividends`, where each deposit/withdrawal **amount** is the cash-side figure (what lands in or leaves Buying Power). Trading **Fees** (buy/sell commissions) are subtracted as they occur; transfer fees on deposits/withdrawals do *not* touch Cash — they live in the gap between Cash and **Net Contributions** (see `docs/adr/0003-cash-side-movement-amounts.md`). Realized gains and dividends flow into Cash and are not re-counted as profit.
 _Avoid_: balance, funds
 
 **Market Value**:
@@ -36,11 +36,11 @@ The **gross** locked-in gain or loss from shares the user has sold — price gai
 _Avoid_: capital gain (a tax term), booked profit, net realized
 
 **Total Return**:
-The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − (total deposits − total withdrawals)`. As a percentage: `Total Return ÷ net contributions (total deposits − total withdrawals)`. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
+The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − Net Contributions`. As a percentage: `Total Return ÷ Net Contributions`. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
 _Avoid_: real P&L (informal; pending UI-label decision), total gain, profit
 
 **Net Contributions** (a.k.a. **Aportado**):
-What the user has actually put in: `total deposits − total withdrawals`, using the **gross** amounts — **Fees are excluded** (they erode **Total Return**, not what was contributed). It is the base the **Total Return** percentage is taken over, and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge.
+What the user has actually put in, measured at the **bank boundary** (out of pocket): a deposit contributes `amount + transferFee` (the money that left your bank to fund the account); a withdrawal removes `amount − fee` (the money that actually reached your bank). So `Aportado = Σ(deposit amount + transferFee) − Σ(withdrawal amount − fee)`. The transfer fee is therefore *part* of what you contributed — it is the friction between **Cash** and Aportado, which is exactly what makes a fee erode **Total Return**. It is the base the **Total Return** percentage is taken over, and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge.
 _Avoid_: principal, capital invested, net deposited
 
 **Net Dividends**:
@@ -48,10 +48,10 @@ Dividend income actually received, after withholding tax: `gross amount − tax`
 _Avoid_: dividends (unqualified — always specify gross or net)
 
 **Fee**:
-Any cost charged on a movement — transfer fee on deposits, commission on buys/withdrawals, commission plus regulatory fees on sells. Every fee reduces **Cash**.
+Any cost charged on a movement — transfer fee on deposits/withdrawals, commission on buys, commission plus regulatory fees on sells. **Trading fees** (buy/sell) reduce **Cash** directly. **Transfer fees** (deposit/withdrawal) do not touch Cash; they sit in the gap between **Cash** and **Net Contributions**. Either way, every fee erodes **Total Return** by its full amount.
 _Avoid_: commission (unqualified), charge
 
 ## Flagged ambiguities
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
-- **A deposit's net (`amount − transferFee`) is Cash/Efectivo, not Aportado.** **Net Contributions** uses the gross `amount`; the transfer fee reduces **Cash** and **Total Return**, never what was contributed.
+- **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − fee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.

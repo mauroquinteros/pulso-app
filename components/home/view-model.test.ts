@@ -36,30 +36,30 @@ describe("buildHomeView", () => {
     const view = buildHomeView(MOCK_PORTFOLIO_SUMMARY);
 
     // Worth — Total Portfolio Value headline + composition.
-    expect(view.worth.total).toBe("$4,854.40");
+    expect(view.worth.total).toBe("$4,863.38");
     expect(view.worth.invested).toEqual({
       label: "En activos",
-      pct: "94.7%",
+      pct: "94.5%",
       amount: "$4,596.31",
       flex: 4596.31,
     });
     expect(view.worth.cash).toEqual({
       label: "Efectivo",
-      pct: "5.3%",
-      amount: "$258.09",
-      flex: 258.09,
+      pct: "5.5%",
+      amount: "$267.07",
+      flex: 267.07,
     });
     // Composition shares sum to ~100% of Total Portfolio Value.
-    const mvPct = (4596.31 / 4854.4) * 100;
-    const cashPct = (258.09 / 4854.4) * 100;
+    const mvPct = (4596.31 / 4863.38) * 100;
+    const cashPct = (267.07 / 4863.38) * 100;
     expect(mvPct + cashPct).toBeCloseTo(100, 8);
 
     // Return — Total Return + the four components.
     expect(view.return.total).toBe("+$354.40");
     expect(view.return.tone).toBe("positive");
-    expect(view.return.percent).toBe("+7.88%"); // 354.40 / 4500 net contributed
-    expect(view.return.aportado).toBe("$4,500.00");
-    expect(view.return.valeHoy).toBe("$4,854.40");
+    expect(view.return.percent).toBe("+7.86%"); // 354.40 / 4508.98 net contributed
+    expect(view.return.aportado).toBe("$4,508.98");
+    expect(view.return.valeHoy).toBe("$4,863.38");
 
     expect(view.return.components).toHaveLength(4);
     const [unrealized, realized, dividends, fees] = view.return.components;

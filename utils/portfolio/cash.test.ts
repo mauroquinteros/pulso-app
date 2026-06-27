@@ -64,12 +64,12 @@ const dividend = (grossAmount: number, tax: number): DividendMovement => ({
 });
 
 describe("computeCash", () => {
-  it("adds a deposit net of its transfer fee", () => {
-    expect(computeCash([deposit(3000, 3.99)])).toBe(2996.01);
+  it("adds a deposit's amount (transfer fee lives in contributions, not cash)", () => {
+    expect(computeCash([deposit(3000, 3.99)])).toBe(3000);
   });
 
-  it("subtracts a withdrawal plus its fee", () => {
-    expect(computeCash([withdrawal(200, 1)])).toBe(-201);
+  it("subtracts a withdrawal's amount (fee lives in contributions, not cash)", () => {
+    expect(computeCash([withdrawal(200, 1)])).toBe(-200);
   });
 
   it("subtracts buy cost plus the buy fee", () => {
@@ -84,7 +84,7 @@ describe("computeCash", () => {
     expect(computeCash([dividend(20, 6)])).toBe(14);
   });
 
-  it("computes a full mixed history with every fee subtracted", () => {
+  it("computes a full mixed history (cash-side deposit/withdrawal amounts, trading fees subtracted)", () => {
     const movements: Movement[] = [
       deposit(5000, 3.99),
       buy(180, 10, 0.15),
@@ -93,6 +93,6 @@ describe("computeCash", () => {
       dividend(20, 6),
       withdrawal(200, 1),
     ];
-    expect(computeCash(movements)).toBe(1768.58);
+    expect(computeCash(movements)).toBe(1773.57);
   });
 });
