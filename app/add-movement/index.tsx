@@ -24,7 +24,8 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#9DB8FF",
     title: "Compra",
     subtitle: "Adquirir acciones o ETF",
-    disabled: true,
+    disabled: false,
+    onPress: () => router.push("/add-movement/buy"),
   },
   {
     icon: "arrow-up",
