@@ -33,7 +33,8 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#FF9D9D",
     title: "Venta",
     subtitle: "Vender una posición",
-    disabled: true,
+    disabled: false,
+    onPress: () => router.push("/add-movement/sell"),
   },
   {
     icon: "cash-outline",
