@@ -27,14 +27,7 @@ import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
 import { formatUSD } from "@/utils/format";
-
-/** Keep only digits and a single decimal point (UI-level input cleaning). */
-function sanitizeDecimal(value: string): string {
-  const cleaned = value.replace(/[^0-9.]/g, "");
-  const dot = cleaned.indexOf(".");
-  if (dot < 0) return cleaned;
-  return cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
-}
+import { sanitizeDecimal } from "@/utils/input";
 
 /** Display the derived shares with up to 6 decimals, trailing zeros trimmed. */
 function formatShares(n: number): string {

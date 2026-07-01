@@ -1,4 +1,5 @@
 import type { DividendMovement } from "@/types/models";
+import { normalizeTicker, parseAmount } from "@/utils/input";
 
 export interface DividendInput {
   ticker: string;
@@ -26,17 +27,6 @@ export interface DividendDeps {
   id: () => string;
   userId: () => string;
   now: () => string; // ISO timestamp for createdAt
-}
-
-/** Parse a decimal string; blank/garbage → 0. */
-function parseAmount(value: string): number {
-  const n = parseFloat(value.replace(/,/g, ""));
-  return Number.isNaN(n) ? 0 : n;
-}
-
-/** Normalize a free-text ticker to its canonical form (uppercase, trimmed). */
-function normalizeTicker(value: string): string {
-  return value.trim().toUpperCase();
 }
 
 /**

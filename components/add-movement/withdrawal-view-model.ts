@@ -1,4 +1,5 @@
 import type { WithdrawalMovement } from "@/types/models";
+import { parseAmount } from "@/utils/input";
 
 export interface WithdrawalInput {
   amount: string;
@@ -25,12 +26,6 @@ export interface WithdrawalDeps {
   id: () => string;
   userId: () => string;
   now: () => string; // ISO timestamp for createdAt
-}
-
-/** Parse a decimal string; blank/garbage → 0. */
-function parseAmount(value: string): number {
-  const n = parseFloat(value.replace(/,/g, ""));
-  return Number.isNaN(n) ? 0 : n;
 }
 
 /**
