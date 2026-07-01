@@ -42,7 +42,8 @@ const OPERACIONES: RowSpec[] = [
     iconColor: "#4FE9D6",
     title: "Dividendo",
     subtitle: "Ingreso por dividendos",
-    disabled: true,
+    disabled: false,
+    onPress: () => router.push("/add-movement/dividend"),
   },
 ];
 
