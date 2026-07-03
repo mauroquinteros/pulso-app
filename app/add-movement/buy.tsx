@@ -26,14 +26,8 @@ import {
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
-import { formatUSD } from "@/utils/format";
+import { formatShares, formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
-
-/** Display the derived shares with up to 6 decimals, trailing zeros trimmed. */
-function formatShares(n: number): string {
-  if (n <= 0) return "";
-  return parseFloat(n.toFixed(6)).toString();
-}
 
 export default function BuyFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
@@ -58,7 +52,7 @@ export default function BuyFormScreen() {
   const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
 
   const amountActive = parseFloat(amount) > 0;
-  const sharesDisplay = formatShares(summary.shares);
+  const sharesDisplay = summary.shares > 0 ? formatShares(summary.shares) : "";
   const feeValue = fee === "" ? 0 : parseFloat(fee) || 0;
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).

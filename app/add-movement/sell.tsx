@@ -26,14 +26,8 @@ import {
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
-import { formatUSD } from "@/utils/format";
+import { formatShares, formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
-
-/** Display shares with up to 6 decimals, trailing zeros trimmed. */
-function formatShares(n: number): string {
-  if (n <= 0) return "0";
-  return parseFloat(n.toFixed(6)).toString();
-}
 
 export default function SellFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
