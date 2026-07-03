@@ -14,6 +14,12 @@ export interface BuySummary {
   shares: number;
   /** Total a pagar = Monto + Comisión; what leaves Cash (0 when Monto is blank/≤0). */
   total: number;
+  /** Parsed Comisión (0 when blank) — the breakdown's "Comisión" line. */
+  fee: number;
+  /** Monto > 0 — drives the teal accent on the Monto field. */
+  amountPositive: boolean;
+  /** Precio > 0 — drives the teal accent on the Precio field. */
+  pricePositive: boolean;
   /** Save-gate: ticker≠"" and amount>0 and price>0 and fee≥0 and total ≤ available Cash. */
   saveEnabled: boolean;
   /** The ticker is empty (after trim/uppercase) — drives the error once touched. */
@@ -73,6 +79,9 @@ export function summarizeBuy(
   return {
     shares,
     total,
+    fee,
+    amountPositive: amount > 0,
+    pricePositive: price > 0,
     saveEnabled,
     tickerInvalid,
     amountInvalid,

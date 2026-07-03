@@ -55,9 +55,9 @@ export default function SellFormScreen() {
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
 
-  const sharesActive = parseFloat(shares) > 0;
-  const feeValue = fee === "" ? 0 : parseFloat(fee) || 0;
-  const regValue = regulatoryFees === "" ? 0 : parseFloat(regulatoryFees) || 0;
+  const sharesActive = summary.sharesPositive;
+  const feeValue = summary.fee;
+  const regValue = summary.regulatoryFees;
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showTickerError = touchedTicker && summary.tickerInvalid;
@@ -90,7 +90,7 @@ export default function SellFormScreen() {
 
   const priceBorderColor = showPriceError
     ? Colors.negative
-    : parseFloat(executionPrice) > 0
+    : summary.pricePositive
       ? "rgba(0,229,204,0.5)"
       : Colors.border;
 

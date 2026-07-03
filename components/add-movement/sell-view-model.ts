@@ -15,6 +15,14 @@ export interface SellSummary {
   gross: number;
   /** gross − Comisión − Impuestos; what lands in Cash (0 when gross is 0). */
   total: number;
+  /** Parsed Comisión (0 when blank) — the breakdown's "Comisión" line. */
+  fee: number;
+  /** Parsed Impuestos (0 when blank) — the breakdown's "Impuestos" line. */
+  regulatoryFees: number;
+  /** Acciones > 0 — drives the teal accent on the Acciones field. */
+  sharesPositive: boolean;
+  /** Precio > 0 — drives the teal accent on the Precio field. */
+  pricePositive: boolean;
   /** Save-gate: ticker≠"" and shares>0 and shares≤available and price>0 and fee≥0 and regFees≥0. */
   saveEnabled: boolean;
   /** The ticker is empty (after trim/uppercase) — drives the error once touched. */
@@ -71,6 +79,10 @@ export function summarizeSell(
   return {
     gross,
     total,
+    fee,
+    regulatoryFees,
+    sharesPositive: shares > 0,
+    pricePositive: price > 0,
     saveEnabled,
     tickerInvalid,
     sharesInvalid,

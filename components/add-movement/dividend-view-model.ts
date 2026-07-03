@@ -13,6 +13,8 @@ export interface DividendSummary {
   gross: number;
   /** gross − Impuestos; what lands in Cash (0 when gross is 0). */
   total: number;
+  /** Parsed Impuestos (0 when blank) — the breakdown's "Impuestos" line. */
+  tax: number;
   /** Save-gate: ticker≠"" and gross>0 and tax≥0 and tax≤gross. */
   saveEnabled: boolean;
   /** The ticker is empty (after trim/uppercase) — drives the error once touched. */
@@ -54,6 +56,7 @@ export function summarizeDividend(input: DividendInput): DividendSummary {
   return {
     gross,
     total,
+    tax,
     saveEnabled,
     tickerInvalid,
     grossInvalid,

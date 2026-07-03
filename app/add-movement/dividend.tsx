@@ -44,8 +44,8 @@ export default function DividendFormScreen() {
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
 
-  const grossActive = parseFloat(grossAmount) > 0;
-  const taxValue = tax === "" ? 0 : parseFloat(tax) || 0;
+  const grossActive = summary.gross > 0;
+  const taxValue = summary.tax;
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showTickerError = touchedTicker && summary.tickerInvalid;
