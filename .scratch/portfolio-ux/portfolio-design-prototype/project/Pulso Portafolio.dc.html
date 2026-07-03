@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    .donutWrap{opacity:1;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;">
+
+      <!-- SCREEN TITLE -->
+      <div style="padding:12px 20px 14px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.6px;">Portafolio</div>
+      </div>
+
+      <!-- DISTRIBUCIÓN CARD -->
+      <div style="margin:0 16px 14px;background:#111638;border:1px solid #1C224D;border-radius:20px;padding:20px 20px 18px;">
+        <div style="font-size:13px;font-weight:500;color:#8E8E93;letter-spacing:0.2px;">Distribución</div>
+
+        <div style="display:flex;justify-content:center;margin:14px 0 4px;">
+          <div class="donutWrap" style="position:relative;width:184px;height:184px;">
+            <svg width="184" height="184" viewBox="0 0 140 140" style="display:block;">
+              <sc-for list="{{ segments }}" as="seg" hint-placeholder-count="3">
+                <circle cx="70" cy="70" r="54" fill="none" stroke="{{ seg.color }}" stroke-width="{{ seg.width }}" stroke-dasharray="{{ seg.dash }}" stroke-dashoffset="{{ seg.offset }}" opacity="{{ seg.opacity }}" transform="rotate(-90 70 70)" onClick="{{ seg.onSelect }}" style="cursor:pointer;transition:opacity .18s ease,stroke-width .18s ease;"></circle>
+              </sc-for>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+              <span class="mono" style="font-size:22px;font-weight:800;letter-spacing:-0.6px;color:{{ centerTopColor }};">{{ centerTop }}</span>
+              <span style="font-size:12px;font-weight:600;color:#8E8E93;margin-top:2px;letter-spacing:0.2px;">{{ centerBottom }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;font-size:11px;color:#5A6080;min-height:14px;">{{ hint }}</div>
+
+        <!-- legend toggle -->
+        <div onClick="{{ toggleLegend }}" style="display:flex;justify-content:flex-end;align-items:center;gap:5px;cursor:pointer;user-select:none;margin-top:12px;color:#8E8E93;font-size:12px;font-weight:600;">
+          <span>{{ legendLabel }}</span>
+          <span style="font-size:11px;transform:{{ legendChevron }};transition:transform .2s;display:inline-block;">▾</span>
+        </div>
+
+        <sc-if value="{{ legendOpen }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:2px;">
+          <sc-for list="{{ legend }}" as="l" hint-placeholder-count="3">
+            <div onClick="{{ l.onSelect }}" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;background:{{ l.rowBg }};transition:background .15s;">
+              <span style="width:10px;height:10px;border-radius:3px;background:{{ l.color }};flex:none;"></span>
+              <span style="flex:1;font-size:14px;font-weight:600;color:#E8EAF2;">{{ l.label }}</span>
+              <span class="mono" style="font-size:13px;font-weight:700;color:#8E8E93;">{{ l.pct }}</span>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+
+      <!-- ACTIVOS / RENDIMIENTO CARD -->
+      <div style="margin:0 16px;background:#111638;border:1px solid #1C224D;border-radius:20px;padding:16px 18px 8px;">
+        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:2px;">Mis Assets</div>
+
+        <sc-for list="{{ holdings }}" as="h" hint-placeholder-count="2">
+          <div onClick="{{ h.open }}" style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #1C224D;cursor:pointer;">
+            <div style="width:40px;height:40px;border-radius:12px;background:{{ h.badgeBg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:{{ h.badgeColor }};flex:none;letter-spacing:-0.3px;">{{ h.ticker }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:15px;font-weight:700;color:#fff;">{{ h.ticker }}</div>
+              <div class="mono" style="font-size:12px;color:#8E8E93;margin-top:1px;">{{ h.sharesLabel }}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="mono" style="font-size:15px;font-weight:700;color:#E8EAF2;">{{ h.value }}</div>
+              <div class="mono" style="font-size:12px;font-weight:700;color:{{ h.pnlColor }};margin-top:2px;">{{ h.pnl }}  {{ h.pnlPct }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;donutThickness&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:22,&quot;min&quot;:16,&quot;max&quot;:34,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Donut&quot;},&quot;unselectedOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.28,&quot;min&quot;:0.1,&quot;max&quot;:0.6,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Donut&quot;}}">
+class Component extends DCLogic {
+  state = { selected: null, legendOpen: true };
+
+  TOTAL = 4854.40;
+
+  SEGMENTS = [
+    { key:'AAPL', label:'AAPL',     frac:0.61618, value:2991.21, color:'#4FE9D6' },
+    { key:'VOO',  label:'VOO',      frac:0.33062, value:1605.10, color:'#9DB8FF' },
+    { key:'CASH', label:'Efectivo', frac:0.05320, value:258.09,  color:'#5B63A0' },
+  ];
+
+  HOLDINGS = [
+    { ticker:'AAPL', shares:15.07666, value:2991.21, pnl:240.18, pnlPct:8.73,
+      badgeBg:'rgba(0,229,204,0.14)', badgeColor:'#4FE9D6' },
+    { ticker:'VOO', shares:3.5, value:1605.10, pnl:35.50, pnlPct:2.26,
+      badgeBg:'rgba(120,160,255,0.16)', badgeColor:'#9DB8FF' },
+  ];
+
+  usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signed(n){ return (n<-0.005?'−':'+') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  sharesLabel(n){ return n.toLocaleString('en-US',{maximumFractionDigits:5}); }
+
+  select(key){ this.setState(s => ({ selected: s.selected === key ? null : key })); }
+
+  renderVals(){
+    const thickness = this.props.donutThickness ?? 26;
+    const dim = this.props.unselectedOpacity ?? 0.28;
+    const r = 54, C = 2 * Math.PI * r, gap = 2.4;
+    const sel = this.state.selected;
+
+    let cum = 0;
+    const segments = this.SEGMENTS.map(s => {
+      const dashLen = Math.max(s.frac * C - gap, 0.5);
+      const seg = {
+        key: s.key,
+        color: s.color,
+        width: sel === s.key ? thickness + 5 : thickness,
+        dash: dashLen + ' ' + C,
+        offset: String(-cum * C),
+        opacity: sel && sel !== s.key ? dim : 1,
+        onSelect: () => this.select(s.key),
+      };
+      cum += s.frac;
+      return seg;
+    });
+
+    let centerTop, centerBottom, centerTopColor;
+    if (sel){
+      const s = this.SEGMENTS.find(x => x.key === sel);
+      centerTop = s.label;
+      centerBottom = this.usd(s.value);
+      centerTopColor = s.color;
+    } else {
+      centerTop = this.usd(this.TOTAL);
+      centerBottom = 'Total';
+      centerTopColor = '#ffffff';
+    }
+
+    const legend = this.SEGMENTS.map(s => ({
+      key: s.key,
+      color: s.color,
+      label: s.label,
+      pct: (s.frac * 100).toFixed(1) + '%',
+      rowBg: sel === s.key ? 'rgba(255,255,255,0.05)' : 'transparent',
+      onSelect: () => this.select(s.key),
+    }));
+
+    const holdings = this.HOLDINGS.map(h => ({
+      ticker: h.ticker,
+      sharesLabel: this.sharesLabel(h.shares),
+      value: this.usd(h.value),
+      pnl: this.signed(h.pnl),
+      pnlPct: (h.pnl < -0.005 ? '▼ ' : '▲ ') + Math.abs(h.pnlPct).toFixed(2) + '%',
+      pnlColor: h.pnl >= 0 ? '#00C853' : '#FF5252',
+      badgeBg: h.badgeBg,
+      badgeColor: h.badgeColor,
+      open: () => {},
+    }));
+
+    return {
+      segments,
+      centerTop, centerBottom, centerTopColor,
+      hint: sel ? 'Toca de nuevo para volver al total' : 'Toca un segmento para ver su monto',
+      legendOpen: this.state.legendOpen,
+      legendLabel: this.state.legendOpen ? 'Ocultar leyenda' : 'Ver leyenda',
+      legendChevron: this.state.legendOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      toggleLegend: () => this.setState(s => ({ legendOpen: !s.legendOpen })),
+      legend,
+      holdings,
+    };
+  }
+}
+</script>
+</body>
+</html>

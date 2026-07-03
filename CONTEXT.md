@@ -19,6 +19,10 @@ _Avoid_: balance, funds
 The current worth of a holding: `current share price × shares held`. The sum across all holdings is the holdings portion of **Total Portfolio Value**.
 _Avoid_: current invested amount, current value
 
+**Allocation** (a.k.a. **Distribución**):
+The share of **Total Portfolio Value** that a position — or **Cash** — represents: `Market Value ÷ Total Portfolio Value` (for Cash, `Cash ÷ Total Portfolio Value`). Allocations always sum to 100% because holdings missing a price are excluded from Total Portfolio Value itself (they are flagged, never estimated). The Home's cash-vs-invested split is the coarse two-segment view of the same concept.
+_Avoid_: weight, peso, composición (unqualified)
+
 **Average Cost**:
 The weighted-average price paid per share of a position currently held, used only to measure **Net P&L**. It updates on each buy, is unchanged by sells, and resets to zero when the position is fully closed. Excludes **Fees**. Mirrors how Hapi reports average cost (see `docs/adr/0001-moving-average-cost-method.md`).
 _Avoid_: cost per share, basis, break-even
