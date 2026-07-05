@@ -1,5 +1,6 @@
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
-import { StyleSheet, Text, View } from "react-native";
+import type { GestureResponderEvent } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import type { ColorIndex, DonutSegment } from "./view-model";
 
@@ -14,7 +15,12 @@ const THICKNESS = 22;
 const SELECTED_EXTRA = 5;
 const GAP = 2.4;
 const DIM_OPACITY = 0.28;
-const HIT_THICKNESS = 34; // expanded invisible hit band → ≥44pt effective target
+
+// Taps are matched by angle within this radial band (viewBox units), a ~50px
+// rendered ring — inside it selects the segment under the finger, the hole and
+// the area outside are ignored. Comfortably ≥44pt effective target.
+const INNER_HIT = RADIUS - THICKNESS / 2 - 6;
+const OUTER_HIT = RADIUS + THICKNESS / 2 + 6;
 
 const GAP_DEG = (GAP / CIRCUMFERENCE) * 360;
 const FULL = 0.9999; // a single segment filling the whole ring
@@ -79,6 +85,28 @@ export function Donut({
     };
   });
 
+  // Resolve which segment a tap hit by its angle from center — the inverse of
+  // polar(), so what you touch is what gets selected. Deterministic: no
+  // overlapping hit shapes, no z-order, no transparent-stroke quirks. Taps in
+  // the hole or outside the ring are ignored.
+  const handlePress = (event: GestureResponderEvent) => {
+    const scale = VIEWBOX / SIZE;
+    const dx = event.nativeEvent.locationX * scale - CENTER;
+    const dy = event.nativeEvent.locationY * scale - CENTER;
+    if (Math.hypot(dx, dy) < INNER_HIT || Math.hypot(dx, dy) > OUTER_HIT) return;
+    // 0° = 12 o'clock, clockwise (matches polar's angle convention).
+    const deg = (((Math.atan2(dy, dx) * 180) / Math.PI + 90) % 360 + 360) % 360;
+    let cumulative = 0;
+    for (const seg of segments) {
+      const sweep = seg.fraction * 360;
+      if (deg >= cumulative && deg < cumulative + sweep) {
+        onSelect(seg.key);
+        return;
+      }
+      cumulative += sweep;
+    }
+  };
+
   return (
     <View style={styles.wrap}>
       <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
@@ -112,37 +140,21 @@ export function Donut({
             />
           );
         })}
-        {/* Expanded invisible hit bands, on top so small arcs stay tappable. */}
-        {arcs.map((arc) =>
-          arc.full ? (
-            <Circle
-              key={`hit-${arc.key}`}
-              cx={CENTER}
-              cy={CENTER}
-              r={RADIUS}
-              fill="none"
-              stroke="transparent"
-              strokeWidth={HIT_THICKNESS}
-              onPress={() => onSelect(arc.key)}
-            />
-          ) : (
-            <Path
-              key={`hit-${arc.key}`}
-              d={arcPath(arc.startDeg, arc.startDeg + arc.sweepDeg)}
-              fill="none"
-              stroke="transparent"
-              strokeWidth={HIT_THICKNESS}
-              onPress={() => onSelect(arc.key)}
-            />
-          ),
-        )}
       </Svg>
       <View style={styles.center} pointerEvents="none">
-        <Text style={[styles.centerTop, { color: centerTopColor }]}>
-          {centerTop}
-        </Text>
-        <Text style={styles.centerBottom}>{centerBottom}</Text>
+        <View style={styles.centerInner}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={[styles.centerTop, { color: centerTopColor }]}
+          >
+            {centerTop}
+          </Text>
+          <Text style={styles.centerBottom}>{centerBottom}</Text>
+        </View>
       </View>
+      {/* One transparent overlay resolves the tapped segment by angle. */}
+      <Pressable style={StyleSheet.absoluteFill} onPress={handlePress} />
     </View>
   );
 }
@@ -158,6 +170,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
+  },
+  // Bounded to the ring's inner hole so the amount shrinks to fit instead of
+  // overrunning the arcs (adjustsFontSizeToFit needs a width to shrink toward).
+  centerInner: {
+    width: 108,
+    paddingHorizontal: 8,
+    alignItems: "center",
   },
   centerTop: {
     fontSize: 22,

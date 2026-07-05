@@ -45,12 +45,6 @@ export function DistributionCard({ distribution }: Props) {
         />
       </View>
 
-      <Text style={styles.hint}>
-        {selectedKey
-          ? "Toca de nuevo para volver al total"
-          : "Toca un segmento para ver su monto"}
-      </Text>
-
       {missingPriceCount > 0 && (
         <Text style={styles.missingNote}>
           {missingPriceCount === 1
@@ -129,12 +123,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 14,
     marginBottom: 4,
-  },
-  hint: {
-    textAlign: "center",
-    fontSize: 11,
-    color: Colors.textMuted,
-    minHeight: 14,
   },
   missingNote: {
     textAlign: "center",
