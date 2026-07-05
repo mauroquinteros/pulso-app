@@ -20,6 +20,7 @@ import {
   summarizeBuy,
 } from "@/components/add-movement/buy-view-model";
 import { FormHeader } from "@/components/add-movement/form-header";
+import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
@@ -273,23 +274,7 @@ export default function BuyFormScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  fields: {
-    paddingHorizontal: 20,
-    flexGrow: 1,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-    marginBottom: 8,
-  },
+  ...baseFormStyles,
   labelRow: {
     flexDirection: "row",
     alignItems: "baseline",
@@ -336,63 +321,9 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
     padding: 0,
   },
-  errorText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: Colors.negative,
-    marginTop: 6,
-    marginHorizontal: 2,
-  },
   firstRow: {
     flexDirection: "row",
     gap: 12,
-  },
-  pairRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 18,
-  },
-  smallBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-  },
-  smallDollar: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#5A6080",
-    fontVariant: ["tabular-nums"],
-  },
-  smallInput: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    fontVariant: ["tabular-nums"],
-    padding: 0,
-  },
-  dateBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-  },
-  dateText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.textPrimary,
-    fontVariant: ["tabular-nums"],
   },
   hint: {
     flexDirection: "row",
@@ -404,11 +335,6 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 12.5,
     color: "#A9B7D0",
-  },
-  bottom: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 20,
   },
   breakdown: {
     marginBottom: 14,
