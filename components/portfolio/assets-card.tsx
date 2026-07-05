@@ -54,7 +54,7 @@ function HoldingRowView({
           <>
             <Text style={styles.value}>{holding.value}</Text>
             <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>
-              {holding.pnl}  {holding.pnlPct}
+              {holding.pnl} · {holding.pnlPct}
             </Text>
           </>
         ) : (

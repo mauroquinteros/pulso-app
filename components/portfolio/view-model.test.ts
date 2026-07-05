@@ -85,7 +85,7 @@ describe("buildPortfolioView", () => {
         priceAvailable: true,
         value: "$2,991.21",
         pnl: "+$240.18",
-        pnlPct: "▲ 8.73%",
+        pnlPct: "+8.73%",
         pnlTone: "positive",
         badge: 0,
       },
@@ -95,7 +95,7 @@ describe("buildPortfolioView", () => {
         priceAvailable: true,
         value: "$1,605.10",
         pnl: "+$35.50",
-        pnlPct: "▲ 2.26%",
+        pnlPct: "+2.26%",
         pnlTone: "positive",
         badge: 1,
       },
@@ -230,7 +230,7 @@ describe("buildPortfolioView", () => {
     expect(cashRow.amount).not.toContain("-"); // never an ASCII hyphen-minus
   });
 
-  it("formats a loss with ▼, a unicode minus, and a negative tone", () => {
+  it("formats a loss with a signed unicode-minus percent and a negative tone", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5)];
     const view = buildPortfolioView(
       assemblePortfolio(movements, { AAPL: 60 }),
@@ -238,7 +238,8 @@ describe("buildPortfolioView", () => {
 
     const aapl = view.holdings[0];
     expect(aapl.pnlTone).toBe("negative");
-    expect(aapl.pnlPct?.startsWith("▼")).toBe(true);
+    expect(aapl.pnlPct?.startsWith("−")).toBe(true); // signed like Home, unicode minus
+    expect(aapl.pnlPct).not.toContain("-"); // never an ASCII hyphen-minus
     expect(aapl.pnl).toContain("−");
     expect(aapl.pnl).not.toContain("-");
   });

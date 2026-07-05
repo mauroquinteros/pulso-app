@@ -1,5 +1,10 @@
 import type { Portfolio, ValuedHolding } from "@/types/models";
-import { formatShares, formatSignedUSD, formatUSD } from "@/utils/format";
+import {
+  formatShares,
+  formatSignedPercent,
+  formatSignedUSD,
+  formatUSD,
+} from "@/utils/format";
 
 export type Tone = "positive" | "negative";
 
@@ -30,7 +35,7 @@ export interface HoldingRow {
   priceAvailable: boolean;
   value: string | null; // "$2,991.21"
   pnl: string | null; // "+$240.18" (− is U+2212)
-  pnlPct: string | null; // "▲ 8.73%" / "▼ 1.20%" (2 decimals)
+  pnlPct: string | null; // "+8.73%" / "−1.20%" (2 decimals, signed like Home)
   pnlTone: Tone; // threshold ±0.005
   badge: number; // palette index, same as the ticker's segment colorIndex
 }
@@ -53,10 +58,6 @@ const toneOf = (amount: number): Tone =>
 /** One-decimal share-of-total, e.g. "61.6%". */
 const allocationPct = (fraction: number): string =>
   `${(fraction * 100).toFixed(1)}%`;
-
-/** Net P&L percent with a ▲/▼ prefix; arrow follows the P&L sign. */
-const pnlPctLabel = (netPnl: number, netPnlPercent: number): string =>
-  `${toneOf(netPnl) === "negative" ? "▼" : "▲"} ${Math.abs(netPnlPercent).toFixed(2)}%`;
 
 // Beyond this many priced holdings, the tail collapses into a single "Otros"
 // segment: the top TOP_WHEN_GROUPED plus "Otros". Efectivo is never grouped.
@@ -95,7 +96,7 @@ export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
       h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
     pnlPct:
       h.priceAvailable && h.netPnl !== null
-        ? pnlPctLabel(h.netPnl, h.netPnlPercent ?? 0)
+        ? formatSignedPercent(h.netPnlPercent ?? 0)
         : null,
     pnlTone: toneOf(h.netPnl ?? 0),
     badge: i,
