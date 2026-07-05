@@ -1,4 +1,5 @@
 import { AssetsCard } from "@/components/portfolio/assets-card";
+import { DistributionCard } from "@/components/portfolio/distribution-card";
 import { EmptyState } from "@/components/portfolio/empty-state";
 import { buildPortfolioView } from "@/components/portfolio/view-model";
 import { Colors } from "@/constants/theme";
@@ -24,12 +25,15 @@ export default function HoldingsScreen() {
         {view.state === "empty" ? (
           <EmptyState onAddMovement={() => router.push("/add-movement")} />
         ) : (
-          view.holdings.length > 0 && (
-            <AssetsCard
-              holdings={view.holdings}
-              onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
-            />
-          )
+          <>
+            <DistributionCard distribution={view.distribution} />
+            {view.holdings.length > 0 && (
+              <AssetsCard
+                holdings={view.holdings}
+                onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
+              />
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
