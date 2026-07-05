@@ -28,13 +28,13 @@ export function formatPercent(value: number): string {
 
 /** Signed currency with the sign before the symbol: "+$354.40" / "−$10.13". */
 export function formatSignedUSD(amount: number): string {
-  const sign = amount < -0.005 ? "-" : "+";
+  const sign = amount < -0.005 ? "−" : "+";
   return `${sign}${usdFormatter.format(Math.abs(amount))}`;
 }
 
 /** Signed percentage: "+7.88%" / "−4.10%". */
 export function formatSignedPercent(value: number): string {
-  const sign = value < -0.005 ? "-" : "+";
+  const sign = value < -0.005 ? "−" : "+";
   return `${sign}${Math.abs(value).toFixed(2)}%`;
 }
 
