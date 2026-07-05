@@ -1,6 +1,6 @@
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import { StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import type { ColorIndex, DonutSegment } from "./view-model";
 
 // Geometry (matches the prototype): 184px rendered over a 140 viewBox, r=54,
@@ -14,7 +14,10 @@ const THICKNESS = 22;
 const SELECTED_EXTRA = 5;
 const GAP = 2.4;
 const DIM_OPACITY = 0.28;
-const HIT_THICKNESS = 34; // expanded invisible hit area → ≥44pt effective target
+const HIT_THICKNESS = 34; // expanded invisible hit band → ≥44pt effective target
+
+const GAP_DEG = (GAP / CIRCUMFERENCE) * 360;
+const FULL = 0.9999; // a single segment filling the whole ring
 
 /** Maps a segment's colorIndex to its stroke color: a badge palette entry, or
  * the two reserved colors (Efectivo, Otros). */
@@ -22,6 +25,20 @@ export function segmentColor(colorIndex: ColorIndex): string {
   if (colorIndex === "cash") return Colors.investedBar;
   if (colorIndex === "others") return Colors.textMuted;
   return HoldingBadgePalette[colorIndex % HoldingBadgePalette.length].color;
+}
+
+/** Point on the ring at `angleDeg` (0° = 12 o'clock, clockwise). */
+function polar(angleDeg: number): { x: number; y: number } {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: CENTER + RADIUS * Math.cos(rad), y: CENTER + RADIUS * Math.sin(rad) };
+}
+
+/** SVG arc path from `startDeg` to `endDeg`, clockwise. */
+function arcPath(startDeg: number, endDeg: number): string {
+  const start = polar(startDeg);
+  const end = polar(endDeg);
+  const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+  return `M ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${end.x} ${end.y}`;
 }
 
 type Props = {
@@ -33,9 +50,10 @@ type Props = {
   centerBottom: string;
 };
 
-/** Presentational Allocation donut: renders arcs from view-model fractions
- * (no allocation math here) with a center readout. Largest segment starts at
- * 12 o'clock, clockwise. */
+/** Presentational Allocation donut: renders one arc per view-model fraction
+ * (no allocation math here) with a center readout. Each arc is its own path,
+ * so a tap selects the segment under the finger. Largest starts at 12
+ * o'clock, clockwise. */
 export function Donut({
   segments,
   selectedKey,
@@ -44,42 +62,59 @@ export function Donut({
   centerTopColor,
   centerBottom,
 }: Props) {
-  // Accumulate offsets so each arc begins where the previous ended.
-  let cumulative = 0;
+  // Accumulate the angular start of each segment so arcs sit end-to-end.
+  let cumulativeDeg = 0;
   const arcs = segments.map((seg) => {
-    const dashLength = Math.max(seg.fraction * CIRCUMFERENCE - GAP, 0.5);
-    const arc = {
+    const startDeg = cumulativeDeg;
+    const sweepDeg = seg.fraction * 360;
+    cumulativeDeg += sweepDeg;
+    return {
       key: seg.key,
       color: segmentColor(seg.colorIndex),
-      dash: `${dashLength} ${CIRCUMFERENCE}`,
-      offset: -cumulative * CIRCUMFERENCE,
+      startDeg,
+      sweepDeg,
+      full: seg.fraction >= FULL,
       selected: selectedKey === seg.key,
       dimmed: selectedKey !== null && selectedKey !== seg.key,
     };
-    cumulative += seg.fraction;
-    return arc;
   });
 
   return (
     <View style={styles.wrap}>
       <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
-        <G rotation={-90} originX={CENTER} originY={CENTER}>
-          {arcs.map((arc) => (
-            <Circle
+        {/* Visible arcs, inset by half the gap on each side. */}
+        {arcs.map((arc) => {
+          const width = arc.selected ? THICKNESS + SELECTED_EXTRA : THICKNESS;
+          const opacity = arc.dimmed ? DIM_OPACITY : 1;
+          if (arc.full) {
+            return (
+              <Circle
+                key={arc.key}
+                cx={CENTER}
+                cy={CENTER}
+                r={RADIUS}
+                fill="none"
+                stroke={arc.color}
+                strokeWidth={width}
+                opacity={opacity}
+              />
+            );
+          }
+          const inset = Math.min(GAP_DEG / 2, arc.sweepDeg / 2 - 0.01);
+          return (
+            <Path
               key={arc.key}
-              cx={CENTER}
-              cy={CENTER}
-              r={RADIUS}
+              d={arcPath(arc.startDeg + inset, arc.startDeg + arc.sweepDeg - inset)}
               fill="none"
               stroke={arc.color}
-              strokeWidth={arc.selected ? THICKNESS + SELECTED_EXTRA : THICKNESS}
-              strokeDasharray={arc.dash}
-              strokeDashoffset={arc.offset}
-              opacity={arc.dimmed ? DIM_OPACITY : 1}
+              strokeWidth={width}
+              opacity={opacity}
             />
-          ))}
-          {/* Expanded invisible hit areas, on top so small arcs stay tappable. */}
-          {arcs.map((arc) => (
+          );
+        })}
+        {/* Expanded invisible hit bands, on top so small arcs stay tappable. */}
+        {arcs.map((arc) =>
+          arc.full ? (
             <Circle
               key={`hit-${arc.key}`}
               cx={CENTER}
@@ -88,12 +123,19 @@ export function Donut({
               fill="none"
               stroke="transparent"
               strokeWidth={HIT_THICKNESS}
-              strokeDasharray={arc.dash}
-              strokeDashoffset={arc.offset}
               onPress={() => onSelect(arc.key)}
             />
-          ))}
-        </G>
+          ) : (
+            <Path
+              key={`hit-${arc.key}`}
+              d={arcPath(arc.startDeg, arc.startDeg + arc.sweepDeg)}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={HIT_THICKNESS}
+              onPress={() => onSelect(arc.key)}
+            />
+          ),
+        )}
       </Svg>
       <View style={styles.center} pointerEvents="none">
         <Text style={[styles.centerTop, { color: centerTopColor }]}>
