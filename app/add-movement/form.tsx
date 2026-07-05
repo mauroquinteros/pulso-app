@@ -1,14 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -23,6 +19,10 @@ import {
   buildDepositMovement,
   summarizeDeposit,
 } from "@/components/add-movement/deposit-view-model";
+import { FormHeader } from "@/components/add-movement/form-header";
+import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
+import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
+import { SaveButton } from "@/components/add-movement/save-button";
 import { Colors } from "@/constants/theme";
 import { useMovementsStore } from "@/stores/movements";
 import { formatUSD } from "@/utils/format";
@@ -53,23 +53,11 @@ export default function DepositFormScreen() {
 
   const summaryColor = summary.amountPositive ? Colors.accent : "#3E4470";
 
-  const onChangeDate = (event: DateTimePickerEvent, selected?: Date) => {
-    // Android dialog closes itself on any action; commit only on "set".
-    if (Platform.OS === "android") setShowPicker(false);
-    if (event.type === "set" && selected) {
-      setExecutedAt(format(selected, "yyyy-MM-dd"));
-    }
-  };
-
   const onSave = () => {
     if (!canSave) return;
     const movement = buildDepositMovement(
       { amount, transferFee: fee, executedAt },
-      {
-        id: () => `local-${Date.now()}`,
-        userId: () => "mock-user-001",
-        now: () => new Date().toISOString(),
-      },
+      defaultMovementDeps(),
     );
     addMovement(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -82,16 +70,7 @@ export default function DepositFormScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.header}>
-          <Pressable
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={22} color={Colors.accent} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Depósito</Text>
-        </View>
+        <FormHeader title="Depósito" />
 
         <ScrollView
           style={styles.flex}
@@ -160,42 +139,12 @@ export default function DepositFormScreen() {
             </View>
           </View>
 
-          {showPicker &&
-            (Platform.OS === "ios" ? (
-              <Modal transparent animationType="fade" visible>
-                <Pressable
-                  style={styles.modalBackdrop}
-                  onPress={() => setShowPicker(false)}
-                >
-                  <Pressable style={styles.modalSheet}>
-                    <DateTimePicker
-                      value={parseISO(executedAt)}
-                      mode="date"
-                      display="inline"
-                      maximumDate={new Date()}
-                      themeVariant="dark"
-                      accentColor={Colors.accent}
-                      onChange={(_, d) =>
-                        d && setExecutedAt(format(d, "yyyy-MM-dd"))
-                      }
-                    />
-                    <Pressable
-                      style={styles.modalDone}
-                      onPress={() => setShowPicker(false)}
-                    >
-                      <Text style={styles.modalDoneText}>Listo</Text>
-                    </Pressable>
-                  </Pressable>
-                </Pressable>
-              </Modal>
-            ) : (
-              <DateTimePicker
-                value={parseISO(executedAt)}
-                mode="date"
-                maximumDate={new Date()}
-                onChange={onChangeDate}
-              />
-            ))}
+          <MovementDatePicker
+            value={executedAt}
+            visible={showPicker}
+            onChange={setExecutedAt}
+            onClose={() => setShowPicker(false)}
+          />
 
           {/* INFO HINT */}
           <View style={styles.hint}>
@@ -219,24 +168,7 @@ export default function DepositFormScreen() {
               {formatUSD(summary.aportado)}
             </Text>
           </View>
-          <Pressable
-            style={[
-              styles.button,
-              { backgroundColor: canSave ? Colors.accent : "#161B3D" },
-              canSave && styles.buttonActive,
-            ]}
-            onPress={onSave}
-            disabled={!canSave}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                { color: canSave ? "#04211E" : "#4A5070" },
-              ]}
-            >
-              Guardar movimiento
-            </Text>
-          </Pressable>
+          <SaveButton canSave={canSave} onPress={onSave} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -250,30 +182,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 20,
-  },
-  backBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 9999,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 21,
-    fontWeight: "800",
-    color: Colors.textPrimary,
-    letterSpacing: -0.3,
   },
   fields: {
     paddingHorizontal: 20,
@@ -402,47 +310,5 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginTop: 3,
     fontVariant: ["tabular-nums"],
-  },
-  button: {
-    paddingVertical: 16,
-    borderRadius: 15,
-    alignItems: "center",
-  },
-  buttonActive: {
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    elevation: 6,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(7,10,28,0.7)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  modalSheet: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 12,
-  },
-  modalDone: {
-    alignSelf: "center",
-    marginTop: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 28,
-    borderRadius: 12,
-    backgroundColor: Colors.accent,
-  },
-  modalDoneText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#04211E",
   },
 });
