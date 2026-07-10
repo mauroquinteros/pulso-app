@@ -12,7 +12,7 @@ const deps: DividendDeps = {
   now: () => "2025-06-25T12:00:00Z",
 };
 
-const base = { ticker: "AAPL", executedAt: "2025-06-25" };
+const base = { ticker: "AAPL", executionDate: "2025-06-25" };
 
 describe("summarizeDividend", () => {
   it("gross is the Monto bruto", () => {
@@ -127,7 +127,7 @@ describe("buildDividendMovement", () => {
         ticker: "AAPL",
         grossAmount: "130.00",
         tax: "5.50",
-        executedAt: "2023-10-24",
+        executionDate: "2023-10-24",
       },
       deps,
     );
@@ -138,7 +138,7 @@ describe("buildDividendMovement", () => {
       ticker: "AAPL",
       grossAmount: 130,
       tax: 5.5,
-      executedAt: "2023-10-24",
+      executionDate: "2023-10-24",
       createdAt: "2025-06-25T12:00:00Z",
     });
   });

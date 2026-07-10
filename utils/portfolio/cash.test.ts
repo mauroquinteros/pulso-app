@@ -10,11 +10,11 @@ import type {
 import { computeCash } from "./cash";
 
 let seq = 0;
-const base = (executedAt: string) => ({
+const base = (executionDate: string) => ({
   id: `m${seq++}`,
   userId: "u",
-  executedAt,
-  createdAt: `${executedAt}T00:00:00Z`,
+  executionDate,
+  createdAt: `${executionDate}T00:00:00Z`,
 });
 const deposit = (amount: number, transferFee: number): DepositMovement => ({
   ...base("2025-01-01"),

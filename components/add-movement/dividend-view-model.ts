@@ -5,7 +5,7 @@ export interface DividendInput {
   ticker: string;
   grossAmount: string;
   tax: string;
-  executedAt: string; // YYYY-MM-DD
+  executionDate: string; // YYYY-MM-DD
 }
 
 export interface DividendSummary {
@@ -81,7 +81,7 @@ export function buildDividendMovement(
     ticker: normalizeTicker(input.ticker),
     grossAmount: parseAmount(input.grossAmount),
     tax: input.tax === "" ? 0 : parseAmount(input.tax),
-    executedAt: input.executedAt,
+    executionDate: input.executionDate,
     createdAt: deps.now(),
   };
 }

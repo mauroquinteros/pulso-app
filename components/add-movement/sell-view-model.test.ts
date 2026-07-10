@@ -12,7 +12,7 @@ const deps: SellDeps = {
   now: () => "2025-06-25T12:00:00Z",
 };
 
-const base = { ticker: "GOOG", executedAt: "2025-06-25" };
+const base = { ticker: "GOOG", executionDate: "2025-06-25" };
 
 describe("summarizeSell", () => {
   it("gross is Acciones × Precio", () => {
@@ -297,7 +297,7 @@ describe("buildSellMovement", () => {
         executionPrice: "349.60",
         fee: "0.10",
         regulatoryFees: "0.02",
-        executedAt: "2023-10-24",
+        executionDate: "2023-10-24",
       },
       deps,
     );
@@ -310,7 +310,7 @@ describe("buildSellMovement", () => {
       executionPrice: 349.6,
       fee: 0.1,
       regulatoryFees: 0.02,
-      executedAt: "2023-10-24",
+      executionDate: "2023-10-24",
       createdAt: "2025-06-25T12:00:00Z",
     });
   });

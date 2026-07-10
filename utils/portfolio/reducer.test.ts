@@ -10,7 +10,7 @@ let seq = 0;
 const buy = (
   executionPrice: number,
   shares: number,
-  executedAt: string,
+  executionDate: string,
   fee = 0,
 ): BuyMovement => ({
   id: `b${seq++}`,
@@ -20,13 +20,13 @@ const buy = (
   executionPrice,
   shares,
   fee,
-  executedAt,
-  createdAt: `${executedAt}T00:00:00Z`,
+  executionDate,
+  createdAt: `${executionDate}T00:00:00Z`,
 });
 const sell = (
   executionPrice: number,
   shares: number,
-  executedAt: string,
+  executionDate: string,
   fee = 0,
   regulatoryFees = 0,
 ): SellMovement => ({
@@ -38,13 +38,13 @@ const sell = (
   shares,
   fee,
   regulatoryFees,
-  executedAt,
-  createdAt: `${executedAt}T00:00:00Z`,
+  executionDate,
+  createdAt: `${executionDate}T00:00:00Z`,
 });
 const dividend = (
   grossAmount: number,
   tax: number,
-  executedAt: string,
+  executionDate: string,
 ): DividendMovement => ({
   id: `d${seq++}`,
   userId: "u",
@@ -52,8 +52,8 @@ const dividend = (
   ticker: "AAPL",
   grossAmount,
   tax,
-  executedAt,
-  createdAt: `${executedAt}T00:00:00Z`,
+  executionDate,
+  createdAt: `${executionDate}T00:00:00Z`,
 });
 
 describe("deriveHoldingFacts", () => {

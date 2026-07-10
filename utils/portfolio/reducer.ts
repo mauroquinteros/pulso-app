@@ -32,7 +32,7 @@ const round8 = (n: number) => Math.round(n * 1e8) / 1e8;
  *
  * Assumes every movement belongs to the same ticker (buy/sell/dividend); any
  * other movement type is ignored. Input order does not matter — movements are
- * processed chronologically (executedAt, then createdAt).
+ * processed chronologically (executionDate, then createdAt).
  */
 export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
   const ordered = [...movements].sort(compareChronological);
@@ -75,8 +75,8 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
 }
 
 function compareChronological(a: Movement, b: Movement): number {
-  if (a.executedAt !== b.executedAt) {
-    return a.executedAt < b.executedAt ? -1 : 1;
+  if (a.executionDate !== b.executionDate) {
+    return a.executionDate < b.executionDate ? -1 : 1;
   }
   if (a.createdAt === b.createdAt) return 0;
   return a.createdAt < b.createdAt ? -1 : 1;

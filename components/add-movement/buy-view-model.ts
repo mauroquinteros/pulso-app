@@ -6,7 +6,7 @@ export interface BuyInput {
   amount: string; // "Monto comprado" — principal invested (cash that buys shares)
   executionPrice: string;
   fee: string;
-  executedAt: string; // YYYY-MM-DD
+  executionDate: string; // YYYY-MM-DD
 }
 
 export interface BuySummary {
@@ -109,7 +109,7 @@ export function buildBuyMovement(input: BuyInput, deps: BuyDeps): BuyMovement {
     executionPrice: price,
     shares: deriveShares(amount, price),
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
-    executedAt: input.executedAt,
+    executionDate: input.executionDate,
     createdAt: deps.now(),
   };
 }

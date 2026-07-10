@@ -33,15 +33,15 @@ export default function DepositFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
-  const [executedAt, setExecutedAt] = useState(() =>
+  const [executionDate, setExecutionDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd"),
   );
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const summary = summarizeDeposit({ amount, transferFee: fee, executedAt });
+  const summary = summarizeDeposit({ amount, transferFee: fee, executionDate });
   const canSave = summary.saveEnabled;
-  const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
+  const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showAmountError = touchedAmount && summary.amountInvalid;
@@ -57,7 +57,7 @@ export default function DepositFormScreen() {
   const onSave = () => {
     if (!canSave) return;
     const movement = buildDepositMovement(
-      { amount, transferFee: fee, executedAt },
+      { amount, transferFee: fee, executionDate },
       defaultMovementDeps(),
     );
     addMovement(movement);
@@ -141,9 +141,9 @@ export default function DepositFormScreen() {
           </View>
 
           <MovementDatePicker
-            value={executedAt}
+            value={executionDate}
             visible={showPicker}
-            onChange={setExecutedAt}
+            onChange={setExecutionDate}
             onClose={() => setShowPicker(false)}
           />
 

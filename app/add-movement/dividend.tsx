@@ -34,16 +34,16 @@ export default function DividendFormScreen() {
   const [ticker, setTicker] = useState("");
   const [grossAmount, setGrossAmount] = useState("");
   const [tax, setTax] = useState("");
-  const [executedAt, setExecutedAt] = useState(() =>
+  const [executionDate, setExecutionDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd"),
   );
   const [touchedTicker, setTouchedTicker] = useState(false);
   const [touchedGross, setTouchedGross] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const summary = summarizeDividend({ ticker, grossAmount, tax, executedAt });
+  const summary = summarizeDividend({ ticker, grossAmount, tax, executionDate });
   const canSave = summary.saveEnabled;
-  const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
+  const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
   const grossActive = summary.gross > 0;
   const taxValue = summary.tax;
@@ -79,7 +79,7 @@ export default function DividendFormScreen() {
   const onSave = () => {
     if (!canSave) return;
     const movement = buildDividendMovement(
-      { ticker, grossAmount, tax, executedAt },
+      { ticker, grossAmount, tax, executionDate },
       defaultMovementDeps(),
     );
     addMovement(movement);
@@ -185,9 +185,9 @@ export default function DividendFormScreen() {
           )}
 
           <MovementDatePicker
-            value={executedAt}
+            value={executionDate}
             visible={showPicker}
-            onChange={setExecutedAt}
+            onChange={setExecutionDate}
             onClose={() => setShowPicker(false)}
           />
         </ScrollView>

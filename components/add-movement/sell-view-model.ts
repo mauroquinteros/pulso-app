@@ -7,7 +7,7 @@ export interface SellInput {
   executionPrice: string;
   fee: string;
   regulatoryFees: string;
-  executedAt: string; // YYYY-MM-DD
+  executionDate: string; // YYYY-MM-DD
 }
 
 export interface SellSummary {
@@ -111,7 +111,7 @@ export function buildSellMovement(
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
     regulatoryFees:
       input.regulatoryFees === "" ? 0 : parseAmount(input.regulatoryFees),
-    executedAt: input.executedAt,
+    executionDate: input.executionDate,
     createdAt: deps.now(),
   };
 }

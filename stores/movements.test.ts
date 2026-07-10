@@ -10,7 +10,7 @@ const sampleDeposit: DepositMovement = {
   type: "deposit",
   amount: 1250,
   transferFee: 5,
-  executedAt: "2025-06-25",
+  executionDate: "2025-06-25",
   createdAt: "2025-06-25T00:00:00Z",
 };
 

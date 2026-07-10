@@ -11,7 +11,7 @@ const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   type: "deposit",
   amount,
   transferFee,
-  executedAt: "2025-01-01",
+  executionDate: "2025-01-01",
   createdAt: "2025-01-01T00:00:00Z",
 });
 const buy = (
@@ -27,7 +27,7 @@ const buy = (
   executionPrice,
   shares,
   fee,
-  executedAt: "2025-02-01",
+  executionDate: "2025-02-01",
   createdAt: "2025-02-01T00:00:00Z",
 });
 

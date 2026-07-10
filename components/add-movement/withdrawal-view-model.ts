@@ -4,7 +4,7 @@ import { parseAmount } from "@/utils/input";
 export interface WithdrawalInput {
   amount: string;
   fee: string;
-  executedAt: string; // YYYY-MM-DD
+  executionDate: string; // YYYY-MM-DD
 }
 
 export interface WithdrawalSummary {
@@ -77,7 +77,7 @@ export function buildWithdrawalMovement(
     type: "withdrawal",
     amount: parseAmount(input.amount),
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
-    executedAt: input.executedAt,
+    executionDate: input.executionDate,
     createdAt: deps.now(),
   };
 }

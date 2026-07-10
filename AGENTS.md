@@ -69,7 +69,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ### Naming
 
-Use **camelCase** for all identifiers in application code — variables, functions, parameters, and object/domain fields (e.g. `Movement` fields are `executionPrice`, `executedAt`, `grossAmount`, not snake_case). **snake_case is reserved for the database layer only**: Supabase/Postgres column names stay snake_case and are translated to camelCase domain objects at the data-access boundary (`mapRowToMovement`). Never let snake_case leak into domain types, the engine, components, or tests. Exception: framework-defined identifiers (e.g. Expo Router's `unstable_settings`).
+Use **camelCase** for all identifiers in application code — variables, functions, parameters, and object/domain fields (e.g. `Movement` fields are `executionPrice`, `executionDate`, `grossAmount`, not snake_case). **snake_case is reserved for the database layer only**: Supabase/Postgres column names stay snake_case and are translated to camelCase domain objects at the data-access boundary (`mapRowToMovement`). Never let snake_case leak into domain types, the engine, components, or tests. Exception: framework-defined identifiers (e.g. Expo Router's `unstable_settings`).
 
 ## Agent skills
 

@@ -9,7 +9,7 @@ export interface BaseMovement {
   id: string;
   userId: string;
   type: MovementType;
-  executedAt: string;
+  executionDate: string;
   createdAt: string;
 }
 
@@ -58,7 +58,7 @@ export type Movement =
 
 // TODO: When Supabase integration is added, a mapRowToMovement(row: SupabaseRow): Movement
 // mapper function will be needed to (a) translate snake_case DB columns
-// (execution_price, executed_at, …) into these camelCase domain fields — snake_case
+// (execution_price, execution_date, …) into these camelCase domain fields — snake_case
 // must not leak past this boundary — and (b) coerce DB NULLs to 0 for non-nullable
 // fields (e.g. regulatoryFees, transferFee), mapping the flat row to the correct subtype.
 export const isBuyMovement = (m: Movement): m is BuyMovement =>

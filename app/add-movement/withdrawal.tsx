@@ -35,7 +35,7 @@ export default function WithdrawalFormScreen() {
   const availableCash = usePortfolio().cash;
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
-  const [executedAt, setExecutedAt] = useState(() =>
+  const [executionDate, setExecutionDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd"),
   );
   const [touchedAmount, setTouchedAmount] = useState(false);
@@ -43,11 +43,11 @@ export default function WithdrawalFormScreen() {
   const [showPicker, setShowPicker] = useState(false);
 
   const summary = summarizeWithdrawal(
-    { amount, fee, executedAt },
+    { amount, fee, executionDate },
     availableCash,
   );
   const canSave = summary.saveEnabled;
-  const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
+  const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showAmountError =
@@ -74,7 +74,7 @@ export default function WithdrawalFormScreen() {
   const onSave = () => {
     if (!canSave) return;
     const movement = buildWithdrawalMovement(
-      { amount, fee, executedAt },
+      { amount, fee, executionDate },
       defaultMovementDeps(),
     );
     addMovement(movement);
@@ -174,9 +174,9 @@ export default function WithdrawalFormScreen() {
           )}
 
           <MovementDatePicker
-            value={executedAt}
+            value={executionDate}
             visible={showPicker}
-            onChange={setExecutedAt}
+            onChange={setExecutionDate}
             onClose={() => setShowPicker(false)}
           />
 

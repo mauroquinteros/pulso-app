@@ -8,7 +8,7 @@ const deps: BuyDeps = {
   now: () => "2025-06-25T12:00:00Z",
 };
 
-const base = { ticker: "AAPL", executedAt: "2025-06-25" };
+const base = { ticker: "AAPL", executionDate: "2025-06-25" };
 
 describe("summarizeBuy", () => {
   it("derives shares as Monto / Precio", () => {
@@ -179,7 +179,7 @@ describe("buildBuyMovement", () => {
         amount: "365",
         executionPrice: "182.5",
         fee: "0.15",
-        executedAt: "2023-10-24",
+        executionDate: "2023-10-24",
       },
       deps,
     );
@@ -191,7 +191,7 @@ describe("buildBuyMovement", () => {
       executionPrice: 182.5,
       shares: 2,
       fee: 0.15,
-      executedAt: "2023-10-24",
+      executionDate: "2023-10-24",
       createdAt: "2025-06-25T12:00:00Z",
     });
   });

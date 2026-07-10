@@ -37,7 +37,7 @@ export default function BuyFormScreen() {
   const [amount, setAmount] = useState("");
   const [executionPrice, setExecutionPrice] = useState("");
   const [fee, setFee] = useState("");
-  const [executedAt, setExecutedAt] = useState(() =>
+  const [executionDate, setExecutionDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd"),
   );
   const [touchedTicker, setTouchedTicker] = useState(false);
@@ -46,11 +46,11 @@ export default function BuyFormScreen() {
   const [showPicker, setShowPicker] = useState(false);
 
   const summary = summarizeBuy(
-    { ticker, amount, executionPrice, fee, executedAt },
+    { ticker, amount, executionPrice, fee, executionDate },
     availableCash,
   );
   const canSave = summary.saveEnabled;
-  const dateDisplay = format(parseISO(executedAt), "dd/MM/yyyy");
+  const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
   const amountActive = summary.amountPositive;
   const sharesDisplay = summary.shares > 0 ? formatShares(summary.shares) : "";
@@ -93,7 +93,7 @@ export default function BuyFormScreen() {
   const onSave = () => {
     if (!canSave) return;
     const movement = buildBuyMovement(
-      { ticker, amount, executionPrice, fee, executedAt },
+      { ticker, amount, executionPrice, fee, executionDate },
       defaultMovementDeps(),
     );
     addMovement(movement);
@@ -238,9 +238,9 @@ export default function BuyFormScreen() {
           </View>
 
           <MovementDatePicker
-            value={executedAt}
+            value={executionDate}
             visible={showPicker}
-            onChange={setExecutedAt}
+            onChange={setExecutionDate}
             onClose={() => setShowPicker(false)}
           />
         </ScrollView>

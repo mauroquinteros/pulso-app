@@ -22,7 +22,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     type: "deposit",
     amount: 3000.0,
     transferFee: 3.99,
-    executedAt: "2025-01-10",
+    executionDate: "2025-01-10",
     createdAt: "2025-01-10T10:00:00Z",
   } satisfies DepositMovement,
   {
@@ -31,7 +31,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     type: "deposit",
     amount: 2000.0,
     transferFee: 3.99,
-    executedAt: "2025-03-05",
+    executionDate: "2025-03-05",
     createdAt: "2025-03-05T09:30:00Z",
   } satisfies DepositMovement,
 
@@ -44,7 +44,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 182.5,
     shares: 2.45321,
     fee: 0.15,
-    executedAt: "2025-01-15",
+    executionDate: "2025-01-15",
     createdAt: "2025-01-15T14:00:00Z",
   } satisfies BuyMovement,
   {
@@ -55,7 +55,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 178.3,
     shares: 10.5,
     fee: 0.1,
-    executedAt: "2025-03-20",
+    executionDate: "2025-03-20",
     createdAt: "2025-03-20T13:45:00Z",
   } satisfies BuyMovement,
   {
@@ -66,7 +66,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 191.0,
     shares: 5.12345,
     fee: 0.15,
-    executedAt: "2025-07-08",
+    executionDate: "2025-07-08",
     createdAt: "2025-07-08T15:10:00Z",
   } satisfies BuyMovement,
 
@@ -79,7 +79,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 445.2,
     shares: 2.0,
     fee: 0.15,
-    executedAt: "2025-02-03",
+    executionDate: "2025-02-03",
     createdAt: "2025-02-03T10:30:00Z",
   } satisfies BuyMovement,
   {
@@ -90,7 +90,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 452.8,
     shares: 1.5,
     fee: 0.1,
-    executedAt: "2025-08-14",
+    executionDate: "2025-08-14",
     createdAt: "2025-08-14T11:00:00Z",
   } satisfies BuyMovement,
 
@@ -103,7 +103,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     executionPrice: 415.6,
     shares: 3.0,
     fee: 0.15,
-    executedAt: "2025-04-10",
+    executionDate: "2025-04-10",
     createdAt: "2025-04-10T09:55:00Z",
   } satisfies BuyMovement,
 
@@ -117,7 +117,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     shares: 3.0,
     fee: 0.15,
     regulatoryFees: 0.03,
-    executedAt: "2025-09-22",
+    executionDate: "2025-09-22",
     createdAt: "2025-09-22T14:20:00Z",
   } satisfies SellMovement,
 
@@ -131,7 +131,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     shares: 3.0,
     fee: 0.15,
     regulatoryFees: 0.02,
-    executedAt: "2025-10-30",
+    executionDate: "2025-10-30",
     createdAt: "2025-10-30T15:45:00Z",
   } satisfies SellMovement,
 
@@ -143,7 +143,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     ticker: "AAPL",
     grossAmount: 18.5,
     tax: 5.55, // 30% WHT: 18.50 * 0.30
-    executedAt: "2025-11-15",
+    executionDate: "2025-11-15",
     createdAt: "2025-11-15T08:00:00Z",
   } satisfies DividendMovement,
 
@@ -155,7 +155,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     ticker: "VOO",
     grossAmount: 12.3,
     tax: 3.69, // 30% WHT: 12.30 * 0.30
-    executedAt: "2025-12-20",
+    executionDate: "2025-12-20",
     createdAt: "2025-12-20T08:00:00Z",
   } satisfies DividendMovement,
 
@@ -166,7 +166,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     type: "withdrawal",
     amount: 500.0,
     fee: 1.0,
-    executedAt: "2026-01-08",
+    executionDate: "2026-01-08",
     createdAt: "2026-01-08T16:00:00Z",
   } satisfies WithdrawalMovement,
 ];

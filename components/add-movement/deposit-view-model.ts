@@ -4,7 +4,7 @@ import { parseAmount } from "@/utils/input";
 export interface DepositInput {
   amount: string;
   transferFee: string;
-  executedAt: string; // YYYY-MM-DD
+  executionDate: string; // YYYY-MM-DD
 }
 
 export interface DepositSummary {
@@ -62,7 +62,7 @@ export function buildDepositMovement(
     type: "deposit",
     amount: parseAmount(input.amount),
     transferFee: input.transferFee === "" ? 0 : parseAmount(input.transferFee),
-    executedAt: input.executedAt,
+    executionDate: input.executionDate,
     createdAt: deps.now(),
   };
 }
