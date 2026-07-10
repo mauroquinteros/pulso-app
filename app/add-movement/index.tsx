@@ -3,44 +3,35 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
+import type { MovementType } from "@/types/models";
 
+// The icon, colors and label of each type come from MOVEMENT_TYPE_META — the
+// same source the movements list renders from. Only the picker's own copy (the
+// subtitle) and its destination live here.
 type RowSpec = {
-  icon: keyof typeof Ionicons.glyphMap;
-  iconBg: string;
-  iconColor: string;
-  title: string;
+  type: MovementType;
   subtitle: string;
   disabled: boolean;
   onPress?: () => void;
 };
 
-// The cash movements (Depósito, Retiro) are wired. The three OPERACIONES read
-// as not-yet-built ("Pronto") and get re-enabled as their forms land.
 const OPERACIONES: RowSpec[] = [
   {
-    icon: "arrow-down",
-    iconBg: "rgba(120,160,255,0.14)",
-    iconColor: "#9DB8FF",
-    title: "Compra",
+    type: "buy",
     subtitle: "Adquirir acciones o ETF",
     disabled: false,
     onPress: () => router.push("/add-movement/buy"),
   },
   {
-    icon: "arrow-up",
-    iconBg: "rgba(255,140,140,0.14)",
-    iconColor: "#FF9D9D",
-    title: "Venta",
+    type: "sell",
     subtitle: "Vender una posición",
     disabled: false,
     onPress: () => router.push("/add-movement/sell"),
   },
   {
-    icon: "cash-outline",
-    iconBg: "rgba(0,229,204,0.12)",
-    iconColor: "#4FE9D6",
-    title: "Dividendo",
+    type: "dividend",
     subtitle: "Ingreso por dividendos",
     disabled: false,
     onPress: () => router.push("/add-movement/dividend"),
@@ -49,19 +40,13 @@ const OPERACIONES: RowSpec[] = [
 
 const EFECTIVO: RowSpec[] = [
   {
-    icon: "arrow-down",
-    iconBg: "rgba(0,229,204,0.14)",
-    iconColor: "#4FE9D6",
-    title: "Depósito",
+    type: "deposit",
     subtitle: "Agregar efectivo a tu cuenta",
     disabled: false,
     onPress: () => router.push("/add-movement/form"),
   },
   {
-    icon: "arrow-up",
-    iconBg: "rgba(142,142,147,0.14)",
-    iconColor: "#B8BCCB",
-    title: "Retiro",
+    type: "withdrawal",
     subtitle: "Retirar efectivo de tu cuenta",
     disabled: false,
     onPress: () => router.push("/add-movement/withdrawal"),
@@ -69,13 +54,14 @@ const EFECTIVO: RowSpec[] = [
 ];
 
 function TypeRow({ spec }: { spec: RowSpec }) {
+  const meta = MOVEMENT_TYPE_META[spec.type];
   const inner = (
     <>
-      <View style={[styles.rowIcon, { backgroundColor: spec.iconBg }]}>
-        <Ionicons name={spec.icon} size={18} color={spec.iconColor} />
+      <View style={[styles.rowIcon, { backgroundColor: meta.bg }]}>
+        <Ionicons name={meta.icon} size={18} color={meta.color} />
       </View>
       <View style={styles.rowText}>
-        <Text style={styles.rowTitle}>{spec.title}</Text>
+        <Text style={styles.rowTitle}>{meta.label}</Text>
         <Text style={styles.rowSubtitle}>{spec.subtitle}</Text>
       </View>
       {spec.disabled ? (
@@ -120,7 +106,7 @@ export default function SelectMovementTypeScreen() {
         <Text style={styles.sectionLabel}>OPERACIONES</Text>
         <View style={styles.group}>
           {OPERACIONES.map((spec) => (
-            <TypeRow key={spec.title} spec={spec} />
+            <TypeRow key={spec.type} spec={spec} />
           ))}
         </View>
 
@@ -129,7 +115,7 @@ export default function SelectMovementTypeScreen() {
         </Text>
         <View style={styles.group}>
           {EFECTIVO.map((spec) => (
-            <TypeRow key={spec.title} spec={spec} />
+            <TypeRow key={spec.type} spec={spec} />
           ))}
         </View>
       </ScrollView>

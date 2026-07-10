@@ -13,6 +13,11 @@ export const Colors = {
   tabIconDefault: "#8E8E93",
   tabIconSelected: "#00E5CC",
 
+  /** Depósito's badge tint: `positive`'s hue (145°) lifted into the pastel
+   * register the other badges live in. Deliberately NOT `positive` itself —
+   * that token means *gain*, and a deposit is not a profit. */
+  depositGreen: "#7DE8AA",
+
   // Home redesign tokens (Pulso Home.dc.html)
   avatarText: "#04211E",
   investedBar: "#5B63A0", // "En activos" swatch + composition segment
