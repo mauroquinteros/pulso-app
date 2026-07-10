@@ -15,6 +15,10 @@ _Avoid_: balance, net worth, total amount
 Uninvested money available to trade. It is `deposit amounts − withdrawal amounts − buy cost + sell proceeds + net dividends`, where each deposit/withdrawal **amount** is the cash-side figure (what lands in or leaves Buying Power). Trading **Fees** (buy/sell commissions) are subtracted as they occur; transfer fees on deposits/withdrawals do *not* touch Cash — they live in the gap between Cash and **Net Contributions** (see `docs/adr/0003-cash-side-movement-amounts.md`). Realized gains and dividends flow into Cash and are not re-counted as profit.
 _Avoid_: balance, funds
 
+**Cash Impact**:
+The change a single **Movement** makes to **Cash**, net of trading **Fees**. By type: deposit `+amount`, withdrawal `−amount` (cash-side; transfer fees excluded), buy `−(executionPrice × shares + fee)`, sell `+(gross − fee − regulatoryFees)`, dividend `+`**Net Dividends** `(gross − tax)`. It answers "how did this movement change my Buying Power," and reconciles: the running sum of every movement's Cash Impact equals **Cash**. Its direction is fully determined by the movement's type — deposits, sells and dividends always add; buys and withdrawals always subtract.
+_Avoid_: amount (unqualified — the typed `amount` field is only the deposit/withdrawal cash-side figure), monto (unqualified), total
+
 **Market Value**:
 The current worth of a holding: `current share price × shares held`. The sum across all holdings is the holdings portion of **Total Portfolio Value**.
 _Avoid_: current invested amount, current value
@@ -59,3 +63,4 @@ _Avoid_: commission (unqualified), charge
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
 - **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − fee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.
+- **A Movement's `executionDate` is a calendar date; its `createdAt` is an instant.** `executionDate` is the day the movement happened (`YYYY-MM-DD`, no time, no timezone — never convert it); `createdAt` is the UTC instant it was recorded, shown to no one and used only as the reducer's chronological tiebreaker. Naming convention: **`-Date` = calendar date, `-At` = instant**. See `docs/adr/0004-execution-date-is-a-calendar-date.md`.

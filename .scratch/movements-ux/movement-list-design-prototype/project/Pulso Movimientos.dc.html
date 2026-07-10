@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    .chipsRow::-webkit-scrollbar{display:none;}
+    a{color:#4FE9D6;}
+    a:hover{color:#7BF0E1;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;display:flex;flex-direction:column;">
+
+      <!-- SCREEN TITLE -->
+      <div style="padding:12px 20px 14px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.6px;">Movimientos</div>
+      </div>
+
+      <!-- CHIPS ROW -->
+      <sc-if value="{{ showChips }}" hint-placeholder-val="{{ true }}">
+      <div class="chipsRow" style="display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+          <div onClick="{{ c.onClick }}" role="button" aria-label="{{ c.label }}" style="flex:none;height:36px;padding:0 16px;border-radius:9999px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;font-size:13px;font-weight:700;white-space:nowrap;background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }};transition:background .15s,color .15s,border-color .15s;">{{ c.label }}</div>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <!-- LIST AREA -->
+      <div style="flex:1;padding:0 16px;display:flex;flex-direction:column;">
+
+        <!-- REAL EMPTY -->
+        <sc-if value="{{ isRealEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 20px 60px;">
+          <svg width="112" height="112" viewBox="0 0 120 120" fill="none" style="margin-bottom:18px;">
+            <rect x="30" y="18" width="60" height="84" rx="10" stroke="#2A3163" stroke-width="2.5"></rect>
+            <path d="M42 40h36M42 54h36M42 68h24" stroke="#2A3163" stroke-width="2.5" stroke-linecap="round"></path>
+            <circle cx="90" cy="90" r="16" fill="#111638" stroke="#3B4380" stroke-width="2.5"></circle>
+            <path d="M90 83v14M83 90h14" stroke="#4FE9D6" stroke-width="2.5" stroke-linecap="round"></path>
+          </svg>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;">Todavía no hay movimientos</div>
+          <div style="font-size:13px;color:#8E8E93;line-height:1.5;max-width:240px;margin-bottom:20px;">Cuando compres, vendas o muevas efectivo, aparecerá acá.</div>
+          <div onClick="{{ goAddMovement }}" style="height:44px;padding:0 22px;border-radius:9999px;background:linear-gradient(135deg,#00E5CC,#1C9C8F);color:#04211E;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;">Agregar movimiento</div>
+        </div>
+        </sc-if>
+
+        <!-- FILTERED EMPTY -->
+        <sc-if value="{{ isFilteredEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 20px 60px;">
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;">{{ filteredEmptyMessage }}</div>
+          <div onClick="{{ clearFilter }}" style="margin-top:6px;font-size:14px;font-weight:700;color:#4FE9D6;cursor:pointer;">Quitar filtro</div>
+        </div>
+        </sc-if>
+
+        <!-- READY LIST -->
+        <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#111638;border:1px solid #1C224D;border-radius:20px;padding:4px 18px 4px;margin-bottom:16px;">
+          <sc-for list="{{ rows }}" as="m" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:{{ m.borderTop }};">
+              <div style="width:40px;height:40px;border-radius:12px;background:{{ m.badgeBg }};display:flex;align-items:center;justify-content:center;color:{{ m.badgeColor }};flex:none;">
+                <sc-if value="{{ m.isBuy }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                </sc-if>
+                <sc-if value="{{ m.isSell }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                </sc-if>
+                <sc-if value="{{ m.isDividend }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle></svg>
+                </sc-if>
+                <sc-if value="{{ m.isDeposit }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+                </sc-if>
+                <sc-if value="{{ m.isWithdrawal }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg>
+                </sc-if>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:700;color:#fff;">{{ m.title }}</div>
+                <div style="font-size:12px;color:#8E8E93;margin-top:2px;">{{ m.dateLabel }}</div>
+              </div>
+              <div class="mono" style="font-size:15px;font-weight:700;color:#E8EAF2;flex:none;">{{ m.amount }}</div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+      </div>
+
+    </div>
+  </x-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;demoState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Con movimientos&quot;,&quot;options&quot;:[&quot;Con movimientos&quot;,&quot;Sin movimientos&quot;,&quot;Filtro sin resultados&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = { selectedType: null };
+
+  MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  TYPE_META = {
+    buy:        { label:'Compra',    labelPlural:'Compras',    bg:'rgba(120,160,255,0.16)', color:'#9DB8FF' },
+    sell:       { label:'Venta',     labelPlural:'Ventas',     bg:'rgba(255,140,140,0.14)', color:'#FF9D9D' },
+    dividend:   { label:'Dividendo', labelPlural:'Dividendos', bg:'rgba(0,229,204,0.12)',   color:'#4FE9D6' },
+    deposit:    { label:'Depósito',  labelPlural:'Depósitos',  bg:'rgba(0,200,83,0.16)',    color:'#7DE8AA' },
+    withdrawal: { label:'Retiro',    labelPlural:'Retiros',    bg:'rgba(142,142,147,0.14)', color:'#B8BCCB' },
+  };
+
+  TYPE_ORDER = ['buy','sell','dividend','deposit','withdrawal'];
+
+  BASE_MOVEMENTS = [
+    { id:'m1',  type:'dividend',   ticker:'AAPL', date:'2026-06-02', amount:14.10 },
+    { id:'m2',  type:'buy',        ticker:'VOO',  date:'2026-05-20', amount:610.40 },
+    { id:'m3',  type:'dividend',   ticker:'AAPL', date:'2026-04-02', amount:13.75 },
+    { id:'m4',  type:'sell',       ticker:'AAPL', date:'2026-02-14', amount:892.14 },
+    { id:'m5',  type:'deposit',    ticker:null,   date:'2026-01-05', amount:1500.00 },
+    { id:'m6',  type:'dividend',   ticker:'AAPL', date:'2025-11-15', amount:12.95 },
+    { id:'m7',  type:'withdrawal', ticker:null,   date:'2025-10-01', amount:500.00 },
+    { id:'m8',  type:'sell',       ticker:'VOO',  date:'2025-09-09', amount:586.32 },
+    { id:'m9',  type:'buy',        ticker:'AAPL', date:'2025-06-20', amount:447.86 },
+    { id:'m10', type:'buy',        ticker:'VOO',  date:'2025-03-12', amount:705.20 },
+    { id:'m11', type:'deposit',    ticker:null,   date:'2025-01-10', amount:3000.00 },
+  ];
+
+  componentDidMount(){ this._applyDemo(this.props.demoState); }
+  componentDidUpdate(prevProps){
+    if (prevProps.demoState !== this.props.demoState) this._applyDemo(this.props.demoState);
+  }
+  _applyDemo(demoState){
+    this.setState({ selectedType: demoState === 'Filtro sin resultados' ? 'withdrawal' : null });
+  }
+
+  usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  dateLabel(iso){
+    const [y,m,d] = iso.split('-').map(Number);
+    return d + ' ' + this.MONTHS_ES[m-1] + ' ' + y;
+  }
+
+  toggleType(type){
+    this.setState(s => ({ selectedType: s.selectedType === type ? null : type }));
+  }
+
+  renderVals(){
+    const demoState = this.props.demoState ?? 'Con movimientos';
+    let movements;
+    if (demoState === 'Sin movimientos') movements = [];
+    else if (demoState === 'Filtro sin resultados') movements = this.BASE_MOVEMENTS.filter(m => m.type !== 'withdrawal');
+    else movements = this.BASE_MOVEMENTS;
+
+    const sorted = [...movements].sort((a,b) => a.date < b.date ? 1 : -1);
+    const selectedType = this.state.selectedType;
+    const filtered = selectedType ? sorted.filter(m => m.type === selectedType) : sorted;
+
+    const hasAny = movements.length > 0;
+    const isFilteredEmpty = hasAny && !!selectedType && filtered.length === 0;
+    const isRealEmpty = !hasAny;
+    const isReady = hasAny && !isFilteredEmpty;
+
+    const chips = this.TYPE_ORDER.map(type => {
+      const meta = this.TYPE_META[type];
+      const active = selectedType === type;
+      return {
+        key: type,
+        label: meta.labelPlural,
+        bg: active ? meta.bg : 'transparent',
+        color: active ? meta.color : '#8E8E93',
+        border: active ? meta.color : '#1C224D',
+        onClick: () => this.toggleType(type),
+      };
+    });
+
+    const rows = filtered.map((m, i) => {
+      const meta = this.TYPE_META[m.type];
+      const hasTicker = m.type === 'buy' || m.type === 'sell' || m.type === 'dividend';
+      return {
+        key: m.id,
+        title: hasTicker ? (meta.label + ' ' + m.ticker) : meta.label,
+        dateLabel: this.dateLabel(m.date),
+        amount: this.usd(m.amount),
+        badgeBg: meta.bg,
+        badgeColor: meta.color,
+        borderTop: i === 0 ? 'none' : '1px solid #1C224D',
+        isBuy: m.type === 'buy',
+        isSell: m.type === 'sell',
+        isDividend: m.type === 'dividend',
+        isDeposit: m.type === 'deposit',
+        isWithdrawal: m.type === 'withdrawal',
+      };
+    });
+
+    return {
+      showChips: hasAny,
+      chips,
+      isRealEmpty,
+      isFilteredEmpty,
+      isReady,
+      filteredEmptyMessage: selectedType ? ('No tienes ' + this.TYPE_META[selectedType].labelPlural.toLowerCase()) : '',
+      clearFilter: () => this.setState({ selectedType: null }),
+      goAddMovement: () => {},
+      rows,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
