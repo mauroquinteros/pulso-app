@@ -1,8 +1,11 @@
 import { router } from "expo-router";
+import { useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/movements/empty-state";
+import { FilterChips } from "@/components/movements/filter-chips";
+import { FilteredEmpty } from "@/components/movements/filtered-empty";
 import {
   MovementRow,
   MovementSeparator,
@@ -10,10 +13,17 @@ import {
 import { buildMovementsView } from "@/components/movements/view-model";
 import { Colors } from "@/constants/theme";
 import { useMovementsStore } from "@/stores/movements";
+import type { MovementType } from "@/types/models";
 
 export default function MovementsScreen() {
   const movements = useMovementsStore((s) => s.movements);
-  const view = buildMovementsView(movements, null);
+  // `null` = no filter = every movement. The tab navigator keeps this screen
+  // mounted, so the filter survives a tab switch with no extra code.
+  const [selectedType, setSelectedType] = useState<MovementType | null>(null);
+  const view = buildMovementsView(movements, selectedType);
+
+  const toggleType = (type: MovementType) =>
+    setSelectedType((current) => (current === type ? null : type));
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -21,9 +31,23 @@ export default function MovementsScreen() {
         <Text style={styles.title}>Movimientos</Text>
       </View>
 
-      {view.state === "empty" ? (
+      {/* Nothing recorded yet means nothing to filter. */}
+      {view.state !== "empty" && (
+        <FilterChips chips={view.chips} onToggle={toggleType} />
+      )}
+
+      {view.state === "empty" && (
         <EmptyState onAddMovement={() => router.push("/add-movement")} />
-      ) : (
+      )}
+
+      {view.state === "filtered-empty" && (
+        <FilteredEmpty
+          message={view.filteredEmptyMessage ?? ""}
+          onClear={() => setSelectedType(null)}
+        />
+      )}
+
+      {view.state === "ready" && (
         // Virtualized: movements grow without bound, unlike holdings.
         <FlatList
           style={styles.list}
