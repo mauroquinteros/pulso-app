@@ -71,6 +71,25 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 Use **camelCase** for all identifiers in application code — variables, functions, parameters, and object/domain fields (e.g. `Movement` fields are `executionPrice`, `executionDate`, `grossAmount`, not snake_case). **snake_case is reserved for the database layer only**: Supabase/Postgres column names stay snake_case and are translated to camelCase domain objects at the data-access boundary (`mapRowToMovement`). Never let snake_case leak into domain types, the engine, components, or tests. Exception: framework-defined identifiers (e.g. Expo Router's `unstable_settings`).
 
+### ASCII-only source
+
+Source files (`.ts`, `.tsx`) use **plain ASCII punctuation** — never a
+typographic lookalike. The one that keeps coming back is the minus sign: a
+negative amount is `-$10.13` with an **ASCII hyphen** (U+002D), never U+2212
+(`−`). Same for quotes and dashes: `'`, `"`, `-`, not `’`, `“`, `—`.
+
+Why: the lookalikes are indistinguishable in most editors, so a reader cannot
+tell which character a string holds, and a careless find-and-replace silently
+swaps one for the other. This has already broken the test suite twice.
+
+Spanish UI copy keeps its accents and `¿¡` — those carry meaning. This rule is
+about **punctuation that has an ASCII equivalent**.
+
+Applies to string literals, comments and test assertions alike. To assert the
+*absence* of a lookalike in a test, write it as a unicode escape —
+`not.toContain("\u2212")` — rather than pasting the glyph, so the assertion
+says out loud which character it means.
+
 ## Agent skills
 
 ### Issue tracker

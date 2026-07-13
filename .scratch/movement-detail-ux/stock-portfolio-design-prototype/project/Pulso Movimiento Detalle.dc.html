@@ -127,7 +127,7 @@ class Component extends DCLogic {
   };
 
   usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  signed(n, sign){ return (sign === '-' ? '\u2212' : '+') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signed(n, sign){ return (sign === '-' ? '-' : '+') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   shares(n){ return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:5}); }
   dateLabel(iso){
     const [y,m,d] = iso.split('-').map(Number);

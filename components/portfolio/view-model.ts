@@ -34,8 +34,8 @@ export interface HoldingRow {
   sharesLabel: string; // plain number, max 5 decimals, no suffix
   priceAvailable: boolean;
   value: string | null; // "$2,991.21"
-  pnl: string | null; // "+$240.18" (− is U+2212)
-  pnlPct: string | null; // "+8.73%" / "−1.20%" (2 decimals, signed like Home)
+  pnl: string | null; // "+$240.18" / "-$12.40"
+  pnlPct: string | null; // "+8.73%" / "-1.20%" (2 decimals, signed like Home)
   pnlTone: Tone; // threshold ±0.005
   badge: number; // palette index, same as the ticker's segment colorIndex
 }

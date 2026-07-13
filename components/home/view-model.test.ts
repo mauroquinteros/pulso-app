@@ -83,7 +83,7 @@ describe("buildHomeView", () => {
     });
     expect(fees).toMatchObject({
       label: "Comisiones",
-      value: "−$10.13",
+      value: "-$10.13",
       tone: "negative",
     });
 
@@ -154,17 +154,16 @@ describe("buildHomeView", () => {
     expect(view.assets.holdings).toHaveLength(0);
   });
 
-  it("uses a negative tone and a unicode-minus string for a negative Total Return", () => {
+  it("uses a negative tone and an ASCII-signed string for a negative Total Return", () => {
     // Bought high, priced low: every figure on the loss side.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
     const portfolio = assemblePortfolio(movements, { AAPL: 60 });
     const view = buildHomeView(portfolio);
 
     expect(view.return.tone).toBe("negative");
-    expect(view.return.total.startsWith("−")).toBe(true);
-    expect(view.return.total).toContain("−"); // unicode minus, not hyphen
-    expect(view.return.total).not.toContain("-"); // never an ASCII hyphen-minus
+    expect(view.return.total.startsWith("-")).toBe(true);
+    expect(view.return.total).not.toContain("\u2212"); // ASCII hyphen, never U+2212
     expect(view.assets.netPnlTone).toBe("negative");
-    expect(view.assets.netPnl).toContain("−");
+    expect(view.assets.netPnl).toContain("-");
   });
 });

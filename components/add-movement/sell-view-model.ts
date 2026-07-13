@@ -13,7 +13,7 @@ export interface SellInput {
 export interface SellSummary {
   /** Acciones × Precio — gross proceeds (0 when shares/price blank/≤0). */
   gross: number;
-  /** gross − Comisión − Impuestos; what lands in Cash (0 when gross is 0). */
+  /** gross - Comisión - Impuestos; what lands in Cash (0 when gross is 0). */
   total: number;
   /** Parsed Comisión (0 when blank) — the breakdown's "Comisión" line. */
   fee: number;
@@ -44,8 +44,8 @@ export interface SellDeps {
 /**
  * Pure summary of the sell form: the live "Monto bruto" / "Total a recibir" figures and the
  * save-gate. Venta is the inverse of Compra: the user enters Acciones (a quantity out of a
- * held position) and the proceeds are derived. Total a recibir is gross − Comisión − Impuestos
- * — the cash-side credit, since computeCash does `cash += executionPrice × shares − fee −
+ * held position) and the proceeds are derived. Total a recibir is gross - Comisión - Impuestos
+ * — the cash-side credit, since computeCash does `cash += executionPrice × shares - fee -
  * regulatoryFees`. It previews the engine; it does not re-implement it. With Acciones or Precio
  * blank/≤0 the figures are $0.00. The gate is strict: you can only sell what you hold, so the
  * caller passes in the available shares for the typed ticker (0 if not held).

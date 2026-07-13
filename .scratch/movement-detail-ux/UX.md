@@ -191,7 +191,8 @@ principio, conclusión opuesta.
   signo**, como en la lista.
 - Las **líneas de datos** (acciones, precio) nunca llevan operador: no son
   aritmética.
-- El menos es **U+2212** (`−`), la convención de la app, nunca un guion ASCII.
+- El menos es un **guion ASCII** (`-`), la convención de la app (ver `AGENTS.md`),
+  nunca U+2212.
 - **Sin color.** Nada acá es ganancia ni pérdida (misma razón que en la lista).
 
 ## 8. Redondeo: el total ES el Cash Impact; el bruto se DERIVA de él

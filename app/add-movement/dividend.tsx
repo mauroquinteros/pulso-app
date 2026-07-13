@@ -204,7 +204,7 @@ export default function DividendFormScreen() {
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Impuestos</Text>
               <Text style={styles.breakdownValue}>
-                {taxValue > 0 ? `−${formatUSD(taxValue)}` : formatUSD(0)}
+                {taxValue > 0 ? `-${formatUSD(taxValue)}` : formatUSD(0)}
               </Text>
             </View>
             <View style={styles.breakdownDivider} />

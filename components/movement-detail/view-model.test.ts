@@ -71,11 +71,11 @@ const withdrawal = (amount: number, fee: number): WithdrawalMovement => ({
   fee,
 });
 
-/** Reads back a figure the view-model rendered: "$8,821.70" | "+$0.88" | "−$5.55".
+/** Reads back a figure the view-model rendered: "$8,821.70" | "+$0.88" | "-$5.55".
  * The invariants are asserted on the STRINGS the screen shows, never on values
  * recomputed inside the test — otherwise they would prove nothing. */
 const parseAmount = (rendered: string): number => {
-  const negative = rendered.includes("−"); // U+2212
+  const negative = rendered.includes("-");
   const digits = parseFloat(rendered.replace(/[^\d.]/g, ""));
   return negative ? -digits : digits;
 };
@@ -114,8 +114,8 @@ describe("buildMovementDetailView", () => {
     ]);
     expect(pairs(view.money)).toEqual([
       ["Monto bruto", "$586.50"],
-      ["Comisión", "−$0.15"], // the same fee SUBTRACTS from what a sell pays you
-      ["Tarifas regulatorias", "−$0.03"],
+      ["Comisión", "-$0.15"], // the same fee SUBTRACTS from what a sell pays you
+      ["Tarifas regulatorias", "-$0.03"],
     ]);
     expect(view.total).toEqual({ label: "Total recibido", amount: "$586.32" });
   });
@@ -127,7 +127,7 @@ describe("buildMovementDetailView", () => {
     expect(view.facts).toEqual([]); // no shares, no price
     expect(pairs(view.money)).toEqual([
       ["Monto bruto", "$18.50"],
-      ["Impuesto", "−$5.55"],
+      ["Impuesto", "-$5.55"],
     ]);
     expect(view.total).toEqual({ label: "Total recibido", amount: "$12.95" });
   });
@@ -140,7 +140,7 @@ describe("buildMovementDetailView", () => {
     // The base is what left the bank; the total is what landed as Cash.
     expect(pairs(view.money)).toEqual([
       ["Total transferido", "$3,003.99"],
-      ["Comisión de transferencia", "−$3.99"],
+      ["Comisión de transferencia", "-$3.99"],
     ]);
     expect(view.total).toEqual({
       label: "Efectivo agregado",
@@ -163,12 +163,12 @@ describe("buildMovementDetailView", () => {
     });
   });
 
-  it("signs adjustments with a unicode minus, never an ASCII hyphen", () => {
+  it("signs adjustments with an ASCII hyphen, never a unicode minus", () => {
     const view = buildMovementDetailView(sell("AAPL", 195.5, 3, 0.15, 0.03));
     for (const line of view.money.slice(1)) {
-      expect(line.amount).not.toContain("-"); // never a hyphen
+      expect(line.amount).not.toContain("\u2212"); // U+2212 is banned app-wide
     }
-    expect(view.money[1].amount).toContain("−"); // U+2212
+    expect(view.money[1].amount).toContain("-"); // a plain hyphen
     // The base and the total never carry a sign at all.
     expect(view.money[0].amount).toBe("$586.50");
     expect(view.total?.amount).toBe("$586.32");

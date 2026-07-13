@@ -222,15 +222,15 @@ describe("buildPortfolioView", () => {
     expect(view.distribution.segments.map((s) => s.key)).toEqual(["AAPL"]);
     expect(view.distribution.segments[0].fraction).toBeCloseTo(1, 8);
 
-    // Legend keeps a negative Efectivo row: red, no percentage, unicode minus.
+    // Legend keeps a negative Efectivo row: red, no percentage, signed.
     const cashRow = view.distribution.legend.find((l) => l.key === "cash")!;
     expect(cashRow.negative).toBe(true);
     expect(cashRow.pct).toBeNull();
-    expect(cashRow.amount).toContain("−");
-    expect(cashRow.amount).not.toContain("-"); // never an ASCII hyphen-minus
+    expect(cashRow.amount).toContain("-");
+    expect(cashRow.amount).not.toContain("\u2212"); // ASCII hyphen, never U+2212
   });
 
-  it("formats a loss with a signed unicode-minus percent and a negative tone", () => {
+  it("formats a loss with an ASCII-signed percent and a negative tone", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5)];
     const view = buildPortfolioView(
       assemblePortfolio(movements, { AAPL: 60 }),
@@ -238,9 +238,9 @@ describe("buildPortfolioView", () => {
 
     const aapl = view.holdings[0];
     expect(aapl.pnlTone).toBe("negative");
-    expect(aapl.pnlPct?.startsWith("−")).toBe(true); // signed like Home, unicode minus
-    expect(aapl.pnlPct).not.toContain("-"); // never an ASCII hyphen-minus
-    expect(aapl.pnl).toContain("−");
-    expect(aapl.pnl).not.toContain("-");
+    expect(aapl.pnlPct?.startsWith("-")).toBe(true); // signed like Home
+    expect(aapl.pnlPct).not.toContain("\u2212"); // ASCII hyphen, never U+2212
+    expect(aapl.pnl).toContain("-");
+    expect(aapl.pnl).not.toContain("\u2212");
   });
 });

@@ -11,7 +11,7 @@ export interface DividendInput {
 export interface DividendSummary {
   /** Monto bruto — the dividend paid before tax (0 when blank/≤0). */
   gross: number;
-  /** gross − Impuestos; what lands in Cash (0 when gross is 0). */
+  /** gross - Impuestos; what lands in Cash (0 when gross is 0). */
   total: number;
   /** Parsed Impuestos (0 when blank) — the breakdown's "Impuestos" line. */
   tax: number;
@@ -34,8 +34,8 @@ export interface DividendDeps {
 /**
  * Pure summary of the dividend form: the live "Monto bruto" / "Total a recibir" figures and the
  * save-gate. Dividendo is amount-first — the user records the gross cash paid and the withholding
- * tax, and the net is derived. Total a recibir is gross − Impuestos — the cash-side credit, since
- * computeCash does `cash += grossAmount − tax`. It previews the engine; it does not re-implement
+ * tax, and the net is derived. Total a recibir is gross - Impuestos — the cash-side credit, since
+ * computeCash does `cash += grossAmount - tax`. It previews the engine; it does not re-implement
  * it. With Monto bruto blank/≤0 the figures are $0.00. Unlike Venta there is no held-shares gate:
  * a dividend is income, not a trade against a position. The one guard is domain honesty — tax
  * cannot exceed the gross (a negative net dividend is never a real event).

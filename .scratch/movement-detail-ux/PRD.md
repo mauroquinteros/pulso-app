@@ -157,7 +157,8 @@ opuesta.
   signo**, como en la lista.
 - Las **líneas de datos** (acciones, precio) nunca llevan operador: no son
   aritmética.
-- El menos es **U+2212** (`−`), la convención de la app, nunca un guion ASCII.
+- El menos es un **guion ASCII** (`-`), la convención de la app (ver `AGENTS.md`),
+  nunca U+2212.
 - **Sin color.** Nada acá es ganancia ni pérdida.
 
 ### Redondeo: el total ES el Cash Impact; el "Monto bruto" se DERIVA de él
@@ -289,7 +290,7 @@ de zona horaria. Reusa el formateador español que ya existe.
     `facts`, `money` y `total` exactos, incluyendo los labels.
   - **Operadores**: `+` en compra y retiro; `−` en venta, dividendo y depósito.
     La base y el total **sin signo**.
-  - **El menos es U+2212**, nunca un guion ASCII (prior art: los tests del
+  - **El menos es un guion ASCII**, nunca U+2212 (prior art: los tests del
     view-model de Home ya afirman esto sobre `formatSignedUSD`).
   - **Título** con ticker (`Compra AAPL`) y sin ticker (`Depósito`).
   - **`facts` vacío** para dividendo, depósito y retiro.
@@ -331,7 +332,7 @@ de zona horaria. Reusa el formateador español que ya existe.
   microcopy); este PRD no duplica esos valores.
 - **El prototipo confirma cada decisión del grilling** — trae ya implementada
   `buildMovementDetailView(movement | undefined)` con la forma exacta que se
-  especificó, los labels, los operadores y el `−` U+2212. Pero **refinó tres
+  especificó, los labels y los operadores. Pero **refinó tres
   decisiones visuales** que el `UX.md` había asumido mal, y en las que manda el
   prototipo: (1) **header propio**, no el nativo del `Stack`; (2) **sin card** —
   filas planas con hairlines; (3) **total anclado al fondo** de la pantalla, no

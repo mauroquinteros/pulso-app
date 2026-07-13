@@ -5,7 +5,7 @@ import { cashImpact } from "@/utils/portfolio/cash";
 
 export interface DetailLine {
   label: string;
-  amount: string; // "$447.71" | "+$0.15" | "−$5.55" — the operator is baked in
+  amount: string; // "$447.71" | "+$0.15" | "-$5.55" — the operator is baked in
 }
 
 export interface MovementDetailView {

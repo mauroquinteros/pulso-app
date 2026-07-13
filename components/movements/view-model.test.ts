@@ -213,8 +213,9 @@ describe("buildMovementsView", () => {
       null,
     ).rows;
     for (const row of rows) {
-      expect(row.amount).not.toContain("-"); // no ASCII hyphen
-      expect(row.amount).not.toContain("−"); // no unicode minus
+      // The list shows a magnitude: no sign of any kind, in either encoding.
+      expect(row.amount).not.toContain("-");
+      expect(row.amount).not.toContain("\u2212"); // U+2212
       expect(row.amount).not.toContain("+");
     }
   });

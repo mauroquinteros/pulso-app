@@ -8,7 +8,7 @@ export interface WithdrawalInput {
 }
 
 export interface WithdrawalSummary {
-  /** Monto − Comisión; what reaches the bank (0 when Monto is blank). */
+  /** Monto - Comisión; what reaches the bank (0 when Monto is blank). */
   recibiras: number;
   /** Save-gate: Monto > 0 and Comisión < Monto and Monto ≤ available Cash. */
   saveEnabled: boolean;
@@ -30,7 +30,7 @@ export interface WithdrawalDeps {
 
 /**
  * Pure summary of the withdrawal form: the live "Recibirás en tu banco" figure
- * and the save-gate. The recibiras is Monto − Comisión (what reaches the bank).
+ * and the save-gate. The recibiras is Monto - Comisión (what reaches the bank).
  * Under the cash-side convention only the Monto leaves Cash, so the over-withdrawal
  * gate compares Monto (not Monto + Comisión) against the available Cash, which the
  * caller passes in. A blank Monto shows $0.00 regardless of any fee.

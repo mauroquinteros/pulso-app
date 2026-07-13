@@ -266,13 +266,13 @@ export default function SellFormScreen() {
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Comisión</Text>
               <Text style={styles.breakdownValue}>
-                {feeValue > 0 ? `−${formatUSD(feeValue)}` : formatUSD(0)}
+                {feeValue > 0 ? `-${formatUSD(feeValue)}` : formatUSD(0)}
               </Text>
             </View>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Impuestos</Text>
               <Text style={styles.breakdownValue}>
-                {regValue > 0 ? `−${formatUSD(regValue)}` : formatUSD(0)}
+                {regValue > 0 ? `-${formatUSD(regValue)}` : formatUSD(0)}
               </Text>
             </View>
             <View style={styles.breakdownDivider} />

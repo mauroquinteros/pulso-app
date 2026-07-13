@@ -16,7 +16,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * Buying Power), so transfer fees are NOT subtracted here — they live in Net
  * Contributions (see computeNetContributions). Trading fees still reduce cash:
  * buy fee, sell fee + regulatoryFees. Dividend tax is netted into the dividend
- * (gross − tax) and is never treated as a fee.
+ * (gross - tax) and is never treated as a fee.
  *
  * Its direction is fully determined by the movement's type: deposits, sells and
  * dividends always add; buys and withdrawals always subtract. Returned unrounded
