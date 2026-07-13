@@ -16,7 +16,7 @@ export function DetailIdentity({
   return (
     <View style={styles.identity}>
       <View style={[styles.badge, { backgroundColor: meta.bg }]}>
-        <Ionicons name={meta.icon} size={23} color={meta.color} />
+        <Ionicons name={meta.icon} size={21} color={meta.color} />
       </View>
       <View style={styles.identityText}>
         <Text style={styles.title}>{header.title}</Text>
@@ -77,9 +77,9 @@ const styles = StyleSheet.create({
     marginBottom: 36,
   },
   badge: {
-    width: 52,
-    height: 52,
-    borderRadius: 15,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -88,13 +88,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "800",
     color: Colors.textPrimary,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   date: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 3,
   },
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "600",
     color: Colors.textSecondary,
   },
   amount: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
     color: Colors.textBright,
     fontVariant: ["tabular-nums"],
@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   totalLabel: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
     color: Colors.textPrimary,
   },
   totalAmount: {
-    fontSize: 21,
+    fontSize: 20,
     fontWeight: "800",
     color: Colors.textPrimary,
     fontVariant: ["tabular-nums"],
