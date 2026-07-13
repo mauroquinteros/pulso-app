@@ -19,11 +19,11 @@ import {
   buildDividendMovement,
   summarizeDividend,
 } from "@/components/add-movement/dividend-view-model";
-import { FormHeader } from "@/components/add-movement/form-header";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { useMovementsStore } from "@/stores/movements";
 import { formatUSD } from "@/utils/format";
@@ -93,7 +93,7 @@ export default function DividendFormScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <FormHeader title="Dividendo" />
+        <ScreenHeader title="Dividendo" />
 
         <ScrollView
           style={styles.flex}

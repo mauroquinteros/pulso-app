@@ -4,8 +4,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Colors } from "@/constants/theme";
 
-/** Add-movement form header: back button + screen title. */
-export function FormHeader({ title }: { title: string }) {
+/** Screen header: back button + screen title. Shared by add-movement forms and movement detail. */
+export function ScreenHeader({ title }: { title: string }) {
   return (
     <View style={styles.header}>
       <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={8}>

@@ -19,11 +19,11 @@ import {
   buildBuyMovement,
   summarizeBuy,
 } from "@/components/add-movement/buy-view-model";
-import { FormHeader } from "@/components/add-movement/form-header";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
@@ -107,7 +107,7 @@ export default function BuyFormScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <FormHeader title="Compra" />
+        <ScreenHeader title="Compra" />
 
         <ScrollView
           style={styles.flex}

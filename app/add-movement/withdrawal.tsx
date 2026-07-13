@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { FormHeader } from "@/components/add-movement/form-header";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
@@ -24,6 +23,7 @@ import {
   buildWithdrawalMovement,
   summarizeWithdrawal,
 } from "@/components/add-movement/withdrawal-view-model";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
@@ -88,7 +88,7 @@ export default function WithdrawalFormScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <FormHeader title="Retiro" />
+        <ScreenHeader title="Retiro" />
 
         <ScrollView
           style={styles.flex}

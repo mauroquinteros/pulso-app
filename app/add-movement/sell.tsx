@@ -19,11 +19,11 @@ import {
   buildSellMovement,
   summarizeSell,
 } from "@/components/add-movement/sell-view-model";
-import { FormHeader } from "@/components/add-movement/form-header";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
@@ -118,7 +118,7 @@ export default function SellFormScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <FormHeader title="Venta" />
+        <ScreenHeader title="Venta" />
 
         <ScrollView
           style={styles.flex}
