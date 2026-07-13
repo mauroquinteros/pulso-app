@@ -62,14 +62,8 @@ export default function RootLayout() {
             headerTintColor: Colors.textPrimary,
           }}
         />
-        <Stack.Screen
-          name="movement/[id]"
-          options={{
-            title: "Movement Detail",
-            headerStyle: { backgroundColor: Colors.background },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
+        {/* Draws its own ScreenHeader, like the add-movement forms. */}
+        <Stack.Screen name="movement/[id]" options={{ headerShown: false }} />
         <Stack.Screen
           name="add-movement"
           options={{ presentation: "modal", headerShown: false }}

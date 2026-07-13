@@ -54,7 +54,12 @@ export default function MovementsScreen() {
           contentContainerStyle={styles.card}
           data={view.rows}
           keyExtractor={(row) => row.id}
-          renderItem={({ item }) => <MovementRow row={item} />}
+          renderItem={({ item }) => (
+            <MovementRow
+              row={item}
+              onPress={() => router.push(`/movement/${item.id}`)}
+            />
+          )}
           ItemSeparatorComponent={MovementSeparator}
           showsVerticalScrollIndicator={false}
         />

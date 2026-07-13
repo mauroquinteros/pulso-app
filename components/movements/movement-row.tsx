@@ -1,21 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementRow as Row } from "./view-model";
 
 /**
- * One movement in the ledger. Deliberately not a Pressable: the movement-detail
- * screen does not exist yet, and a control that looks tappable but does nothing
- * is worse than a plain row.
+ * One movement in the ledger, opening its receipt on tap. No chevron: the Home
+ * asset rows navigate the same way without one, and a chevron per row would be
+ * noise down a long history.
  *
  * The amount is the movement's Cash Impact as a magnitude — no sign, no colour.
  */
-export function MovementRow({ row }: { row: Row }) {
+export function MovementRow({ row, onPress }: { row: Row; onPress?: () => void }) {
   const meta = MOVEMENT_TYPE_META[row.type];
   return (
-    <View style={styles.row}>
+    <Pressable style={styles.row} onPress={onPress}>
       <View style={[styles.badge, { backgroundColor: meta.bg }]}>
         <Ionicons name={meta.icon} size={18} color={meta.color} />
       </View>
@@ -24,7 +24,7 @@ export function MovementRow({ row }: { row: Row }) {
         <Text style={styles.date}>{row.dateLabel}</Text>
       </View>
       <Text style={styles.amount}>{row.amount}</Text>
-    </View>
+    </Pressable>
   );
 }
 
