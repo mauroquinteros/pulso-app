@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    a{color:#4FE9D6;}
+    a:hover{color:#7BF0E1;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 0;display:flex;flex-direction:column;">
+
+      <!-- HEADER -->
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px 20px;">
+        <div style="width:34px;height:34px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;color:#00E5CC;font-size:20px;cursor:pointer;line-height:1;">‹</div>
+        <span style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-0.3px;">Detalle</span>
+      </div>
+
+      <!-- NOT FOUND -->
+      <sc-if value="{{ isNotFound }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px 40px 80px;text-align:center;">
+          <div style="font-size:15px;font-weight:600;color:#8E8E93;">No encontramos este movimiento</div>
+        </div>
+      </sc-if>
+
+      <!-- FOUND -->
+      <sc-if value="{{ isFound }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;padding:8px 24px 40px;display:flex;flex-direction:column;">
+
+        <!-- IDENTITY -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:36px;">
+          <div style="width:52px;height:52px;border-radius:15px;background:{{ badgeBg }};display:flex;align-items:center;justify-content:center;color:{{ badgeColor }};flex:none;">
+            <sc-if value="{{ isBuy }}" hint-placeholder-val="{{ false }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+            </sc-if>
+            <sc-if value="{{ isSell }}" hint-placeholder-val="{{ false }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+            </sc-if>
+            <sc-if value="{{ isDividend }}" hint-placeholder-val="{{ false }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle></svg>
+            </sc-if>
+            <sc-if value="{{ isDeposit }}" hint-placeholder-val="{{ false }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+            </sc-if>
+            <sc-if value="{{ isWithdrawal }}" hint-placeholder-val="{{ false }}">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg>
+            </sc-if>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.4px;">{{ headerTitle }}</div>
+            <div style="font-size:14px;color:#8E8E93;margin-top:3px;">{{ headerDate }}</div>
+          </div>
+        </div>
+
+        <!-- RECEIPT -->
+        <div style="flex:1;display:flex;flex-direction:column;">
+
+          <!-- FACTS (buy/sell only) -->
+          <sc-if value="{{ hasFacts }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ facts }}" as="line" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;padding:20px 0;border-top:{{ line.borderTop }};">
+                <span style="font-size:16px;color:#8E8E93;font-weight:500;">{{ line.label }}</span>
+                <span class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;">{{ line.amount }}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+
+          <!-- MONEY LINES -->
+          <sc-for list="{{ money }}" as="line" hint-placeholder-count="2">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;padding:20px 0;border-top:{{ line.borderTop }};">
+              <span style="font-size:16px;color:#8E8E93;font-weight:500;">{{ line.label }}</span>
+              <span class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;">{{ line.amount }}</span>
+            </div>
+          </sc-for>
+
+          <!-- TOTAL -->
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:24px 0 20px;border-top:1px solid #1C224D;margin-top:auto;">
+            <span style="font-size:17px;color:#fff;font-weight:700;">{{ total.label }}</span>
+            <span class="mono" style="font-size:21px;font-weight:800;color:#fff;">{{ total.amount }}</span>
+          </div>
+
+        </div>
+
+      </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;demoType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Compra&quot;,&quot;options&quot;:[&quot;Compra&quot;,&quot;Venta&quot;,&quot;Dividendo&quot;,&quot;Depósito&quot;,&quot;Retiro&quot;,&quot;No encontrado&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+
+  MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  TYPE_META = {
+    buy:        { label:'Compra',    bg:'rgba(120,160,255,0.16)', color:'#9DB8FF' },
+    sell:       { label:'Venta',     bg:'rgba(255,140,140,0.14)', color:'#FF9D9D' },
+    dividend:   { label:'Dividendo', bg:'rgba(0,229,204,0.12)',   color:'#4FE9D6' },
+    deposit:    { label:'Depósito',  bg:'rgba(0,200,83,0.16)',    color:'#7DE8AA' },
+    withdrawal: { label:'Retiro',    bg:'rgba(142,142,147,0.14)', color:'#B8BCCB' },
+  };
+
+  // `cashImpact` es el total de los 5 tipos — el MISMO número que muestra la fila
+  // de la lista. Todo lo demás del recibo se deriva de él, para que el detalle no
+  // pueda contradecir a la lista NI a su propia aritmética.
+  MOCK = {
+    buy:        { type:'buy',        ticker:'AAPL', date:'2025-01-15', shares:2.45321, price:182.50, fee:0.15,               cashImpact:447.86 },
+    sell:       { type:'sell',       ticker:'AAPL', date:'2025-09-22', shares:3,       price:195.50, fee:0.15, regFee:0.03,  cashImpact:586.32 },
+    dividend:   { type:'dividend',   ticker:'AAPL', date:'2025-11-15', gross:18.50, tax:5.55,                                cashImpact:12.95 },
+    deposit:    { type:'deposit',    date:'2025-01-10', transferFee:3.99, transferred:3003.99,                               cashImpact:3000.00 },
+    withdrawal: { type:'withdrawal', date:'2026-01-08', fee:1.00, receivedAtBank:499.00,                                     cashImpact:500.00 },
+  };
+
+  usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signed(n, sign){ return (sign === '-' ? '\u2212' : '+') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  shares(n){ return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:5}); }
+  dateLabel(iso){
+    const [y,m,d] = iso.split('-').map(Number);
+    return d + ' ' + this.MONTHS_ES[m-1] + ' ' + y;
+  }
+
+  // pure view-model: buildMovementDetailView(movement | undefined)
+  buildView(m){
+    if (!m) return { state:'not-found' };
+
+    const meta = this.TYPE_META[m.type];
+    const hasTicker = m.type === 'buy' || m.type === 'sell' || m.type === 'dividend';
+    const header = {
+      title: hasTicker ? (meta.label + ' ' + m.ticker) : meta.label,
+      dateLabel: this.dateLabel(m.date),
+      type: m.type,
+    };
+
+    let facts = [];
+    let money = [];
+    let total;
+
+    const round2 = (n) => Math.round(n * 100) / 100;
+
+    if (m.type === 'buy') {
+      // El bruto se DERIVA del total (no de precio × acciones), para que el
+      // recibo siempre cuadre. Ver §8 del UX.md: en 0.002% de los casos
+      // round2(precio × acciones) queda 1¢ arriba y el recibo no sumaría.
+      const gross = round2(m.cashImpact - m.fee);
+      facts = [
+        { label:'Acciones', amount: this.shares(m.shares) },
+        { label:'Precio de ejecución', amount: this.usd(m.price) },
+      ];
+      money = [
+        { label:'Monto bruto', amount: this.usd(gross) },
+        { label:'Comisión', amount: this.signed(m.fee, '+') },
+      ];
+      total = { label:'Total pagado', amount: this.usd(m.cashImpact) };
+    } else if (m.type === 'sell') {
+      const gross = round2(m.cashImpact + m.fee + m.regFee);
+      facts = [
+        { label:'Acciones', amount: this.shares(m.shares) },
+        { label:'Precio de ejecución', amount: this.usd(m.price) },
+      ];
+      money = [
+        { label:'Monto bruto', amount: this.usd(gross) },
+        { label:'Comisión', amount: this.signed(m.fee, '-') },
+        { label:'Tarifas regulatorias', amount: this.signed(m.regFee, '-') },
+      ];
+      total = { label:'Total recibido', amount: this.usd(m.cashImpact) };
+    } else if (m.type === 'dividend') {
+      // gross y tax ya vienen exactos a 2 decimales: nada que derivar.
+      money = [
+        { label:'Monto bruto', amount: this.usd(m.gross) },
+        { label:'Impuesto', amount: this.signed(m.tax, '-') },
+      ];
+      total = { label:'Total recibido', amount: this.usd(m.cashImpact) };
+    } else if (m.type === 'deposit') {
+      // Aritmética INVERTIDA: se parte del monto del banco y se baja hasta el
+      // efectivo. Así el total ES el Cash Impact (el número de la fila) y la
+      // comisión sigue siendo una línea real con su operador.
+      money = [
+        { label:'Total transferido', amount: this.usd(m.transferred) },
+        { label:'Comisión de transferencia', amount: this.signed(m.transferFee, '-') },
+      ];
+      total = { label:'Efectivo agregado', amount: this.usd(m.cashImpact) };
+    } else if (m.type === 'withdrawal') {
+      money = [
+        { label:'Recibido en banco', amount: this.usd(m.receivedAtBank) },
+        { label:'Comisión', amount: this.signed(m.fee, '+') },
+      ];
+      total = { label:'Efectivo retirado', amount: this.usd(m.cashImpact) };
+    }
+
+    facts = facts.map((l,i) => ({ ...l, borderTop: i === 0 ? 'none' : '1px solid #1C224D' }));
+    money = money.map((l,i) => ({ ...l, borderTop: (i === 0 && facts.length === 0) ? 'none' : '1px solid #1C224D' }));
+
+    return { state:'found', header, facts, money, total };
+  }
+
+  renderVals(){
+    const demoType = this.props.demoType ?? 'Compra';
+    const key = { 'Compra':'buy', 'Venta':'sell', 'Dividendo':'dividend', 'Depósito':'deposit', 'Retiro':'withdrawal', 'No encontrado':null }[demoType];
+    const view = this.buildView(key ? this.MOCK[key] : undefined);
+
+    if (view.state === 'not-found') {
+      return { isNotFound:true, isFound:false };
+    }
+
+    return {
+      isNotFound:false,
+      isFound:true,
+      headerTitle: view.header.title,
+      headerDate: view.header.dateLabel,
+      badgeBg: this.TYPE_META[view.header.type].bg,
+      badgeColor: this.TYPE_META[view.header.type].color,
+      isBuy: view.header.type === 'buy',
+      isSell: view.header.type === 'sell',
+      isDividend: view.header.type === 'dividend',
+      isDeposit: view.header.type === 'deposit',
+      isWithdrawal: view.header.type === 'withdrawal',
+      hasFacts: view.facts.length > 0,
+      facts: view.facts,
+      money: view.money,
+      total: view.total,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -19,6 +19,10 @@ _Avoid_: balance, funds
 The change a single **Movement** makes to **Cash**, net of trading **Fees**. By type: deposit `+amount`, withdrawal `−amount` (cash-side; transfer fees excluded), buy `−(executionPrice × shares + fee)`, sell `+(gross − fee − regulatoryFees)`, dividend `+`**Net Dividends** `(gross − tax)`. It answers "how did this movement change my Buying Power," and reconciles: the running sum of every movement's Cash Impact equals **Cash**. Its direction is fully determined by the movement's type — deposits, sells and dividends always add; buys and withdrawals always subtract.
 _Avoid_: amount (unqualified — the typed `amount` field is only the deposit/withdrawal cash-side figure), monto (unqualified), total
 
+**Gross Amount** (UI: "Monto bruto"):
+What a **Movement** is worth *before* its **Fees** and taxes are applied — the figure every deduction is taken from. For a buy or sell it is the trade principal, `executionPrice × shares`; for a dividend it is the declared gross, before withholding tax. Deposits and withdrawals have no Gross Amount: their headline is the cash-side `amount` itself, and the transfer fee sits *outside* it (see `docs/adr/0003-cash-side-movement-amounts.md`). Adjusting a Gross Amount by the fees that touch **Cash** yields the movement's **Cash Impact**.
+_Avoid_: subtotal, principal, monto (unqualified — always say which one)
+
 **Market Value**:
 The current worth of a holding: `current share price × shares held`. The sum across all holdings is the holdings portion of **Total Portfolio Value**.
 _Avoid_: current invested amount, current value
