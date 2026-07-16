@@ -67,7 +67,8 @@ const withdrawal = (amount: number): WithdrawalMovement => ({
   fee: 1,
 });
 
-/** A priced holding by default; pass overrides for the no-price variant. */
+/** A priced holding by default; pass overrides for the no-price variant.
+ * The lifetime figures add up: 20.71 + 4.20 + 0.85 - 0.25 = 25.51. */
 const valued = (
   ticker: string,
   over: Partial<ValuedHolding> = {},
@@ -76,9 +77,9 @@ const valued = (
   shares: 1.4532,
   avgCost: 175.2,
   costBasis: 254.6,
-  realizedPnl: 0,
-  totalFees: 1.2,
-  totalDividends: 0.34,
+  realizedPnl: 4.2,
+  totalFees: 0.25,
+  totalDividends: 0.85,
   priceAvailable: true,
   marketValue: 275.31,
   netPnl: 20.71,
@@ -106,9 +107,51 @@ describe("buildStockDetailView", () => {
       avgCost: "$175.20",
       costBasis: "$254.60",
       marketValue: "$275.31",
-      netPnl: "+$20.71",
-      netPnlPercent: "+8.13%",
-      netPnlTone: "positive",
+      return: {
+        netPnl: "+$20.71",
+        netPnlPercent: "+8.13%",
+        netPnlTone: "positive",
+        dividends: "$0.85",
+        realized: "+$4.20",
+        realizedTone: "positive",
+        fees: "$0.25",
+        total: "+$25.51", // 20.71 + 4.20 + 0.85 - 0.25 — the glossary formula
+        totalTone: "positive",
+      },
+    });
+  });
+
+  describe("return block — Total Return of a stock", () => {
+    it("hides the Realizado row when the ticker was never sold; the total still adds up", () => {
+      const neverSold = valued("AAPL", { realizedPnl: 0 });
+      const view = buildStockDetailView("AAPL", [neverSold], 189.45, []);
+
+      expect(view.position?.return?.realized).toBeNull();
+      // 20.71 + 0 + 0.85 - 0.25
+      expect(view.position?.return?.total).toBe("+$21.31");
+    });
+
+    it("a lifetime loss renders a negative total with tone and ASCII hyphen", () => {
+      const losing = valued("AAPL", {
+        netPnl: -30.5,
+        netPnlPercent: -11.98,
+        realizedPnl: -2.1,
+      });
+      const view = buildStockDetailView("AAPL", [losing], 155.2, []);
+
+      // -30.50 - 2.10 + 0.85 - 0.25
+      expect(view.position?.return?.total).toBe("-$32.00");
+      expect(view.position?.return?.totalTone).toBe("negative");
+      expect(view.position?.return?.realized).toBe("-$2.10");
+      expect(view.position?.return?.realizedTone).toBe("negative");
+      expect(view.position?.return?.total).not.toContain("\u2212");
+    });
+
+    it("dividends and fees are unsigned magnitudes — direction lives in the label", () => {
+      const view = buildStockDetailView("AAPL", [valued("AAPL")], 189.45, []);
+
+      expect(view.position?.return?.dividends).toBe("$0.85");
+      expect(view.position?.return?.fees).toBe("$0.25");
     });
   });
 
@@ -122,11 +165,11 @@ describe("buildStockDetailView", () => {
     const holding = valued("AAPL", { netPnl: -10.13, netPnlPercent: -3.98 });
     const view = buildStockDetailView("AAPL", [holding], 168.4, []);
 
-    expect(view.position?.netPnl).toBe("-$10.13");
-    expect(view.position?.netPnlPercent).toBe("-3.98%");
-    expect(view.position?.netPnlTone).toBe("negative");
-    expect(view.position?.netPnl).not.toContain("\u2212");
-    expect(view.position?.netPnlPercent).not.toContain("\u2212");
+    expect(view.position?.return?.netPnl).toBe("-$10.13");
+    expect(view.position?.return?.netPnlPercent).toBe("-3.98%");
+    expect(view.position?.return?.netPnlTone).toBe("negative");
+    expect(view.position?.return?.netPnl).not.toContain("\u2212");
+    expect(view.position?.return?.netPnlPercent).not.toContain("\u2212");
   });
 
   describe("not-found", () => {
@@ -147,7 +190,7 @@ describe("buildStockDetailView", () => {
   });
 
   describe("no-price collapse", () => {
-    it("nulls the hero, market value, and P&L block; the cost figures survive", () => {
+    it("nulls the hero, market value, and the WHOLE return block; the cost figures survive", () => {
       const view = buildStockDetailView(
         "AAPL",
         [unpriced("AAPL")],
@@ -158,8 +201,9 @@ describe("buildStockDetailView", () => {
       expect(view.state).toBe("found");
       expect(view.price).toBeNull();
       expect(view.position?.marketValue).toBeNull();
-      expect(view.position?.netPnl).toBeNull();
-      expect(view.position?.netPnlPercent).toBeNull();
+      // Dividends, realized and fees are price-free facts, but a return block
+      // without Net P&L would print a partial "return" — it falls entirely.
+      expect(view.position?.return).toBeNull();
       expect(view.position?.shares).toBe("1.4532");
       expect(view.position?.avgCost).toBe("$175.20");
       expect(view.position?.costBasis).toBe("$254.60");
@@ -283,13 +327,18 @@ describe("buildStockDetailView", () => {
       dividend("AAPL", 0.34),
     ]);
 
-    const { netPnlPercent, ...positionRest } = view.position!;
+    const { return: returnBlock, ...positionRest } = view.position!;
+    const { netPnlPercent, ...returnRest } = returnBlock!;
     expect(netPnlPercent).toContain("%");
 
+    // Everything else — including the Total Return, which NEVER carries one.
     const others: (string | null)[] = [
       view.ticker,
       view.price,
       ...Object.values(positionRest).filter(
+        (v): v is string => typeof v === "string",
+      ),
+      ...Object.values(returnRest).filter(
         (v): v is string => typeof v === "string",
       ),
       ...view.rows.flatMap((r) => [

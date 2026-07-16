@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
-import type { StockDetailView } from "./view-model";
+import type { StockDetailView, StockReturnBlock, Tone } from "./view-model";
 
 /** Badge + current-price hero. The badge is the ticker's — the same palette
  * color as the row the user tapped, so the list and its detail read as the
@@ -47,19 +47,91 @@ function Cell({ label, value }: { label: string; value: string }) {
   );
 }
 
+const toneColor = (tone: Tone) =>
+  tone === "negative" ? Colors.negative : Colors.positive;
+
+/** One lifetime-return component row: Dividendos / Realizado / Comisiones.
+ * Untoned rows are magnitudes whose direction lives in the label. */
+function ComponentRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: Tone;
+}) {
+  return (
+    <View style={styles.componentRow}>
+      <Text style={styles.componentLabel}>{label}</Text>
+      <Text
+        style={[
+          styles.componentValue,
+          tone !== undefined && { color: toneColor(tone) },
+        ]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+/** Net P&L, its three lifetime siblings, and their sum — the Total Return of
+ * a stock. The total never carries a % (glossary: there is no honest
+ * denominator); the only % is Net P&L's. Realizado only appears once the user
+ * has actually sold. */
+function ReturnBlock({ block }: { block: StockReturnBlock }) {
+  const pnlColor = toneColor(block.netPnlTone);
+  return (
+    <>
+      <View style={styles.divider} />
+      <View style={styles.pnlRow}>
+        <Text style={styles.pnlLabel}>P&L no realizada</Text>
+        <View style={styles.pnlFigures}>
+          <Text style={[styles.pnlValue, { color: pnlColor }]}>
+            {block.netPnl}
+          </Text>
+          <Text style={[styles.pnlPercent, { color: pnlColor }]}>
+            {block.netPnlPercent}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.components}>
+        <ComponentRow label="Dividendos" value={block.dividends} />
+        {block.realized !== null && (
+          <ComponentRow
+            label="Realizado"
+            value={block.realized}
+            tone={block.realizedTone}
+          />
+        )}
+        <ComponentRow label="Comisiones" value={block.fees} />
+      </View>
+
+      <View style={styles.divider} />
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Retorno total</Text>
+        <Text style={[styles.totalValue, { color: toneColor(block.totalTone) }]}>
+          {block.total}
+        </Text>
+      </View>
+    </>
+  );
+}
+
 /**
- * The "Tu posición" card: the 2×2 grid of today's figures plus the Net P&L
- * block — the only green/red and the only % on the screen; the other four are
- * neutral facts. Renders the view verbatim: a null market value drops its
- * cell, a null P&L drops the whole block and shows the no-price copy instead.
+ * The "Tu posición" card: the 2×2 grid of today's figures plus the lifetime
+ * return block, concluded by the Retorno total. Green/red only on figures that
+ * mean gain/loss (Net P&L, Realizado, Retorno total); everything else is a
+ * neutral fact. Renders the view verbatim: a null market value drops its cell,
+ * a null return block drops entirely and shows the no-price copy instead.
  */
 export function PositionCard({
   position,
 }: {
   position: NonNullable<StockDetailView["position"]>;
 }) {
-  const pnlColor =
-    position.netPnlTone === "negative" ? Colors.negative : Colors.positive;
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Tu posición</Text>
@@ -75,23 +147,8 @@ export function PositionCard({
         )}
       </View>
 
-      {position.netPnl !== null ? (
-        <>
-          <View style={styles.divider} />
-          <View style={styles.pnlRow}>
-            <Text style={styles.pnlLabel}>P&L no realizada</Text>
-            <View style={styles.pnlFigures}>
-              <Text style={[styles.pnlValue, { color: pnlColor }]}>
-                {position.netPnl}
-              </Text>
-              {position.netPnlPercent !== null && (
-                <Text style={[styles.pnlPercent, { color: pnlColor }]}>
-                  {position.netPnlPercent}
-                </Text>
-              )}
-            </View>
-          </View>
-        </>
+      {position.return !== null ? (
+        <ReturnBlock block={position.return} />
       ) : (
         <>
           <View style={styles.divider} />
@@ -230,6 +287,41 @@ const styles = StyleSheet.create({
   pnlPercent: {
     fontSize: 14,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+  components: {
+    marginTop: 16,
+    gap: 12,
+  },
+  componentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+  },
+  componentLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: Colors.textLight,
+  },
+  componentValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.textBright,
+    fontVariant: ["tabular-nums"],
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
   noPriceCopy: {

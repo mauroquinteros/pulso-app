@@ -5,6 +5,16 @@
 > `.scratch/stock-detail-ux/stock-portfolio-design-prototype/` como referencia
 > visual. Este PRD fija los contratos de módulos y las políticas que el
 > prototipo no muestra. Términos en negrita = glosario (`CONTEXT.md`).
+>
+> **Update post-feedback (2026-07-16):** tras ver la Pantalla A construida, el
+> usuario definió que el diseño final SÍ incluye la vida entera del ticker: la
+> tarjeta suma **Dividendos** (**Net Dividends**, magnitud sin signo),
+> **Realizado** (**Realized P&L**, con signo y tono, oculto si es 0),
+> **Comisiones** (**Fees**, magnitud sin signo) y el **Retorno total** (**Total
+> Return of a stock**, con signo y tono, **nunca con %** — glosario). Sin
+> precio cae el bloque de retorno ENTERO (nunca un retorno parcial). Esto
+> reincorpora lo que la sección "Out of Scope" cortaba de la Pantalla B; el
+> resto del PRD sigue vigente.
 
 ## Problem Statement
 

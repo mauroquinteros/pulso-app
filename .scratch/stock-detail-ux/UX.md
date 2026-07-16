@@ -1,5 +1,11 @@
 # Pulso — Stock Detail UX Spec (`/stock/[ticker]`)
 
+> **Update post-feedback (2026-07-16):** construida la Pantalla A, el usuario
+> pivoteó el bloque de retorno hacia la Pantalla B: la tarjeta de posición
+> ahora incluye Dividendos, Realizado (oculto si 0), Comisiones y el Retorno
+> total (sin %, por el glosario "Total Return of a stock"). Ver el update en
+> `PRD.md`. Las secciones §2 y §13 de este doc quedan superadas en ese punto.
+
 > Sesion grill-with-docs. La pantalla vive en `app/stock/[ticker].tsx` (hoy stub
 > de 23 lineas con `ThemedView`/`ThemedText`) y **la navegacion ya existe**: tanto
 > Home (`app/(tabs)/index.tsx:27`) como Portafolio (`app/(tabs)/holdings.tsx:33`)

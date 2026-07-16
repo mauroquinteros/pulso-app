@@ -29,6 +29,25 @@ export interface StockMovementRow extends MovementRow {
   buyTone: BuyTone | null; // only buys with a current price; null otherwise
 }
 
+/** The ticker's lifetime return, concluded by its Total Return of a stock
+ * (glossary): `Net P&L + Realized P&L + Net Dividends − Fees`. A dollar figure
+ * with NO percentage, ever — there is no honest denominator for one. The only
+ * % here belongs to Net P&L, whose numerator and denominator are both
+ * current-position figures. Dividends and fees are magnitudes (their direction
+ * is in the label, like the movement rows' amounts); realized can swing either
+ * way, so it carries sign and tone, and hides entirely at zero. */
+export interface StockReturnBlock {
+  netPnl: string;
+  netPnlPercent: string; // the only % on the screen
+  netPnlTone: Tone;
+  dividends: string; // "$0.85" — Net Dividends, magnitude
+  realized: string | null; // "+$4.20" | null when 0 — no row for "never sold"
+  realizedTone: Tone;
+  fees: string; // "$0.25" — magnitude
+  total: string; // "+$25.51" — Retorno total, never a %
+  totalTone: Tone;
+}
+
 export interface StockDetailView {
   state: "found" | "not-found";
   ticker: string;
@@ -39,9 +58,10 @@ export interface StockDetailView {
     avgCost: string;
     costBasis: string;
     marketValue: string | null; // null without a price — the cell drops
-    netPnl: string | null; // null without a price — the whole block drops
-    netPnlPercent: string | null;
-    netPnlTone: Tone;
+    /** null without a price — the WHOLE block drops. Dividends, realized and
+     * fees are price-free facts, but without Net P&L their sum cannot be the
+     * Total Return, and a partial "return" would lie by omission. */
+    return: StockReturnBlock | null;
   } | null; // null only when not-found
   rows: StockMovementRow[];
 }
@@ -128,13 +148,37 @@ export function buildStockDetailView(
       costBasis: formatUSD(holding.costBasis),
       marketValue:
         holding.marketValue !== null ? formatUSD(holding.marketValue) : null,
-      netPnl: holding.netPnl !== null ? formatSignedUSD(holding.netPnl) : null,
-      netPnlPercent:
-        holding.netPnlPercent !== null
-          ? formatSignedPercent(holding.netPnlPercent)
-          : null,
-      netPnlTone: toneOf(holding.netPnl ?? 0),
+      return: buildReturnBlock(holding),
     },
     rows,
+  };
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** The lifetime return block, concluded by the Total Return of a stock:
+ * `Net P&L + Realized P&L + Net Dividends − Fees` (glossary formula, scoped to
+ * this ticker). Null without a price: Net P&L is unknowable, so the sum is
+ * too, and a partial return is never shown. */
+function buildReturnBlock(holding: ValuedHolding): StockReturnBlock | null {
+  if (holding.netPnl === null || holding.netPnlPercent === null) return null;
+
+  const total = round2(
+    holding.netPnl +
+      holding.realizedPnl +
+      holding.totalDividends -
+      holding.totalFees,
+  );
+  return {
+    netPnl: formatSignedUSD(holding.netPnl),
+    netPnlPercent: formatSignedPercent(holding.netPnlPercent),
+    netPnlTone: toneOf(holding.netPnl),
+    dividends: formatUSD(holding.totalDividends),
+    realized:
+      holding.realizedPnl !== 0 ? formatSignedUSD(holding.realizedPnl) : null,
+    realizedTone: toneOf(holding.realizedPnl),
+    fees: formatUSD(holding.totalFees),
+    total: formatSignedUSD(total),
+    totalTone: toneOf(total),
   };
 }
