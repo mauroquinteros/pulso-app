@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    a{color:#4FE9D6;}
+    a:hover{color:#7BF0E1;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;display:flex;flex-direction:column;">
+
+      <!-- HEADER -->
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px 12px;">
+        <div style="width:34px;height:34px;border-radius:9999px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;color:#00E5CC;font-size:20px;cursor:pointer;line-height:1;flex:none;">‹</div>
+        <span style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-0.3px;">{{ ticker }}</span>
+      </div>
+
+      <!-- NOT FOUND -->
+      <sc-if value="{{ isNotFound }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px 40px 80px;text-align:center;">
+          <div style="font-size:15px;font-weight:600;color:#8E8E93;">No encontramos esta acción</div>
+        </div>
+      </sc-if>
+
+      <!-- FOUND -->
+      <sc-if value="{{ isFound }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;padding:4px 16px 0;display:flex;flex-direction:column;">
+
+        <!-- IDENTITY / HERO -->
+        <div style="display:flex;align-items:center;gap:14px;padding:8px 4px 20px;">
+          <div style="width:52px;height:52px;border-radius:15px;background:{{ badgeBg }};display:flex;align-items:center;justify-content:center;color:{{ badgeColor }};font-size:13px;font-weight:800;letter-spacing:-0.3px;flex:none;">{{ ticker }}</div>
+          <div style="min-width:0;">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.6px;color:#8E8E93;text-transform:uppercase;">Precio actual</div>
+            <div class="mono" style="font-size:{{ priceSize }};font-weight:800;color:{{ priceColor }};letter-spacing:-1px;line-height:1.1;margin-top:2px;">{{ price }}</div>
+          </div>
+        </div>
+
+        <!-- POSITION CARD -->
+        <div style="background:#111638;border:1px solid #1C224D;border-radius:20px;padding:18px 20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.6px;color:#8E8E93;text-transform:uppercase;margin-bottom:16px;">Tu posición</div>
+
+          <div style="display:flex;gap:16px;margin-bottom:18px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;letter-spacing:0.4px;color:#8E8E93;text-transform:uppercase;">Acciones</div>
+              <div class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;margin-top:3px;">{{ pos.shares }}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;letter-spacing:0.4px;color:#8E8E93;text-transform:uppercase;">Costo promedio</div>
+              <div class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;margin-top:3px;">{{ pos.avgCost }}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;letter-spacing:0.4px;color:#8E8E93;text-transform:uppercase;">Costo total</div>
+              <div class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;margin-top:3px;">{{ pos.costBasis }}</div>
+            </div>
+            <sc-if value="{{ hasPrice }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1;">
+                <div style="font-size:11px;letter-spacing:0.4px;color:#8E8E93;text-transform:uppercase;">Valor de mercado</div>
+                <div class="mono" style="font-size:18px;font-weight:700;color:#E8EAF2;margin-top:3px;">{{ pos.marketValue }}</div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- P&L NO REALIZADA (único % de la pantalla) -->
+          <sc-if value="{{ hasPrice }}" hint-placeholder-val="{{ true }}">
+            <div style="border-top:1px solid #1C224D;margin:18px 0 14px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.4px;color:#8E8E93;text-transform:uppercase;padding-bottom:3px;">P&amp;L no realizada</div>
+              <div style="display:flex;align-items:baseline;gap:9px;">
+                <span class="mono" style="font-size:22px;font-weight:800;color:{{ pnl.color }};">{{ pnl.value }}</span>
+                <span class="mono" style="font-size:14px;font-weight:700;color:{{ pnl.color }};">{{ pnl.percent }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- SIN PRECIO -->
+          <sc-if value="{{ noPrice }}" hint-placeholder-val="{{ false }}">
+            <div style="border-top:1px solid #1C224D;margin:18px 0 0;padding-top:16px;">
+              <div style="font-size:13px;font-weight:500;color:#8E8E93;line-height:1.5;">Sin precio actual no podemos calcular tu retorno.</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- MOVEMENTS -->
+        <div style="padding:24px 4px 10px;"><span style="font-size:18px;font-weight:700;color:#fff;">Movimientos</span></div>
+        <div style="background:#111638;border:1px solid #1C224D;border-radius:20px;padding:4px 18px;margin-bottom:16px;">
+          <sc-for list="{{ rows }}" as="m" hint-placeholder-count="4">
+            <div onClick="{{ m.onOpen }}" style="display:flex;align-items:center;gap:12px;padding:14px 0 14px 13px;border-top:{{ m.borderTop }};border-left:{{ m.borderLeft }};cursor:pointer;">
+              <div style="width:40px;height:40px;border-radius:12px;background:{{ m.badgeBg }};display:flex;align-items:center;justify-content:center;color:{{ m.badgeColor }};flex:none;">
+                <sc-if value="{{ m.isBuy }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                </sc-if>
+                <sc-if value="{{ m.isSell }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                </sc-if>
+                <sc-if value="{{ m.isDividend }}" hint-placeholder-val="{{ false }}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle></svg>
+                </sc-if>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:700;color:#fff;">{{ m.title }}</div>
+                <div style="font-size:12px;color:#8E8E93;margin-top:2px;">{{ m.subtitle }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;">
+                <span class="mono" style="font-size:15px;font-weight:700;color:#E8EAF2;">{{ m.amount }}</span>
+                <sc-if value="{{ m.showArrow }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:14px;font-weight:800;line-height:1;color:{{ m.toneColor }};">{{ m.arrow }}</span>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+      </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;demoState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Con posición&quot;,&quot;options&quot;:[&quot;Con posición&quot;,&quot;Sin precio&quot;,&quot;No encontrado&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+
+  MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  BADGE_PALETTE = [
+    { bg:'rgba(0,229,204,0.14)',  color:'#4FE9D6' },
+    { bg:'rgba(120,160,255,0.16)', color:'#9DB8FF' },
+    { bg:'rgba(0,200,83,0.16)',    color:'#7DE8AA' },
+    { bg:'rgba(255,140,140,0.14)', color:'#FF9D9D' },
+  ];
+
+  MOVE_META = {
+    buy:      { label:'Compra',    bg:'rgba(120,160,255,0.16)', color:'#9DB8FF' },
+    sell:     { label:'Venta',     bg:'rgba(255,140,140,0.14)', color:'#FF9D9D' },
+    dividend: { label:'Dividendo', bg:'rgba(0,229,204,0.12)',   color:'#4FE9D6' },
+  };
+
+  POS = '#00C853';
+  NEG = '#FF5252';
+  BUY_BAND = 0.01; // ±1% banda neutral (§7)
+
+  // ValuedHolding del ticker + MOCK_PRICES[ticker]. Cifras ilustrativas del spec.
+  HOLDING = {
+    ticker:'AAPL', badge:0, price:189.45,
+    shares:1.45320, avgCost:175.20, costBasis:254.60, marketValue:275.31,
+    netPnl:20.71, netPnlPercent:8.1,
+  };
+
+  // amount = total del movimiento; precio/acción = amount / shares
+  MOVEMENTS = [
+    { id:'d1', type:'dividend', date:'2023-11-01', amount:0.34 },
+    { id:'b1', type:'buy',      date:'2023-10-12', amount:85.00,  shares:0.5 },  // $170/acc → barata
+    { id:'b2', type:'buy',      date:'2023-09-28', amount:126.00, shares:0.6 },  // $210/acc → cara
+    { id:'s1', type:'sell',     date:'2023-08-15', amount:38.40,  shares:0.2 },
+  ];
+
+  usd(n){ return '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signedUsd(n){ return (n < -0.005 ? '-$' : '+$') + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  signedPct(n){ return (n < -0.005 ? '-' : '+') + Math.abs(n).toFixed(1) + '%'; }
+  fmtShares(n){ return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:5}); }
+  fmtSharesLabel(n){ return this.fmtShares(n) + ' acc'; }
+  tone(n){ return n < -0.005 ? this.NEG : this.POS; }
+  dateLabel(iso){ const [y,m,d] = iso.split('-').map(Number); return d + ' ' + this.MONTHS_ES[m-1] + ' ' + y; }
+
+  // buyTone: 'up' | 'down' | 'neutral' | null — señal precio-de-compra vs precio actual
+  buyTone(mv, price){
+    if (mv.type !== 'buy' || price == null) return null;
+    const buyPrice = mv.amount / mv.shares;
+    const signal = (price - buyPrice) / buyPrice; // + = compré barato
+    if (Math.abs(signal) <= this.BUY_BAND) return 'neutral';
+    return signal > 0 ? 'up' : 'down';
+  }
+
+  // buildStockDetailView(ticker, holding, price, movements) — view-model puro
+  buildView(h, opts){
+    if (!h || h.shares <= 0) return { state:'not-found', ticker: opts.ticker || '' };
+
+    const hasPrice = !opts.noPrice;
+    const price = hasPrice ? h.price : null;
+    const badge = this.BADGE_PALETTE[h.badge % 4];
+
+    const position = {
+      shares: this.fmtShares(h.shares),
+      avgCost: this.usd(h.avgCost),
+      costBasis: this.usd(h.costBasis),
+      marketValue: hasPrice ? this.usd(h.marketValue) : null,
+      netPnl: hasPrice ? this.signedUsd(h.netPnl) : null,
+      netPnlPercent: hasPrice ? this.signedPct(h.netPnlPercent) : null,
+      netPnlTone: hasPrice ? this.tone(h.netPnl) : null,
+    };
+
+    const rows = [...this.MOVEMENTS]
+      .sort((a,b) => a.date < b.date ? 1 : -1)
+      .map(m => {
+        const meta = this.MOVE_META[m.type];
+        const hasShares = m.type === 'buy' || m.type === 'sell';
+        const parts = [this.dateLabel(m.date)];
+        if (hasShares) parts.push(this.fmtSharesLabel(m.shares));
+        return {
+          id: m.id, type: m.type,
+          title: meta.label,                 // sin ticker
+          subtitle: parts.join(' · '),
+          amount: this.usd(m.amount),        // sin signo, sin color
+          badgeBg: meta.bg, badgeColor: meta.color,
+          buyTone: this.buyTone(m, price),   // up/down/neutral/null
+        };
+      });
+
+    return { state:'found', ticker:h.ticker, badge, price, hasPrice, position, rows };
+  }
+
+  renderVals(){
+    const demo = this.props.demoState ?? 'Con posición';
+    let h = this.HOLDING;
+    let noPrice = false;
+    if (demo === 'Sin precio') noPrice = true;
+    else if (demo === 'No encontrado') h = null;
+
+    const v = this.buildView(h, { noPrice, ticker:'AAPL' });
+
+    if (v.state === 'not-found') return { isNotFound:true, isFound:false, ticker:v.ticker };
+
+    return {
+      isNotFound:false, isFound:true,
+      ticker: v.ticker,
+      badgeBg: v.badge.bg, badgeColor: v.badge.color,
+      price: v.hasPrice ? this.usd(v.price) : 'Sin precio',
+      priceColor: v.hasPrice ? '#fff' : '#8E8E93',
+      priceSize: v.hasPrice ? '36px' : '20px',
+      hasPrice: v.hasPrice,
+      noPrice: !v.hasPrice,
+      pos: {
+        shares: v.position.shares,
+        avgCost: v.position.avgCost,
+        costBasis: v.position.costBasis,
+        marketValue: v.position.marketValue,
+      },
+      pnl: {
+        value: v.position.netPnl, percent: v.position.netPnlPercent, color: v.position.netPnlTone,
+      },
+      rows: v.rows.map((m,i) => {
+        const hasLine = m.buyTone === 'up' || m.buyTone === 'down';
+        const toneColor = m.buyTone === 'up' ? this.POS : (m.buyTone === 'down' ? this.NEG : 'transparent');
+        return {
+          ...m,
+          borderTop: i === 0 ? 'none' : '1px solid #1C224D',
+          borderLeft: hasLine ? '3px solid ' + toneColor : '3px solid transparent',
+          showArrow: hasLine,
+          arrow: m.buyTone === 'up' ? '↑' : '↓',
+          toneColor,
+          isBuy: m.type === 'buy', isSell: m.type === 'sell', isDividend: m.type === 'dividend',
+          onOpen: () => {},
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>
