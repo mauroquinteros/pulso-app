@@ -1,7 +1,12 @@
-import { useLocalSearchParams } from "expo-router";
-import { ScrollView, StyleSheet } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Fragment } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+  MovementRow,
+  MovementSeparator,
+} from "@/components/movements/movement-row";
 import {
   NotFound,
   PositionCard,
@@ -46,6 +51,27 @@ export default function StockDetailScreen() {
             price={view.price}
           />
           <PositionCard position={view.position} />
+
+          {/* The full history — no "View All": there is no per-ticker
+              destination elsewhere, and a per-stock history is short. */}
+          {view.rows.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Movimientos</Text>
+              <View style={styles.movementsCard}>
+                {view.rows.map((row, i) => (
+                  <Fragment key={row.id}>
+                    {i > 0 && <MovementSeparator />}
+                    <MovementRow
+                      row={row}
+                      sharesLabel={row.sharesLabel}
+                      buyTone={row.buyTone}
+                      onPress={() => router.push(`/movement/${row.id}`)}
+                    />
+                  </Fragment>
+                ))}
+              </View>
+            </>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -64,5 +90,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 40,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    paddingHorizontal: 4,
+    paddingTop: 24,
+    paddingBottom: 10,
+  },
+  movementsCard: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 18,
   },
 });
