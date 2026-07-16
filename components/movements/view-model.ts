@@ -32,8 +32,9 @@ export interface MovementsView {
 
 /** Newest first: `executionDate` desc, `createdAt` desc to break same-day ties.
  * The engine's chronological order, reversed — a backdated movement lands where
- * it happened, not at the top. */
-const byChronologicalDesc = (a: Movement, b: Movement): number => {
+ * it happened, not at the top. Exported so the stock detail lists its ticker's
+ * history in the same order as this tab. */
+export const byChronologicalDesc = (a: Movement, b: Movement): number => {
   if (a.executionDate !== b.executionDate) {
     return a.executionDate < b.executionDate ? 1 : -1;
   }

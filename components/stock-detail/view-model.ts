@@ -1,0 +1,140 @@
+import {
+  byChronologicalDesc,
+  type MovementRow,
+} from "@/components/movements/view-model";
+import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
+import type { Movement, ValuedHolding } from "@/types/models";
+import {
+  formatDate,
+  formatShares,
+  formatSharesLabel,
+  formatSignedPercent,
+  formatSignedUSD,
+  formatUSD,
+} from "@/utils/format";
+import { cashImpact } from "@/utils/portfolio/cash";
+
+export type Tone = "positive" | "negative";
+
+/** The cheap-or-expensive mark of a buy against TODAY's price: `"up"` = bought
+ * below it (cheap, green ↑), `"down"` = bought above it (expensive, red ↓),
+ * `"neutral"` = within the ±1% band — no mark at all. */
+export type BuyTone = "up" | "down" | "neutral";
+
+/** The Movimientos-tab row plus the two per-stock extras. The title carries no
+ * ticker (every row here is the same stock), and the amount keeps the tab's
+ * convention: a magnitude, never signed, never coloured. */
+export interface StockMovementRow extends MovementRow {
+  sharesLabel: string | null; // "0.5 acc" on buy/sell; null on dividend
+  buyTone: BuyTone | null; // only buys with a current price; null otherwise
+}
+
+export interface StockDetailView {
+  state: "found" | "not-found";
+  ticker: string;
+  badge: number; // the holding's index — same badge as its Home/Portafolio row
+  price: string | null; // null => "Sin precio"
+  position: {
+    shares: string;
+    avgCost: string;
+    costBasis: string;
+    marketValue: string | null; // null without a price — the cell drops
+    netPnl: string | null; // null without a price — the whole block drops
+    netPnlPercent: string | null;
+    netPnlTone: Tone;
+  } | null; // null only when not-found
+  rows: StockMovementRow[];
+}
+
+/** A signed figure is negative only past the ±0.005 rounding threshold. */
+const toneOf = (amount: number): Tone =>
+  amount < -0.005 ? "negative" : "positive";
+
+/** ±1% around today's price reads as "bought at today's price": neither cheap
+ * nor expensive. Deliberately NOT the ±0.005 sign threshold above — that one
+ * would paint a buy made exactly at today's price as a win, which it isn't. */
+const NEUTRAL_BAND = 0.01;
+
+/** Price-vs-price signal of one buy: `(today − paid) ÷ paid`. A percentage of
+ * price, never a dollar amount per lot — under moving average cost the lots
+ * are diluted and a $ figure would claim something the accounting cannot
+ * (ADR-0001). The exact ±1% edge falls in the neutral band. */
+const buyToneOf = (executionPrice: number, currentPrice: number): BuyTone => {
+  const signal = (currentPrice - executionPrice) / executionPrice;
+  if (Math.abs(signal) <= NEUTRAL_BAND) return "neutral";
+  return signal > 0 ? "up" : "down";
+};
+
+const notFound = (ticker: string): StockDetailView => ({
+  state: "not-found",
+  ticker,
+  badge: 0,
+  price: null,
+  position: null,
+  rows: [],
+});
+
+/**
+ * Pure view-model for the stock detail: turns the ticker's ValuedHolding, its
+ * current price, and its movements into a display-ready view. The screen and
+ * components render it verbatim and hold no derivation or formatting.
+ *
+ * Takes the holdings array (not one holding) so the badge — the holding's
+ * position index, the same one Home and Portafolio use — and the not-found
+ * state are derived here, not by the screen.
+ *
+ * The engine's no-price policy propagates untouched: a missing price nulls the
+ * hero, the market value, and the whole Net P&L block, and strips every buy's
+ * colour mark — never a partial or fabricated figure. The three cost figures
+ * (shares, average cost, cost basis) survive; they don't need a price.
+ *
+ * Closed positions never reach the engine's holdings (`shares > 0` filter), so
+ * an absent ticker IS the closed/unknown case: `not-found`.
+ */
+export function buildStockDetailView(
+  ticker: string,
+  holdings: ValuedHolding[],
+  price: number | undefined,
+  movements: Movement[],
+): StockDetailView {
+  const badge = holdings.findIndex((h) => h.ticker === ticker);
+  const holding = badge === -1 ? undefined : holdings[badge];
+  if (!holding || holding.shares === 0) return notFound(ticker);
+
+  const rows: StockMovementRow[] = movements
+    .filter((m) => "ticker" in m && m.ticker === ticker)
+    .sort(byChronologicalDesc)
+    .map((m) => ({
+      id: m.id,
+      title: MOVEMENT_TYPE_META[m.type].label, // "Compra" — no ticker here
+      dateLabel: formatDate(m.executionDate),
+      amount: formatUSD(Math.abs(cashImpact(m))),
+      type: m.type,
+      sharesLabel: "shares" in m ? formatSharesLabel(m.shares) : null,
+      buyTone:
+        m.type === "buy" && price !== undefined
+          ? buyToneOf(m.executionPrice, price)
+          : null,
+    }));
+
+  return {
+    state: "found",
+    ticker,
+    badge,
+    price: price !== undefined ? formatUSD(price) : null,
+    position: {
+      shares: formatShares(holding.shares),
+      avgCost: formatUSD(holding.avgCost),
+      costBasis: formatUSD(holding.costBasis),
+      marketValue:
+        holding.marketValue !== null ? formatUSD(holding.marketValue) : null,
+      netPnl: holding.netPnl !== null ? formatSignedUSD(holding.netPnl) : null,
+      netPnlPercent:
+        holding.netPnlPercent !== null
+          ? formatSignedPercent(holding.netPnlPercent)
+          : null,
+      netPnlTone: toneOf(holding.netPnl ?? 0),
+    },
+    rows,
+  };
+}
