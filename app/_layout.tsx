@@ -13,8 +13,6 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Text } from "react-native";
 
-import { Colors } from "@/constants/theme";
-
 export const unstable_settings = {
   anchor: "(tabs)",
 };
@@ -54,15 +52,8 @@ export default function RootLayout() {
     <ThemeProvider value={DarkTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="stock/[ticker]"
-          options={{
-            title: "Stock Detail",
-            headerStyle: { backgroundColor: Colors.background },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        {/* Draws its own ScreenHeader, like the add-movement forms. */}
+        {/* Draw their own ScreenHeader, like the add-movement forms. */}
+        <Stack.Screen name="stock/[ticker]" options={{ headerShown: false }} />
         <Stack.Screen name="movement/[id]" options={{ headerShown: false }} />
         <Stack.Screen
           name="add-movement"
