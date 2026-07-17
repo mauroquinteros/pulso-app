@@ -29,9 +29,11 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { useMovementsStore } from "@/stores/movements";
 import { formatShares, formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
+import { maxSellableAsOf } from "@/utils/portfolio/reducer";
 
 export default function SellFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
+  const movements = useMovementsStore((s) => s.movements);
   const holdings = usePortfolio().holdings;
   const [ticker, setTicker] = useState("");
   const [shares, setShares] = useState("");
@@ -46,8 +48,12 @@ export default function SellFormScreen() {
   const [touchedPrice, setTouchedPrice] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const availableShares =
-    holdings.find((h) => h.ticker === ticker)?.shares ?? 0;
+  // What the user holds today (for the "never owned it" message) vs. what a
+  // sell dated `executionDate` may actually take: a backdated sale is limited
+  // by the holdings AT that date and by later sells that already spent them —
+  // otherwise the engine's replay would meet a sell with nothing behind it.
+  const currentShares = holdings.find((h) => h.ticker === ticker)?.shares ?? 0;
+  const availableShares = maxSellableAsOf(movements, ticker, executionDate);
 
   const summary = summarizeSell(
     { ticker, shares, executionPrice, fee, regulatoryFees, executionDate },
@@ -66,11 +72,17 @@ export default function SellFormScreen() {
     touchedShares && (summary.sharesInvalid || summary.insufficientShares);
   const showPriceError = touchedPrice && summary.priceInvalid;
 
+  // The date-qualified variants only appear when the chosen date (not the
+  // current position) is what binds — the common today-dated case reads plain.
   const sharesErrorMsg = summary.sharesInvalid
     ? "Ingresa una cantidad mayor a 0."
-    : availableShares === 0
+    : currentShares === 0
       ? `No tienes acciones de ${ticker}.`
-      : `Solo tienes ${formatShares(availableShares)} acciones.`;
+      : availableShares === 0
+        ? `No tenías acciones de ${ticker} en esa fecha.`
+        : availableShares === currentShares
+          ? `Solo tienes ${formatShares(availableShares)} acciones.`
+          : `En esa fecha solo puedes vender ${formatShares(availableShares)} acciones.`;
 
   const showDisponible =
     ticker !== "" &&

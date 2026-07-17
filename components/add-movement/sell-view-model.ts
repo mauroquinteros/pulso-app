@@ -48,7 +48,8 @@ export interface SellDeps {
  * — the cash-side credit, since computeCash does `cash += executionPrice × shares - fee -
  * regulatoryFees`. It previews the engine; it does not re-implement it. With Acciones or Precio
  * blank/≤0 the figures are $0.00. The gate is strict: you can only sell what you hold, so the
- * caller passes in the available shares for the typed ticker (0 if not held).
+ * caller passes in the available shares for the typed ticker AT the chosen execution date
+ * (`maxSellableAsOf` — 0 if not held then), so a backdated sale can never outrun its backing buy.
  */
 export function summarizeSell(
   input: SellInput,

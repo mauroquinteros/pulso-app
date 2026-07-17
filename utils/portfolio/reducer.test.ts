@@ -4,7 +4,7 @@ import type {
   SellMovement,
 } from "@/types/models";
 import { describe, expect, it } from "vitest";
-import { deriveHoldingFacts } from "./reducer";
+import { deriveHoldingFacts, maxSellableAsOf } from "./reducer";
 
 let seq = 0;
 const buy = (
@@ -139,5 +139,64 @@ describe("deriveHoldingFacts", () => {
       sell(250, 4, "2025-02-01"),
     ]);
     expect(shuffled).toEqual(ordered);
+  });
+
+  describe("oversell — an incoherent history never fabricates figures", () => {
+    it("a sell backdated before the first buy realizes nothing and keeps the buy intact", () => {
+      const facts = deriveHoldingFacts([
+        buy(100, 10, "2025-02-01"),
+        sell(195.5, 5, "2025-01-01"), // date typo: lands before the backing buy
+      ]);
+      expect(facts.realizedPnl).toBe(0); // NOT (195.50 - 0) * 5 = 977.50
+      expect(facts.shares).toBe(10); // nothing was sellable, so nothing left
+      expect(facts.avgCost).toBe(100);
+      expect(facts.costBasis).toBe(1000);
+    });
+
+    it("a partial oversell realizes P&L only on the shares actually held", () => {
+      const facts = deriveHoldingFacts([
+        buy(100, 3, "2025-01-01"),
+        sell(120, 5, "2025-02-01"), // only 3 held — the excess 2 never existed
+      ]);
+      expect(facts.realizedPnl).toBe(60); // (120 - 100) * 3, not * 5
+      expect(facts.shares).toBe(0);
+      expect(facts.costBasis).toBe(0);
+    });
+
+    it("still counts the clamped sell's fees — the commission was charged regardless", () => {
+      const facts = deriveHoldingFacts([sell(100, 5, "2025-01-01", 1, 0.5)]);
+      expect(facts.totalFees).toBe(1.5);
+      expect(facts.realizedPnl).toBe(0);
+      expect(facts.shares).toBe(0);
+    });
+  });
+});
+
+describe("maxSellableAsOf", () => {
+  it("with no movements after the date, it is the shares held at that date", () => {
+    const movements = [buy(100, 10, "2025-02-01"), sell(120, 4, "2025-03-01")];
+    expect(maxSellableAsOf(movements, "AAPL", "2025-06-15")).toBe(6);
+  });
+
+  it("is 0 before the first buy — the backdated-oversell gate", () => {
+    const movements = [buy(100, 10, "2025-02-01")];
+    expect(maxSellableAsOf(movements, "AAPL", "2025-01-01")).toBe(0);
+  });
+
+  it("is capped by later sells that already spend the shares", () => {
+    // Held 10 since feb, but 8 are sold in jun: a sell dated march may take at
+    // most 2, or June's sell would replay against shares that no longer exist.
+    const movements = [buy(100, 10, "2025-02-01"), sell(120, 8, "2025-06-01")];
+    expect(maxSellableAsOf(movements, "AAPL", "2025-03-15")).toBe(2);
+  });
+
+  it("a sell dated the same day as a buy can spend that buy", () => {
+    const movements = [buy(100, 10, "2025-02-01")];
+    expect(maxSellableAsOf(movements, "AAPL", "2025-02-01")).toBe(10);
+  });
+
+  it("is 0 for a ticker never traded", () => {
+    const movements = [buy(100, 10, "2025-02-01")];
+    expect(maxSellableAsOf(movements, "MSFT", "2025-06-15")).toBe(0);
   });
 });

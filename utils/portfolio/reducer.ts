@@ -1,4 +1,4 @@
-import type { Movement } from "@/types/models";
+import type { BuyMovement, Movement, SellMovement } from "@/types/models";
 import {
   isBuyMovement,
   isDividendMovement,
@@ -50,10 +50,17 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
       costTotal += m.executionPrice * m.shares;
     } else if (isSellMovement(m)) {
       totalFees += m.fee + m.regulatoryFees;
+      // Never sell more than is held at this point of the replay. An
+      // incoherent history (a sell backdated before its backing buy) must not
+      // fabricate realized P&L out of a $0 average cost, nor leave negative
+      // shares for the full-exit reset to swallow. The sell form prevents
+      // these from being created (maxSellableAsOf); this is the engine's own
+      // guarantee that it never invents figures.
+      const sold = Math.min(m.shares, shares);
       const avgCostAtSale = shares > 0 ? costTotal / shares : 0;
-      realizedPnl += (m.executionPrice - avgCostAtSale) * m.shares;
-      shares -= m.shares;
-      costTotal -= avgCostAtSale * m.shares;
+      realizedPnl += (m.executionPrice - avgCostAtSale) * sold;
+      shares -= sold;
+      costTotal -= avgCostAtSale * sold;
       if (shares < SHARE_EPSILON) {
         // Full exit: reset so a later re-buy starts a fresh average.
         shares = 0;
@@ -72,6 +79,44 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
     totalDividends: round2(totalDividends),
     totalFees: round2(totalFees),
   };
+}
+
+/**
+ * The most shares of `ticker` a sell dated `date` could take without driving
+ * the position negative anywhere in the replay: the minimum of the shares
+ * held as of `date` and the shares held after every later movement. This is
+ * the sell form's gate for backdated sells — "what you hold today" is not
+ * enough when the sale lands in the past: shares held then may already be
+ * spent by a sell that comes after the chosen date.
+ *
+ * A sell dated the same day as an existing movement sorts after it (its
+ * `createdAt` is newest), so same-day buys count as held.
+ */
+export function maxSellableAsOf(
+  movements: Movement[],
+  ticker: string,
+  date: string,
+): number {
+  const ordered = movements
+    .filter(
+      (m): m is BuyMovement | SellMovement =>
+        (isBuyMovement(m) || isSellMovement(m)) && m.ticker === ticker,
+    )
+    .sort(compareChronological);
+
+  let held = 0;
+  let sellable = Infinity;
+  let pastDate = false;
+  for (const m of ordered) {
+    if (!pastDate && m.executionDate > date) {
+      pastDate = true;
+      sellable = held;
+    }
+    held += isBuyMovement(m) ? m.shares : -m.shares;
+    if (pastDate) sellable = Math.min(sellable, held);
+  }
+  if (!pastDate) sellable = held; // the date is at/after the last movement
+  return Math.max(0, round8(sellable));
 }
 
 function compareChronological(a: Movement, b: Movement): number {
