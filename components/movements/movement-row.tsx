@@ -54,7 +54,7 @@ export function MovementRow({
           {sharesLabel ? `${row.dateLabel} · ${sharesLabel}` : row.dateLabel}
         </Text>
       </View>
-      <View style={styles.amountCol}>
+      <View style={styles.amountGroup}>
         <Text style={styles.amount}>{row.amount}</Text>
         {marked && (
           <Text style={[styles.arrow, { color: markColor }]}>
@@ -104,9 +104,10 @@ const styles = StyleSheet.create({
     borderLeftColor: "transparent",
     paddingLeft: 13,
   },
-  amountCol: {
-    alignItems: "flex-end",
-    gap: 3,
+  amountGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
   amount: {
     fontSize: 15,

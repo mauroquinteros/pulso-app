@@ -30,7 +30,7 @@ export interface StockMovementRow extends MovementRow {
 }
 
 /** The ticker's lifetime return, concluded by its Total Return of a stock
- * (glossary): `Net P&L + Realized P&L + Net Dividends − Fees`. A dollar figure
+ * (glossary): `Net P&L + Realized P&L + Net Dividends - Fees`. A dollar figure
  * with NO percentage, ever — there is no honest denominator for one. The only
  * % here belongs to Net P&L, whose numerator and denominator are both
  * current-position figures. Dividends and fees are magnitudes (their direction
@@ -75,7 +75,7 @@ const toneOf = (amount: number): Tone =>
  * would paint a buy made exactly at today's price as a win, which it isn't. */
 const NEUTRAL_BAND = 0.01;
 
-/** Price-vs-price signal of one buy: `(today − paid) ÷ paid`. A percentage of
+/** Price-vs-price signal of one buy: `(today - paid) / paid`. A percentage of
  * price, never a dollar amount per lot — under moving average cost the lots
  * are diluted and a $ figure would claim something the accounting cannot
  * (ADR-0001). The exact ±1% edge falls in the neutral band. */
@@ -157,7 +157,7 @@ export function buildStockDetailView(
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** The lifetime return block, concluded by the Total Return of a stock:
- * `Net P&L + Realized P&L + Net Dividends − Fees` (glossary formula, scoped to
+ * `Net P&L + Realized P&L + Net Dividends - Fees` (glossary formula, scoped to
  * this ticker). Null without a price: Net P&L is unknowable, so the sum is
  * too, and a partial return is never shown. */
 function buildReturnBlock(holding: ValuedHolding): StockReturnBlock | null {
