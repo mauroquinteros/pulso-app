@@ -286,6 +286,48 @@ describe("summarizeSell", () => {
     );
     expect(blank.insufficientShares).toBe(false);
   });
+
+  describe("fees exceeding gross (a negative Total a recibir)", () => {
+    it("blocks save and flags feesExceedGross when Comisión + Impuestos > gross", () => {
+      // 1 share at $1 = $1 gross, but a $5 fee => total -$4.
+      const over = summarizeSell(
+        { ...base, shares: "1", executionPrice: "1", fee: "5", regulatoryFees: "" },
+        6,
+      );
+      expect(over.total).toBe(-4);
+      expect(over.feesExceedGross).toBe(true);
+      expect(over.saveEnabled).toBe(false);
+    });
+
+    it("counts both fee and regulatoryFees against gross, not just fee", () => {
+      // 1 share at $10 = $10 gross; $6 fee + $5 impuestos = $11 => total -$1.
+      const over = summarizeSell(
+        { ...base, shares: "1", executionPrice: "10", fee: "6", regulatoryFees: "5" },
+        6,
+      );
+      expect(over.total).toBe(-1);
+      expect(over.feesExceedGross).toBe(true);
+      expect(over.saveEnabled).toBe(false);
+    });
+
+    it("allows fees exactly equal to gross (total $0 is honest, not a debit)", () => {
+      const even = summarizeSell(
+        { ...base, shares: "1", executionPrice: "10", fee: "6", regulatoryFees: "4" },
+        6,
+      );
+      expect(even.total).toBe(0);
+      expect(even.feesExceedGross).toBe(false);
+      expect(even.saveEnabled).toBe(true);
+    });
+
+    it("does not flag feesExceedGross on a blank form (no gross yet)", () => {
+      const blank = summarizeSell(
+        { ...base, shares: "", executionPrice: "", fee: "5", regulatoryFees: "" },
+        6,
+      );
+      expect(blank.feesExceedGross).toBe(false);
+    });
+  });
 });
 
 describe("buildSellMovement", () => {

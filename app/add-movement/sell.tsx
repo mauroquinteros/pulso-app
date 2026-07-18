@@ -15,14 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  buildSellMovement,
-  summarizeSell,
-} from "@/components/add-movement/sell-view-model";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
+import {
+  buildSellMovement,
+  summarizeSell,
+} from "@/components/add-movement/sell-view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -107,11 +107,12 @@ export default function SellFormScreen() {
       ? "rgba(0,229,204,0.5)"
       : Colors.border;
 
-  const totalColor = summary.insufficientShares
-    ? Colors.negative
-    : summary.total > 0
-      ? Colors.textPrimary
-      : "#3E4470";
+  const totalColor =
+    summary.insufficientShares || summary.feesExceedGross
+      ? Colors.negative
+      : summary.total > 0
+        ? Colors.textPrimary
+        : "#3E4470";
 
   const onSave = () => {
     if (!canSave) return;
@@ -294,6 +295,11 @@ export default function SellFormScreen() {
                 {formatUSD(summary.total)}
               </Text>
             </View>
+            {summary.feesExceedGross && (
+              <Text style={styles.errorText}>
+                La comisión y los impuestos superan el monto bruto
+              </Text>
+            )}
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />
         </View>

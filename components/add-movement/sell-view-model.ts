@@ -23,7 +23,7 @@ export interface SellSummary {
   sharesPositive: boolean;
   /** Precio > 0 — drives the teal accent on the Precio field. */
   pricePositive: boolean;
-  /** Save-gate: ticker≠"" and shares>0 and shares≤available and price>0 and fee≥0 and regFees≥0. */
+  /** Save-gate: ticker≠"" and shares>0 and shares≤available and price>0 and fee≥0 and regFees≥0 and fees≤gross. */
   saveEnabled: boolean;
   /** The ticker is empty (after trim/uppercase) — drives the error once touched. */
   tickerInvalid: boolean;
@@ -33,6 +33,10 @@ export interface SellSummary {
   priceInvalid: boolean;
   /** Acciones exceeds the held shares for the ticker — over-sell, blocks save. */
   insufficientShares: boolean;
+  /** Comisión + Impuestos exceed the gross — a negative Total a recibir, blocks
+   * save. A cross-field invariant like `total`, not a single-field error, so the
+   * screen surfaces it by the total (not gated on a touched field). */
+  feesExceedGross: boolean;
 }
 
 export interface SellDeps {
@@ -68,6 +72,7 @@ export function summarizeSell(
   const sharesInvalid = input.shares !== "" && shares <= 0;
   const priceInvalid = input.executionPrice !== "" && price <= 0;
   const insufficientShares = shares > 0 && shares > availableShares;
+  const feesExceedGross = gross > 0 && fee + regulatoryFees > gross;
 
   const saveEnabled =
     !tickerInvalid &&
@@ -75,7 +80,8 @@ export function summarizeSell(
     shares <= availableShares &&
     price > 0 &&
     fee >= 0 &&
-    regulatoryFees >= 0;
+    regulatoryFees >= 0 &&
+    fee + regulatoryFees <= gross;
 
   return {
     gross,
@@ -89,6 +95,7 @@ export function summarizeSell(
     sharesInvalid,
     priceInvalid,
     insufficientShares,
+    feesExceedGross,
   };
 }
 
