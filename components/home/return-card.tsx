@@ -119,8 +119,7 @@ export function ReturnCard({ return: ret }: Props) {
             );
           })}
           <Text style={styles.footnote}>
-            Los componentes suman el Rendimiento total · % sobre capital
-            aportado
+            Los componentes suman el rendimiento total
           </Text>
         </View>
       )}
@@ -266,8 +265,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   footnote: {
-    fontSize: 11,
-    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.textSecondary,
     marginTop: 1,
   },
 });

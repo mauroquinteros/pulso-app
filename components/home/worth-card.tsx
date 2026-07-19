@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   legendPct: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   amount: {
     fontSize: 14,

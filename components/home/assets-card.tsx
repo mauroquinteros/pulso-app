@@ -98,9 +98,9 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   headerStat: {
-    fontSize: 11,
-    color: Colors.textSecondary,
+    fontSize: 12,
     fontWeight: "500",
+    color: Colors.textSecondary,
   },
   headerStatValue: {
     fontWeight: "700",

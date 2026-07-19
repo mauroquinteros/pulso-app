@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Donut, segmentColor } from "./donut";
@@ -57,14 +58,12 @@ export function DistributionCard({ distribution }: Props) {
         <Text style={styles.legendToggleText}>
           {legendOpen ? "Ocultar leyenda" : "Ver leyenda"}
         </Text>
-        <Text
-          style={[
-            styles.chevron,
-            { transform: [{ rotate: legendOpen ? "180deg" : "0deg" }] },
-          ]}
-        >
-          ▾
-        </Text>
+        <Ionicons
+          name="chevron-down"
+          size={12}
+          color={Colors.textSecondary}
+          style={{ transform: [{ rotate: legendOpen ? "180deg" : "0deg" }] }}
+        />
       </Pressable>
 
       {legendOpen && (
@@ -141,10 +140,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: "600",
-  },
-  chevron: {
-    fontSize: 11,
-    color: Colors.textSecondary,
   },
   legend: {
     marginTop: 10,
