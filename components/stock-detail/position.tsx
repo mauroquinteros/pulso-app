@@ -1,27 +1,23 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { Colors, HoldingBadgePalette } from "@/constants/theme";
+import { Colors, HoldingBadge } from "@/constants/theme";
 import type { StockDetailView, StockReturnBlock, Tone } from "./view-model";
 
-/** Badge + current-price hero. The badge is the ticker's — the same palette
- * color as the row the user tapped, so the list and its detail read as the
- * same thing. Without a price the hero degrades to a small "Sin precio":
- * quietly dropping it would read as a bug, a minimal marker reads as "we
- * don't have it". */
+/** Badge + current-price hero. The badge carries the same single tint as every
+ * holding row, so the list and its detail read as the same thing. Without a
+ * price the hero degrades to a small "Sin precio": quietly dropping it would
+ * read as a bug, a minimal marker reads as "we don't have it". */
 export function StockIdentity({
   ticker,
-  badge,
   price,
 }: {
   ticker: string;
-  badge: number;
   price: string | null;
 }) {
-  const palette = HoldingBadgePalette[badge % HoldingBadgePalette.length];
   return (
     <View style={styles.identity}>
-      <View style={[styles.badge, { backgroundColor: palette.bg }]}>
-        <Text style={[styles.badgeText, { color: palette.color }]}>
+      <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
+        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>
           {ticker}
         </Text>
       </View>

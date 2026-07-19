@@ -37,7 +37,6 @@ export interface HoldingRow {
   pnl: string | null; // "+$240.18" / "-$12.40"
   pnlPct: string | null; // "+8.73%" / "-1.20%" (2 decimals, signed like Home)
   pnlTone: Tone; // threshold ±0.005
-  badge: number; // palette index, same as the ticker's segment colorIndex
 }
 
 export interface PortfolioView {
@@ -81,10 +80,9 @@ const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number =>
 export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
   const { cash, holdings, holdingsMissingPrice } = portfolio;
 
-  // "Mis Activos" rows — priced first (Market Value desc), unpriced last. The
-  // row index doubles as the badge/segment color index.
+  // "Mis Activos" rows — priced first (Market Value desc), unpriced last.
   const sorted = [...holdings].sort(byMarketValueDesc);
-  const holdingRows: HoldingRow[] = sorted.map((h, i) => ({
+  const holdingRows: HoldingRow[] = sorted.map((h) => ({
     ticker: h.ticker,
     sharesLabel: formatShares(h.shares),
     priceAvailable: h.priceAvailable,
@@ -99,7 +97,6 @@ export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
         ? formatSignedPercent(h.netPnlPercent ?? 0)
         : null,
     pnlTone: toneOf(h.netPnl ?? 0),
-    badge: i,
   }));
 
   // Nothing to show: no holdings and no positive cash.

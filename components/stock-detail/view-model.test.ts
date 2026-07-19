@@ -155,10 +155,12 @@ describe("buildStockDetailView", () => {
     });
   });
 
-  it("badge is the holding's index — the same badge as its Home/Portafolio row", () => {
+  it("finds the holding by ticker, whatever its position in the array", () => {
     const holdings = [valued("AAPL"), valued("VOO")];
-    expect(buildStockDetailView("AAPL", holdings, 189.45, []).badge).toBe(0);
-    expect(buildStockDetailView("VOO", holdings, 458.6, []).badge).toBe(1);
+    expect(buildStockDetailView("VOO", holdings, 458.6, []).state).toBe("found");
+    expect(buildStockDetailView("VOO", [...holdings].reverse(), 458.6, []).state).toBe(
+      "found",
+    );
   });
 
   it("a losing position renders a negative tone and an ASCII hyphen, never U+2212", () => {

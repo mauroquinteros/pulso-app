@@ -6,6 +6,56 @@ larger or design-sensitive and wait for a deliberate pass.
 
 ---
 
+## Donut: the palette wraps before the segment cap, so two slices share a color
+
+**Type:** bug · **Status:** backlog · **Raised:** 2026-07-18
+
+**Problem.** `HoldingBadgePalette` has **4** entries and `segmentColor` wraps
+with `colorIndex % 4` (`components/portfolio/donut.tsx`). But the donut draws up
+to **6** holding segments (`MAX_HOLDING_SEGMENTS = 6`):
+
+- 5-6 priced holdings -> no grouping, indices 0..5. The 5th wraps onto color 0,
+  the 6th onto color 1.
+- 7+ priced holdings -> grouped into the top 5, indices 0..4. The 5th wraps
+  onto color 0.
+
+So from **5 priced holdings on**, two slices render the same color and the
+legend shows two rows with the same swatch. In the donut the color IS the only
+key tying a slice to its legend row, so this destroys the mapping the legend
+exists to provide. (`cash` and `others` use reserved colors and are unaffected.)
+
+**Fix.** The palette needs at least 6 entries, keeping them distinguishable at
+the ~10px swatch size and on the dark surface. Picking 2 more colors that hold
+up against the existing 4 is a design call, not a mechanical edit.
+
+**Note.** The badge-color divergence between screens was a *separate* problem,
+fixed by collapsing every holding badge to the single `HoldingBadge` tint. The
+donut deliberately kept its per-segment colors — there color encodes, it does
+not decorate.
+
+---
+
+## Ordering belongs to the backend, not the view-models
+
+**Type:** refactor · **Status:** backlog (blocked on backend) · **Raised:** 2026-07-18
+
+**Problem.** `buildPortfolioView` sorts holdings by Market Value desc client
+side. Once a real backend lands (`hooks/use-portfolio.ts` is the intended swap
+point, today on `MOCK_PRICES`), ordering should come down with the data. If the
+backend ever paginates, sorting client side becomes actively wrong — it would
+order only the current page and present it as a ranking.
+
+**Not urgent, and now safe to defer:** the reason this was entangled with the
+badge bug is gone. Colors no longer derive from row position, so the backend can
+change the order freely without any visual churn.
+
+**Open question for when this lands:** presentation order is not purely a
+backend concern — a donut wants biggest-first, a "recent movements" list wants
+chronological. Decide whether the API grows per-screen ordering params (leaks
+presentation into the API) or the client keeps a thin presentation sort.
+
+---
+
 ## Define and adopt a type scale (font-size sprawl)
 
 **Type:** design-system / refactor · **Status:** backlog · **Raised:** 2026-07-18

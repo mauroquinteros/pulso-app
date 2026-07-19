@@ -87,7 +87,6 @@ describe("buildPortfolioView", () => {
         pnl: "+$240.18",
         pnlPct: "+8.73%",
         pnlTone: "positive",
-        badge: 0,
       },
       {
         ticker: "VOO",
@@ -97,7 +96,6 @@ describe("buildPortfolioView", () => {
         pnl: "+$35.50",
         pnlPct: "+2.26%",
         pnlTone: "positive",
-        badge: 1,
       },
     ]);
   });

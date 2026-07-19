@@ -51,7 +51,6 @@ export interface StockReturnBlock {
 export interface StockDetailView {
   state: "found" | "not-found";
   ticker: string;
-  badge: number; // the holding's index — same badge as its Home/Portafolio row
   price: string | null; // null => "Sin precio"
   position: {
     shares: string;
@@ -88,7 +87,6 @@ const buyToneOf = (executionPrice: number, currentPrice: number): BuyTone => {
 const notFound = (ticker: string): StockDetailView => ({
   state: "not-found",
   ticker,
-  badge: 0,
   price: null,
   position: null,
   rows: [],
@@ -99,8 +97,7 @@ const notFound = (ticker: string): StockDetailView => ({
  * current price, and its movements into a display-ready view. The screen and
  * components render it verbatim and hold no derivation or formatting.
  *
- * Takes the holdings array (not one holding) so the badge — the holding's
- * position index, the same one Home and Portafolio use — and the not-found
+ * Takes the holdings array (not one holding) so the lookup and the not-found
  * state are derived here, not by the screen.
  *
  * The engine's no-price policy propagates untouched: a missing price nulls the
@@ -117,8 +114,7 @@ export function buildStockDetailView(
   price: number | undefined,
   movements: Movement[],
 ): StockDetailView {
-  const badge = holdings.findIndex((h) => h.ticker === ticker);
-  const holding = badge === -1 ? undefined : holdings[badge];
+  const holding = holdings.find((h) => h.ticker === ticker);
   if (!holding || holding.shares === 0) return notFound(ticker);
 
   const rows: StockMovementRow[] = movements
@@ -140,7 +136,6 @@ export function buildStockDetailView(
   return {
     state: "found",
     ticker,
-    badge,
     price: price !== undefined ? formatUSD(price) : null,
     position: {
       shares: formatShares(holding.shares),

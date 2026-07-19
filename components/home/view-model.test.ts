@@ -110,7 +110,6 @@ describe("buildHomeView", () => {
         value: "$2,991.21",
         pnl: "+$240.18 · +8.73%",
         pnlTone: "positive",
-        badge: 0,
       },
       {
         ticker: "VOO",
@@ -119,7 +118,6 @@ describe("buildHomeView", () => {
         value: "$1,605.10",
         pnl: "+$35.50 · +2.26%",
         pnlTone: "positive",
-        badge: 1,
       },
     ]);
 

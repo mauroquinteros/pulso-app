@@ -33,8 +33,15 @@ export const Gradients = {
   avatar: [Colors.accent, "#1C9C8F"] as const, // avatar disc, 135deg teal
 };
 
-/** Per-holding badge colors, assigned by position (wraps). First two match the
- * design (AAPL teal, VOO blue). */
+/** The one holding-badge tint, used by every ticker badge (Home, Portafolio,
+ * stock detail). Deliberately NOT per-ticker: the badge already spells the
+ * ticker out, so its color carries no information, and deriving it from a row
+ * position made the same ticker change color between screens. */
+export const HoldingBadge = { bg: "rgba(0,229,204,0.14)", color: "#4FE9D6" };
+
+/** Donut segment colors, assigned by segment position (wraps). Only the
+ * Distribución donut and its legend use these — there the color IS the key
+ * that ties a slice to its legend row. First two match the design. */
 export const HoldingBadgePalette: { bg: string; color: string }[] = [
   { bg: "rgba(0,229,204,0.14)", color: "#4FE9D6" },
   { bg: "rgba(120,160,255,0.16)", color: "#9DB8FF" },

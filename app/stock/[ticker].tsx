@@ -47,7 +47,6 @@ export default function StockDetailScreen() {
         >
           <StockIdentity
             ticker={view.ticker}
-            badge={view.badge}
             price={view.price}
           />
           <PositionCard position={view.position} />

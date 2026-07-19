@@ -38,7 +38,6 @@ export interface HomeView {
       value: string | null;
       pnl: string | null;
       pnlTone: Tone;
-      badge: number;
     }[];
   };
 }
@@ -114,7 +113,7 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
   const assets: HomeView["assets"] = {
     netPnl: `${formatSignedUSD(netPnl)} · ${formatSignedPercent(netPnlPercent)}`,
     netPnlTone: toneOf(netPnl),
-    holdings: holdings.map((h, i) => ({
+    holdings: holdings.map((h) => ({
       ticker: h.ticker,
       shares: formatSharesLabel(h.shares),
       priceAvailable: h.priceAvailable,
@@ -127,7 +126,6 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
           ? `${formatSignedUSD(h.netPnl)} · ${formatSignedPercent(h.netPnlPercent ?? 0)}`
           : null,
       pnlTone: toneOf(h.netPnl ?? 0),
-      badge: i,
     })),
   };
 
