@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   compSub: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     fontWeight: "400",
   },
   compValue: {

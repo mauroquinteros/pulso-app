@@ -16,7 +16,7 @@ export function HomeHeader() {
         <Text style={styles.avatarLetter}>P</Text>
       </LinearGradient>
       <View style={styles.search}>
-        <Ionicons name="search" size={16} color={Colors.textMuted} />
+        <Ionicons name="search" size={16} color={Colors.textSecondary} />
         <Text style={styles.searchText}>Buscar activo o ticker</Text>
       </View>
       <View style={styles.bell}>
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchText: {
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     fontSize: 13,
   },
   bell: {
