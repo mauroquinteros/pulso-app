@@ -1,8 +1,9 @@
-import { Colors, HoldingBadgePalette } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import type { GestureResponderEvent } from "react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
-import type { ColorIndex, DonutSegment } from "./view-model";
+import type { DonutSegment } from "./view-model";
+import { segmentColor } from "./view-model";
 
 // Geometry (matches the prototype): 184px rendered over a 140 viewBox, r=54,
 // ring thickness 22 (+5 when selected), 2.4 arc gap, unselected dim to 0.28.
@@ -24,14 +25,6 @@ const OUTER_HIT = RADIUS + THICKNESS / 2 + 6;
 
 const GAP_DEG = (GAP / CIRCUMFERENCE) * 360;
 const FULL = 0.9999; // a single segment filling the whole ring
-
-/** Maps a segment's colorIndex to its stroke color: a badge palette entry, or
- * the two reserved colors (Efectivo, Otros). */
-export function segmentColor(colorIndex: ColorIndex): string {
-  if (colorIndex === "cash") return Colors.investedBar;
-  if (colorIndex === "others") return Colors.textMuted;
-  return HoldingBadgePalette[colorIndex % HoldingBadgePalette.length].color;
-}
 
 /** Point on the ring at `angleDeg` (0° = 12 o'clock, clockwise). */
 function polar(angleDeg: number): { x: number; y: number } {

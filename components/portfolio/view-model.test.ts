@@ -2,7 +2,7 @@ import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
 import type { BuyMovement, DepositMovement, Movement } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
-import { buildPortfolioView } from "./view-model";
+import { buildPortfolioView, segmentColor } from "./view-model";
 
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
@@ -99,6 +99,28 @@ describe("buildPortfolioView", () => {
       },
     ]);
   });
+
+  // The legend is the only thing tying a slice to its ticker, and it ties them
+  // by colour — so two slices sharing one makes the mapping unreadable. This
+  // used to break from 5 priced holdings on: the palette held 4 colours and
+  // segmentColor wrapped with `% 4`, so the 5th slice reused the 1st's.
+  it.each([5, 6, 7, 9])(
+    "gives every drawn segment its own colour with %i priced holdings",
+    (n) => {
+      const tickers = Array.from({ length: n }, (_, i) => `T${i}`);
+      const movements: Movement[] = [
+        deposit(100_000),
+        ...tickers.map((t, i) => buy(t, 100, 100 - i)),
+      ];
+      const prices = Object.fromEntries(tickers.map((t) => [t, 100]));
+      const view = buildPortfolioView(assemblePortfolio(movements, prices));
+
+      const colors = view.distribution.segments.map((s) =>
+        segmentColor(s.colorIndex),
+      );
+      expect(new Set(colors).size).toBe(colors.length);
+    },
+  );
 
   it("groups 7+ holdings into top 5 + Otros; Efectivo never inside Otros", () => {
     // Seven priced holdings, cash spent to ~0 so the donut shows holdings only.

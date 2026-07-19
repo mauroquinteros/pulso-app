@@ -2,7 +2,8 @@ import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Donut, segmentColor } from "./donut";
+import { Donut } from "./donut";
+import { segmentColor } from "./view-model";
 import type { PortfolioView } from "./view-model";
 
 type Props = {

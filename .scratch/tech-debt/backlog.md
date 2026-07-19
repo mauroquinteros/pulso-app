@@ -6,32 +6,22 @@ larger or design-sensitive and wait for a deliberate pass.
 
 ---
 
-## Donut: the palette wraps before the segment cap, so two slices share a color
+## Efectivo and Otros are near-identical colors in the same donut
 
-**Type:** bug · **Status:** backlog · **Raised:** 2026-07-18
+**Type:** bug (minor) · **Status:** backlog · **Raised:** 2026-07-18
 
-**Problem.** `HoldingBadgePalette` has **4** entries and `segmentColor` wraps
-with `colorIndex % 4` (`components/portfolio/donut.tsx`). But the donut draws up
-to **6** holding segments (`MAX_HOLDING_SEGMENTS = 6`):
+**Problem.** The two reserved segment colors are `investedBar #5B63A0` (91,99,160)
+and `textMuted #5A6080` (90,96,128) — the same desaturated blue-purple, apart
+only in the blue channel. Both render in the same donut whenever there are 6+
+priced holdings and positive cash, so Efectivo and Otros are hard to tell apart
+in the ring and in the legend.
 
-- 5-6 priced holdings -> no grouping, indices 0..5. The 5th wraps onto color 0,
-  the 6th onto color 1.
-- 7+ priced holdings -> grouped into the top 5, indices 0..4. The 5th wraps
-  onto color 0.
+Same class as the palette-wrap bug (fixed 2026-07-18), but milder: these two are
+distinguishable-ish and always sit at the end of the ring. Worth a pass when
+someone next touches the donut palette.
 
-So from **5 priced holdings on**, two slices render the same color and the
-legend shows two rows with the same swatch. In the donut the color IS the only
-key tying a slice to its legend row, so this destroys the mapping the legend
-exists to provide. (`cash` and `others` use reserved colors and are unaffected.)
-
-**Fix.** The palette needs at least 6 entries, keeping them distinguishable at
-the ~10px swatch size and on the dark surface. Picking 2 more colors that hold
-up against the existing 4 is a design call, not a mechanical edit.
-
-**Note.** The badge-color divergence between screens was a *separate* problem,
-fixed by collapsing every holding badge to the single `HoldingBadge` tint. The
-donut deliberately kept its per-segment colors — there color encodes, it does
-not decorate.
+**Constraint.** The ring already leans blue/purple (periwinkle, lavender, plus
+these two). Whatever replaces one of them should move away from that family.
 
 ---
 

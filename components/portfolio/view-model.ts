@@ -1,3 +1,4 @@
+import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import type { Portfolio, ValuedHolding } from "@/types/models";
 import {
   formatShares,
@@ -8,9 +9,20 @@ import {
 
 export type Tone = "positive" | "negative";
 
-/** Links a segment/legend/badge to the shared color: a holding's position
- * index into the badge palette, or one of the two reserved colors. */
+/** Links a segment to its legend row by color: a segment's position index into
+ * the palette, or one of the two reserved colors. */
 export type ColorIndex = number | "cash" | "others";
+
+/** Resolves a segment's colorIndex to its stroke/swatch color: a palette entry,
+ * or one of the two reserved colors (Efectivo, Otros). Pure, and shared by the
+ * donut and its legend so a slice and its row can never disagree. The wrap is a
+ * guard, not a feature — MAX_HOLDING_SEGMENTS is capped to the palette length
+ * precisely so no two drawn segments resolve to the same color. */
+export function segmentColor(colorIndex: ColorIndex): string {
+  if (colorIndex === "cash") return Colors.investedBar;
+  if (colorIndex === "others") return Colors.textMuted;
+  return HoldingBadgePalette[colorIndex % HoldingBadgePalette.length].color;
+}
 
 export interface DonutSegment {
   key: string; // ticker | "cash" | "others"
@@ -60,7 +72,7 @@ const allocationPct = (fraction: number): string =>
 
 // Beyond this many priced holdings, the tail collapses into a single "Otros"
 // segment: the top TOP_WHEN_GROUPED plus "Otros". Efectivo is never grouped.
-const MAX_HOLDING_SEGMENTS = 6;
+const MAX_HOLDING_SEGMENTS = 5;
 const TOP_WHEN_GROUPED = 5;
 
 const marketValueOf = (h: ValuedHolding): number =>
@@ -176,8 +188,9 @@ function buildDistribution(
   return { centerTotal, segments, legend, missingPriceCount };
 }
 
-/** Priced holdings → parallel segment and legend lists over `denom`. Past 6
- * holdings, the tail after the top 5 collapses into a single "Otros" entry. */
+/** Priced holdings → parallel segment and legend lists over `denom`. Past 5
+ * holdings, the tail after the top 5 collapses into a single "Otros" entry, so
+ * the donut never draws more than MAX_HOLDING_SEGMENTS coloured slices. */
 function buildHoldingSegments(
   priced: ValuedHolding[],
   denom: number,
