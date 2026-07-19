@@ -11,7 +11,8 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { Text } from "react-native";
+
+import { applyManropeDefaultFont } from "@/lib/manrope-font";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -21,13 +22,10 @@ export const unstable_settings = {
 // flash of unstyled / missing text.
 SplashScreen.preventAutoHideAsync();
 
-// Apply Manrope as the global default font so every <Text> picks it up even when
-// a component sets an inline fontWeight without a fontFamily.
-const TextWithDefault = Text as typeof Text & {
-  defaultProps?: { style?: { fontFamily: string } };
-};
-TextWithDefault.defaultProps = TextWithDefault.defaultProps ?? {};
-TextWithDefault.defaultProps.style = { fontFamily: "Manrope_400Regular" };
+// Make Manrope the default font for every <Text> app-wide (resolving weight to
+// the matching Manrope file). Replaces the old Text.defaultProps hack, a no-op
+// under React 19.
+applyManropeDefaultFont();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
