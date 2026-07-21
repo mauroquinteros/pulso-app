@@ -67,8 +67,13 @@ _Avoid_: dividends (unqualified — always specify gross or net)
 Any cost charged on a movement — transfer fee on deposits/withdrawals, commission on buys, commission plus regulatory fees on sells. **Trading fees** (buy/sell) reduce **Cash** directly. **Transfer fees** (deposit/withdrawal) do not touch Cash; they sit in the gap between **Cash** and **Net Contributions**. Either way, every fee erodes **Total Return** by its full amount.
 _Avoid_: commission (unqualified), charge
 
+**Perfil**:
+Who is using the app: a full name and an email address. It is the single source of the user's identity — every place that shows the user (the Home avatar disc, the Settings screen) reads it, so the same person is never spelled two ways. The full name is **one** name, not a first name and a last name held apart; initials for the avatar are derived from it at display time, never stored. Deliberately holds nothing about money — a Perfil owns **Movements**, but says nothing about them.
+_Avoid_: cuenta/account (taken by the Hapi brokerage account, where **Cash** lives), usuario (unqualified)
+
 ## Flagged ambiguities
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
 - **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − fee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.
+- **"Cuenta" is banned as a standalone term** — it reads as both the **Perfil** (who logs in) and the Hapi brokerage account (where **Cash** and the holdings live). Say which one.
 - **A Movement's `executionDate` is a calendar date; its `createdAt` is an instant.** `executionDate` is the day the movement happened (`YYYY-MM-DD`, no time, no timezone — never convert it); `createdAt` is the UTC instant it was recorded, shown to no one and used only as the reducer's chronological tiebreaker. Naming convention: **`-Date` = calendar date, `-At` = instant**. See `docs/adr/0004-execution-date-is-a-calendar-date.md`.

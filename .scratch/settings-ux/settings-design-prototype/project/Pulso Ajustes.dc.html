@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    a{color:#4FE9D6;} a:hover{color:#00E5CC;}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div style="min-height:874px;background:#0A0E27;padding:56px 0 36px;display:flex;flex-direction:column;position:relative;">
+
+      <!-- SCREEN TITLE (suelto, patrón Movimientos/Portafolio) -->
+      <div style="padding:12px 20px 14px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.6px;">Ajustes</div>
+      </div>
+
+      <!-- PERFIL suelto: dos líneas, sin avatar, sin etiquetas -->
+      <div style="padding:10px 20px 0;">
+        <div style="font-size:21px;font-weight:700;color:#fff;letter-spacing:-0.3px;">Mauro Quinteros</div>
+        <div style="font-size:13px;color:#8E8E93;margin-top:4px;">mauro@ejemplo.com</div>
+      </div>
+
+      <!-- línea separadora -->
+      <div style="margin:22px 20px 0;border-top:1px solid #1C224D;"></div>
+
+      <!-- CERRAR SESIÓN: en el flujo, neutro, texto accent -->
+      <div onClick="{{ askSignOut }}" style="margin:22px 20px 0;height:50px;border-radius:14px;background:#111638;border:1px solid #1C224D;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-active="transform:scale(0.98);">
+        <span style="font-size:15px;font-weight:700;color:#4FE9D6;">Cerrar sesión</span>
+      </div>
+
+      <!-- vacío intencional -->
+      <div style="flex:1;"></div>
+
+      <!-- TAB BAR -->
+      <div style="display:flex;border-top:1px solid #1C224D;padding:10px 0 0;background:#0A0E27;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:18px;color:#5A6080;">⌂</span><span style="font-size:10px;font-weight:600;color:#5A6080;">Home</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:18px;color:#5A6080;">◧</span><span style="font-size:10px;font-weight:600;color:#5A6080;">Portafolio</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:18px;color:#5A6080;">⇅</span><span style="font-size:10px;font-weight:600;color:#5A6080;">Movimientos</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <span style="font-size:18px;color:#00E5CC;">⚙</span><span style="font-size:10px;font-weight:700;color:#00E5CC;">Ajustes</span>
+        </div>
+      </div>
+
+      <!-- ALERT NATIVO -->
+      <sc-if value="{{ alertOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ cancel }}" style="position:absolute;inset:0;background:rgba(4,6,18,0.55);display:flex;align-items:center;justify-content:center;z-index:10;">
+          <div style="width:270px;background:#1C2142;border-radius:14px;overflow:hidden;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+            <div style="padding:19px 16px 15px;">
+              <div style="font-size:17px;font-weight:700;color:#fff;">¿Cerrar sesión?</div>
+            </div>
+            <div style="display:flex;border-top:1px solid #2A3060;">
+              <div onClick="{{ cancel }}" style="flex:1;padding:12px 0;border-right:1px solid #2A3060;cursor:pointer;">
+                <span style="font-size:16px;font-weight:700;color:#4FE9D6;">Cancelar</span>
+              </div>
+              <div onClick="{{ confirm }}" style="flex:1;padding:12px 0;cursor:pointer;">
+                <span style="font-size:16px;font-weight:500;color:#FF5252;">Cerrar sesión</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- toast de signOut (mock, no hay login aún) -->
+      <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:20px;right:20px;bottom:90px;background:#111638;border:1px solid #1C224D;border-radius:12px;padding:11px 14px;text-align:center;z-index:9;">
+          <span style="font-size:12px;color:#8E8E93;">signOut() — pendiente de auth · no hay pantalla de login todavía</span>
+        </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940}}">
+class Component extends DCLogic {
+  state = { alertOpen: false, signedOut: false };
+  renderVals(){
+    return {
+      alertOpen: this.state.alertOpen,
+      signedOut: this.state.signedOut,
+      askSignOut: () => this.setState({ alertOpen: true, signedOut: false }),
+      cancel: () => this.setState({ alertOpen: false }),
+      confirm: () => {
+        this.setState({ alertOpen: false, signedOut: true });
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.setState({ signedOut: false }), 2600);
+      },
+    };
+  }
+  componentWillUnmount(){ clearTimeout(this._t); }
+}
+</script>
+</body>
+</html>
