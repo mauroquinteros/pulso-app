@@ -1,5 +1,7 @@
 import { BorderRadius } from "@/constants/layout";
 import { Colors, Gradients } from "@/constants/theme";
+import { MOCK_PROFILE } from "@/lib/mock-data";
+import { initialsFrom } from "@/utils/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
@@ -13,7 +15,9 @@ export function HomeHeader() {
         end={{ x: 1, y: 1 }}
         style={styles.avatar}
       >
-        <Text style={styles.avatarLetter}>P</Text>
+        <Text style={styles.avatarInitials}>
+          {initialsFrom(MOCK_PROFILE.name)}
+        </Text>
       </LinearGradient>
       <View style={styles.search}>
         <Ionicons name="search" size={16} color={Colors.textSecondary} />
@@ -47,7 +51,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarLetter: {
+  avatarInitials: {
     color: Colors.avatarText,
     fontWeight: "800",
     fontSize: 15,

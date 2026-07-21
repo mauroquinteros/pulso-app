@@ -5,6 +5,16 @@ export type MovementType =
   | "deposit"
   | "withdrawal";
 
+/**
+ * Who is using the app. The single source of the user's identity: one name (a
+ * full name, never split into first + last) and an email. Initials are derived
+ * at display time, so no `initials` field lives here.
+ */
+export interface Profile {
+  name: string;
+  email: string;
+}
+
 export interface BaseMovement {
   id: string;
   userId: string;
