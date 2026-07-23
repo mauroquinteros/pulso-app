@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import { Colors } from "@/constants/theme";
@@ -10,6 +11,14 @@ export function SaveButton({
   canSave: boolean;
   onPress: () => void;
 }) {
+  const pressed = useRef(false);
+
+  const handlePress = () => {
+    if (pressed.current) return;
+    pressed.current = true;
+    onPress();
+  };
+
   return (
     <Pressable
       style={[
@@ -17,7 +26,7 @@ export function SaveButton({
         { backgroundColor: canSave ? Colors.accent : "#161B3D" },
         canSave && styles.buttonActive,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={!canSave}
     >
       <Text
