@@ -18,6 +18,11 @@ describe("sanitizeDecimal", () => {
     expect(sanitizeDecimal("349.60")).toBe("349.60");
     expect(sanitizeDecimal("")).toBe("");
   });
+
+  it("drops a comma, which can only group thousands", () => {
+    expect(sanitizeDecimal("1,000")).toBe("1000");
+    expect(sanitizeDecimal("1,250.50")).toBe("1250.50");
+  });
 });
 
 describe("parseAmount", () => {
