@@ -4,6 +4,7 @@ import type {
   DividendMovement,
   Movement,
   SellMovement,
+  WithdrawalMovement,
 } from "@/types/models";
 import { describe, expect, it } from "vitest";
 import { assemblePortfolio } from "./valuation";
@@ -65,6 +66,19 @@ const dividend = (
   tax,
   executionDate: "2025-04-01",
   createdAt: "2025-04-01T00:00:00Z",
+});
+const withdrawal = (
+  amount: number,
+  fee = 0,
+  executionDate = "2025-05-01",
+): WithdrawalMovement => ({
+  id: `wd${seq++}`,
+  userId: "u",
+  type: "withdrawal",
+  amount,
+  fee,
+  executionDate,
+  createdAt: `${executionDate}T00:00:00Z`,
 });
 
 // A single-ticker portfolio with known hand-computed expectations.
@@ -132,6 +146,30 @@ describe("assemblePortfolio", () => {
       p.netContributions + p.totalReturn.total,
       8,
     );
+  });
+
+  it("takes the Total Return % over Peak Contributions, not current net contributions", () => {
+    // Withdraw more than was ever deposited (possible once a realized gain has
+    // grown Cash). Net contributions goes negative; dividing the positive Total
+    // Return by it would flip the sign. The percentage must divide by the peak
+    // of contributions instead — the most money ever actually put in.
+    //   deposit 1000 -> buy 10@100 -> sell 10@400 (realized +3000) -> withdraw 3000
+    const movements: Movement[] = [
+      deposit(1000),
+      buy("AAPL", 100, 10),
+      sell("AAPL", 400, 10),
+      withdrawal(3000),
+    ];
+    const p = assemblePortfolio(movements, {}); // no holding left to price
+
+    expect(p.cash).toBe(1000); // 1000 - 1000 + 4000 - 3000
+    expect(p.netContributions).toBe(-2000); // 1000 deposited - 3000 withdrawn
+    expect(p.realizedPnl).toBe(3000);
+    expect(p.totalReturn.total).toBe(3000); // 0 + 3000 + 0 - 0
+
+    // Peak contributions is 1000 (right after the deposit, before the
+    // withdrawal): 3000 / 1000 = +300%, NOT 3000 / -2000 = -150%.
+    expect(p.totalReturn.percent).toBe(300);
   });
 
   it("excludes and flags a holding with a missing price; movement facts unaffected", () => {

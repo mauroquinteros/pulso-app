@@ -57,7 +57,9 @@ describe("buildHomeView", () => {
     // Return — Total Return + the four components.
     expect(view.return.total).toBe("+$354.40");
     expect(view.return.tone).toBe("positive");
-    expect(view.return.percent).toBe("+7.86%"); // 354.40 / 4508.98 net contributed
+    // Percentage divides by Peak Contributions (5007.98), not current net
+    // contributions (4508.98): the seed's 500 withdrawal lowers net below its peak. 354.40 / 5007.98 = 7.08%. Aportado still shows the net figure.
+    expect(view.return.percent).toBe("+7.08%");
     expect(view.return.aportado).toBe("$4,508.98");
     expect(view.return.valeHoy).toBe("$4,863.38");
 

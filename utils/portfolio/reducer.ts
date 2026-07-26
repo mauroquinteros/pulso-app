@@ -119,7 +119,7 @@ export function maxSellableAsOf(
   return Math.max(0, round8(sellable));
 }
 
-function compareChronological(a: Movement, b: Movement): number {
+export function compareChronological(a: Movement, b: Movement): number {
   if (a.executionDate !== b.executionDate) {
     return a.executionDate < b.executionDate ? -1 : 1;
   }

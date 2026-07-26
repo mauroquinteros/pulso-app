@@ -8,7 +8,7 @@ import type {
 import { isDepositMovement, isWithdrawalMovement } from "@/types/models";
 import { computeNetDividends, computeTotalFees } from "@/utils/calculations";
 import { computeCash } from "./cash";
-import { deriveHoldingFacts } from "./reducer";
+import { compareChronological, deriveHoldingFacts } from "./reducer";
 
 /** Current price per ticker. A held ticker absent from the map has no price. */
 export type PriceMap = Record<string, number>;
@@ -65,6 +65,7 @@ export function assemblePortfolio(
   const totalFees = computeTotalFees(movements);
   const totalDividends = computeNetDividends(movements);
   const netContributions = round2(computeNetContributions(movements));
+  const peakContributions = round2(computePeakContributions(movements));
 
   // Derive facts per ticker. Realized P&L accumulates across every ticker —
   // including ones fully exited — while only currently-held tickers list as
@@ -103,8 +104,8 @@ export function assemblePortfolio(
     netDividends: totalDividends,
     totalFees,
     percent:
-      netContributions !== 0
-        ? round2((totalReturnTotal / netContributions) * 100)
+      peakContributions > 0
+        ? round2((totalReturnTotal / peakContributions) * 100)
         : 0,
   };
 
@@ -134,6 +135,26 @@ function computeNetContributions(movements: Movement[]): number {
     else if (isWithdrawalMovement(m)) total -= m.amount - m.fee;
   }
   return total;
+}
+
+/**
+ * This is the base for the Total Return *percentage* (not netContributions).
+ * Once a realized gain has grown Cash, the user can withdraw more than they ever deposited, driving netContributions negative — and a positive Total Return over a negative base prints an inverted sign.
+ * The peak is the money actually put at risk to earn that return, so it stays positive and gives the true percentage. See docs/adr on the Total Return percentage base.
+ */
+function computePeakContributions(movements: Movement[]): number {
+  const ordered = movements
+    .filter((m) => isDepositMovement(m) || isWithdrawalMovement(m))
+    .sort(compareChronological);
+
+  let running = 0;
+  let peak = 0;
+  for (const m of ordered) {
+    if (isDepositMovement(m)) running += m.amount + m.transferFee;
+    else if (isWithdrawalMovement(m)) running -= m.amount - m.fee;
+    if (running > peak) peak = running;
+  }
+  return peak;
 }
 
 function groupByTicker(movements: Movement[]): Map<string, Movement[]> {
