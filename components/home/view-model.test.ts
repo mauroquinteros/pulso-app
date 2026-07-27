@@ -60,6 +60,11 @@ describe("buildHomeView", () => {
     // Percentage divides by Peak Contributions (5007.98), not current net
     // contributions (4508.98): the seed's 500 withdrawal lowers net below its peak. 354.40 / 5007.98 = 7.08%. Aportado still shows the net figure.
     expect(view.return.percent).toBe("+7.08%");
+    // Peak (5007.98) exceeds net (4508.98) because of the 500 withdrawal, so the
+    // tooltip explaining the percentage base is present and names the peak.
+    expect(view.return.percentTooltip).toBe(
+      "Calculado sobre tu aportado máximo ($5,007.98), no el actual, para que un retiro no infle tu rendimiento.",
+    );
     expect(view.return.aportado).toBe("$4,508.98");
     expect(view.return.valeHoy).toBe("$4,863.38");
 

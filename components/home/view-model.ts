@@ -18,6 +18,11 @@ export interface HomeView {
     total: string;
     tone: Tone;
     percent: string;
+    // Set only when Peak Contributions exceeds current Net Contributions (a
+    // withdrawal has lowered the running total below its high-water mark), so
+    // the percentage divides by a base that is not the shown Aportado. null
+    // otherwise, when the two coincide and no explanation is needed.
+    percentTooltip: string | null;
     aportado: string;
     valeHoy: string;
     components: {
@@ -91,10 +96,15 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
     ...componentAmounts.map((c) => Math.abs(c.amount)),
     0.0001,
   );
+  const peakExceedsNet =
+    portfolio.peakContributions > portfolio.netContributions;
   const returnView: HomeView["return"] = {
     total: formatSignedUSD(totalReturn.total),
     tone: toneOf(totalReturn.total),
     percent: formatSignedPercent(totalReturn.percent),
+    percentTooltip: peakExceedsNet
+      ? `Calculado sobre tu aportado máximo (${formatUSD(portfolio.peakContributions)}), no el actual, para que un retiro no infle tu rendimiento.`
+      : null,
     aportado: formatUSD(portfolio.netContributions),
     valeHoy: formatUSD(total),
     components: componentAmounts.map((c) => ({

@@ -1,8 +1,10 @@
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
+  Dimensions,
   LayoutAnimation,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -33,12 +35,29 @@ const toneColor = (tone: Tone) =>
 
 export function ReturnCard({ return: ret }: Props) {
   const [open, setOpen] = useState(false);
+  const [tip, setTip] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const anchorRef = useRef<View>(null);
   const rotation = useSharedValue(0);
 
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     rotation.value = withTiming(open ? 0 : 180, { duration: 200 });
     setOpen((o) => !o);
+  };
+
+  // Measure the percentage's on-screen box so the popover can float anchored
+  // to it inside a full-screen Modal (which lets a backdrop tap dismiss it).
+  const openTip = () => {
+    anchorRef.current?.measureInWindow((x, y, width, height) => {
+      const screenWidth = Dimensions.get("window").width;
+      const bubbleWidth = Math.min(300, screenWidth - 32);
+      const left = Math.min(Math.max(x, 16), screenWidth - bubbleWidth - 16);
+      setTip({ top: y + height + 8, left, width: bubbleWidth });
+    });
   };
 
   const chevronStyle = useAnimatedStyle(() => ({
@@ -59,9 +78,29 @@ export function ReturnCard({ return: ret }: Props) {
             <Text style={[styles.total, { color: totalColor }]}>
               {ret.total}
             </Text>
-            <Text style={[styles.totalPct, { color: totalColor }]}>
-              {ret.percent}
-            </Text>
+            {ret.percentTooltip ? (
+              <Pressable
+                ref={anchorRef}
+                onPress={openTip}
+                hitSlop={14}
+                accessibilityRole="button"
+                accessibilityLabel="Cómo se calcula el porcentaje"
+                style={styles.pctTip}
+              >
+                <Text style={[styles.totalPct, { color: totalColor }]}>
+                  {ret.percent}
+                </Text>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={16}
+                  color={totalColor}
+                />
+              </Pressable>
+            ) : (
+              <Text style={[styles.totalPct, { color: totalColor }]}>
+                {ret.percent}
+              </Text>
+            )}
           </View>
         </View>
         <View style={styles.toggle}>
@@ -123,6 +162,26 @@ export function ReturnCard({ return: ret }: Props) {
           </Text>
         </View>
       )}
+
+      <Modal
+        transparent
+        visible={!!tip}
+        animationType="fade"
+        onRequestClose={() => setTip(null)}
+      >
+        <Pressable style={styles.tipBackdrop} onPress={() => setTip(null)}>
+          {tip && (
+            <View
+              style={[
+                styles.tip,
+                { top: tip.top, left: tip.left, width: tip.width },
+              ]}
+            >
+              <Text style={styles.tipText}>{ret.percentTooltip}</Text>
+            </View>
+          )}
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -175,6 +234,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
+  },
+  pctTip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  tipBackdrop: {
+    flex: 1,
+  },
+  tip: {
+    position: "absolute",
+    backgroundColor: "#05060F",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 16,
+  },
+  tipText: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: Colors.textLight,
   },
   toggle: {
     flexDirection: "row",

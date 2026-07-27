@@ -126,6 +126,7 @@ export interface Portfolio {
   totalDividends: number;
   totalFees: number;
   netContributions: number;
+  peakContributions: number;
   // Price-applied facts
   marketValue: number;
   totalPortfolioValue: number;

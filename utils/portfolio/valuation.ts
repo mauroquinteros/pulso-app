@@ -116,6 +116,7 @@ export function assemblePortfolio(
     totalDividends,
     totalFees,
     netContributions,
+    peakContributions,
     marketValue,
     totalPortfolioValue: round2(cash + marketValue),
     totalReturn,
