@@ -48,7 +48,7 @@ The **gross** locked-in gain or loss from shares the user has sold — price gai
 _Avoid_: capital gain (a tax term), booked profit, net realized
 
 **Total Return**:
-The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − Net Contributions`. As a percentage: `Total Return ÷ Net Contributions`. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
+The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − Net Contributions`. As a percentage: `Total Return ÷ Peak Contributions` — the base is **Peak Contributions**, *not* **Net Contributions**. Once a realized gain lets the user withdraw more than they deposited, Net Contributions shrinks (and can go negative), which would inflate or invert the percentage; Peak stays fixed at the capital actually put at risk. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
 _Avoid_: real P&L (informal; pending UI-label decision), total gain, profit
 
 **Total Return of a stock** (UI: "Retorno total"):
@@ -56,8 +56,12 @@ The same four-component formula scoped to one ticker: `Net P&L + Realized P&L + 
 _Avoid_: stock return %, per-stock ROI (there is no such ratio)
 
 **Net Contributions** (a.k.a. **Aportado**):
-What the user has actually put in, measured at the **bank boundary** (out of pocket): a deposit contributes `amount + transferFee` (the money that left your bank to fund the account); a withdrawal removes `amount − fee` (the money that actually reached your bank). So `Aportado = Σ(deposit amount + transferFee) − Σ(withdrawal amount − fee)`. The transfer fee is therefore *part* of what you contributed — it is the friction between **Cash** and Aportado, which is exactly what makes a fee erode **Total Return**. It is the base the **Total Return** percentage is taken over, and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge.
+What the user has actually put in, measured at the **bank boundary** (out of pocket): a deposit contributes `amount + transferFee` (the money that left your bank to fund the account); a withdrawal removes `amount − fee` (the money that actually reached your bank). So `Aportado = Σ(deposit amount + transferFee) − Σ(withdrawal amount − fee)`. The transfer fee is therefore *part* of what you contributed — it is the friction between **Cash** and Aportado, which is exactly what makes a fee erode **Total Return**. It is the base of the *dollar* **Total Return** (`Total Portfolio Value − Net Contributions`) and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge — but **not** the base of the Total Return *percentage*, which is taken over **Peak Contributions** (a withdrawal can pull Net Contributions below an earlier peak, or negative).
 _Avoid_: principal, capital invested, net deposited
+
+**Peak Contributions**:
+The high-water mark of **Net Contributions**: walk deposits and withdrawals in chronological order, track the running total, and take the highest it ever reached — the most of your own money ever in at once, i.e. the capital actually put at risk. It is the base the **Total Return** *percentage* is divided by. Unlike **Net Contributions** it never shrinks on a withdrawal: once a realized gain lets you withdraw more than you deposited, Net Contributions falls (possibly below zero) and dividing by it would invert or inflate the percentage, while Peak stays fixed at the true capital deployed. It equals **Net Contributions** whenever no withdrawal has dropped the running total below an earlier high; the two diverge only after such a withdrawal, and the home screen surfaces a tooltip on the percentage in exactly that case (the base is otherwise not shown on screen).
+_Avoid_: max contributions, high-water aportado (informal), peak invested
 
 **Net Dividends**:
 Dividend income actually received, after withholding tax: `gross amount − tax`. Shown as its own figure so the user can see dividend earnings separately from **Net P&L**.
