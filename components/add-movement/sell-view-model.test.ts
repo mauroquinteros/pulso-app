@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { formatShares } from "@/utils/format";
+import { maxSellableAsOf } from "@/utils/portfolio/reducer";
+
+import { buildBuyMovement } from "./buy-view-model";
 import {
   buildSellMovement,
   summarizeSell,
@@ -386,5 +390,41 @@ describe("buildSellMovement", () => {
     );
     expect(movement.fee).toBe(0);
     expect(movement.regulatoryFees).toBe(0);
+  });
+});
+
+describe("selling the full position shown as Disponible", () => {
+  // A position bought through the form (shares = Monto / Precio) used to be
+  // stored at full float precision while "Disponible" showed only 5 decimals,
+  // so typing exactly what was shown was rejected as an over-sell. With shares
+  // standardised at 5 dp everywhere, the displayed figure IS the held amount.
+  it("closes a derived fractional position (no over-sell block)", () => {
+    const buy = buildBuyMovement(
+      {
+        ticker: "NVDA",
+        amount: "500",
+        executionPrice: "123.7",
+        fee: "",
+        executionDate: "2025-01-01",
+      },
+      { id: () => "buy-x", userId: () => "u", now: () => "2025-01-01T00:00:00Z" },
+    );
+    const available = maxSellableAsOf([buy], "NVDA", "2025-06-01");
+    const shown = formatShares(available); // what the Acciones helper displays
+
+    const summary = summarizeSell(
+      {
+        ticker: "NVDA",
+        shares: shown,
+        executionPrice: "130",
+        fee: "",
+        regulatoryFees: "",
+        executionDate: "2025-06-01",
+      },
+      available,
+    );
+
+    expect(summary.insufficientShares).toBe(false);
+    expect(summary.saveEnabled).toBe(true);
   });
 });

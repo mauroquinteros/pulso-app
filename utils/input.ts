@@ -5,18 +5,38 @@
  * `parseAmount` turns the final text into a domain number.
  */
 
-/** Keep only digits and a single decimal point (UI-level input cleaning). */
-export function sanitizeDecimal(value: string): string {
+/**
+ * Keep only digits and a single decimal point (UI-level input cleaning).
+ * `maxDecimals`, when given, caps the fractional part — the shares field passes
+ * 5 so the field never shows more precision than the domain keeps (see
+ * `roundShares`).
+ */
+export function sanitizeDecimal(value: string, maxDecimals?: number): string {
   const cleaned = value.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");
   if (dot < 0) return cleaned;
-  return cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+  const whole = cleaned.slice(0, dot + 1);
+  let fraction = cleaned.slice(dot + 1).replace(/\./g, "");
+  if (maxDecimals !== undefined) fraction = fraction.slice(0, maxDecimals);
+  return whole + fraction;
 }
 
 /** Parse a decimal string; blank/garbage → 0. */
 export function parseAmount(value: string): number {
   const n = parseFloat(value.replace(/,/g, ""));
   return Number.isNaN(n) ? 0 : n;
+}
+
+/**
+ * Shares are a 5-decimal quantity everywhere in the app — storage, the
+ * "Disponible" display (`formatShares`), and the sell gate all agree at 5 dp, so
+ * "sell exactly what you hold" always resolves. Round any derived or parsed
+ * share count through this so the three never diverge: a full-precision buy
+ * (`Monto / Precio`) shown as 5 dp could not be fully sold, since the typed
+ * figure was rejected against the unrounded held amount.
+ */
+export function roundShares(shares: number): number {
+  return Math.round(shares * 1e5) / 1e5;
 }
 
 /** Normalize a free-text ticker to its canonical form (uppercase, trimmed). */

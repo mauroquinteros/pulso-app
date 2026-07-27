@@ -1,5 +1,5 @@
 import type { BuyMovement } from "@/types/models";
-import { normalizeTicker, parseAmount } from "@/utils/input";
+import { normalizeTicker, parseAmount, roundShares } from "@/utils/input";
 
 export interface BuyInput {
   ticker: string;
@@ -38,9 +38,12 @@ export interface BuyDeps {
   now: () => string; // ISO timestamp for createdAt
 }
 
-/** Derived shares from the cash-side input: Monto / Precio (0 unless both > 0). */
+/**
+ * Derived shares from the cash-side input: Monto / Precio, rounded to the
+ * app-wide 5-decimal share precision (0 unless both > 0).
+ */
 function deriveShares(amount: number, price: number): number {
-  return amount > 0 && price > 0 ? amount / price : 0;
+  return amount > 0 && price > 0 ? roundShares(amount / price) : 0;
 }
 
 /**
@@ -92,8 +95,9 @@ export function summarizeBuy(
 
 /**
  * Maps validated form input to a typed BuyMovement. The cash-side Monto is converted
- * to shares (`Monto / Precio`) at full precision so `executionPrice × shares` reconciles
- * back to the Monto. System fields (id, userId, createdAt) come from injected generators
+ * to shares (`Monto / Precio`) and rounded to the app-wide 5-decimal share precision, so
+ * `executionPrice × shares` reconciles back to the Monto to within that rounding (a
+ * fraction of a cent). System fields (id, userId, createdAt) come from injected generators
  * so the result is deterministic and unit-testable; the ticker is stored uppercase and an
  * empty Comisión defaults to 0.
  */

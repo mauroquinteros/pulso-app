@@ -1,5 +1,5 @@
 import type { SellMovement } from "@/types/models";
-import { normalizeTicker, parseAmount } from "@/utils/input";
+import { normalizeTicker, parseAmount, roundShares } from "@/utils/input";
 
 export interface SellInput {
   ticker: string;
@@ -59,7 +59,7 @@ export function summarizeSell(
   input: SellInput,
   availableShares: number,
 ): SellSummary {
-  const shares = parseAmount(input.shares);
+  const shares = roundShares(parseAmount(input.shares));
   const price = parseAmount(input.executionPrice);
   const fee = parseAmount(input.fee);
   const regulatoryFees = parseAmount(input.regulatoryFees);
@@ -114,7 +114,7 @@ export function buildSellMovement(
     userId: deps.userId(),
     type: "sell",
     ticker: normalizeTicker(input.ticker),
-    shares: parseAmount(input.shares),
+    shares: roundShares(parseAmount(input.shares)),
     executionPrice: parseAmount(input.executionPrice),
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
     regulatoryFees:

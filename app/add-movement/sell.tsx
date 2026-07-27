@@ -192,7 +192,7 @@ export default function SellFormScreen() {
                   placeholder="0"
                   placeholderTextColor="#3E4470"
                   value={shares}
-                  onChangeText={(t) => setShares(sanitizeDecimal(t))}
+                  onChangeText={(t) => setShares(sanitizeDecimal(t, 5))}
                   onBlur={() => setTouchedShares(true)}
                 />
               </View>

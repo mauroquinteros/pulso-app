@@ -4,6 +4,7 @@ import {
   isDividendMovement,
   isSellMovement,
 } from "@/types/models";
+import { roundShares } from "@/utils/input";
 
 /**
  * The movement-derived facts for a single ticker's position. Excludes anything
@@ -21,7 +22,6 @@ export interface HoldingFacts {
 
 const SHARE_EPSILON = 1e-9;
 const round2 = (n: number) => Math.round(n * 100) / 100;
-const round8 = (n: number) => Math.round(n * 1e8) / 1e8;
 
 /**
  * Derives a single ticker's movement facts, applying the moving-average cost
@@ -72,7 +72,7 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
   }
 
   return {
-    shares: round8(shares),
+    shares: roundShares(shares),
     avgCost: shares > 0 ? round2(costTotal / shares) : 0,
     costBasis: round2(costTotal),
     realizedPnl: round2(realizedPnl),
@@ -116,7 +116,7 @@ export function maxSellableAsOf(
     if (pastDate) sellable = Math.min(sellable, held);
   }
   if (!pastDate) sellable = held; // the date is at/after the last movement
-  return Math.max(0, round8(sellable));
+  return Math.max(0, roundShares(sellable));
 }
 
 export function compareChronological(a: Movement, b: Movement): number {

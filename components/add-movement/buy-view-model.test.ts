@@ -19,6 +19,14 @@ describe("summarizeBuy", () => {
     expect(shares).toBe(2);
   });
 
+  it("rounds derived shares to 5 decimals", () => {
+    const { shares } = summarizeBuy(
+      { ...base, amount: "500", executionPrice: "123.7", fee: "" },
+      100000,
+    );
+    expect(shares).toBe(4.04204); // 500 / 123.7 = 4.042037... -> 5 dp
+  });
+
   it("total a pagar is Monto + Comisión", () => {
     const { total } = summarizeBuy(
       { ...base, amount: "365", executionPrice: "182.5", fee: "0.15" },
@@ -196,19 +204,12 @@ describe("buildBuyMovement", () => {
     });
   });
 
-  it("derives shares at full precision so executionPrice × shares reconciles to the Monto", () => {
-    const amount = 1000;
-    const price = 182.5;
+  it("stores derived shares rounded to 5 decimals (the app-wide share precision)", () => {
     const movement = buildBuyMovement(
-      {
-        ...base,
-        amount: String(amount),
-        executionPrice: String(price),
-        fee: "",
-      },
+      { ...base, amount: "1000", executionPrice: "182.5", fee: "" },
       deps,
     );
-    expect(movement.executionPrice * movement.shares).toBeCloseTo(amount, 10);
+    expect(movement.shares).toBe(5.47945); // 1000 / 182.5 = 5.479452... -> 5 dp
   });
 
   it("stores the ticker uppercase and trimmed", () => {
