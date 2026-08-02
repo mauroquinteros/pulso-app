@@ -27,6 +27,10 @@ _Avoid_: subtotal, principal, monto (unqualified — always say which one)
 The current worth of a holding: `current share price × shares held`. The sum across all holdings is the holdings portion of **Total Portfolio Value**.
 _Avoid_: current invested amount, current value
 
+**Stale Price**:
+A share price older than the last moment the market could have moved it. Staleness is measured against **market activity, never against the clock**: a Friday-close price read on Sunday morning is *not* stale — the market was shut the whole time, so it is exactly right — while a price from twenty minutes ago during trading hours is. A stale price is **not** a *missing* price, and the two must never be spoken of as one: a missing price announces itself, while a stale price looks exactly like a good one. That is the whole reason the distinction has a name.
+_Avoid_: old price, outdated price, precio desactualizado (unqualified — always say stale or missing)
+
 **Allocation** (a.k.a. **Distribución**):
 The share of **Total Portfolio Value** that a position — or **Cash** — represents: `Market Value ÷ Total Portfolio Value` (for Cash, `Cash ÷ Total Portfolio Value`). Allocations always sum to 100% because holdings missing a price are excluded from Total Portfolio Value itself (they are flagged, never estimated). The Home's cash-vs-invested split is the coarse two-segment view of the same concept.
 _Avoid_: weight, peso, composición (unqualified)
@@ -72,12 +76,16 @@ Any cost charged on a movement — transfer fee on deposits/withdrawals, commiss
 _Avoid_: commission (unqualified), charge
 
 **Perfil**:
-Who is using the app: a full name and an email address. It is the single source of the user's identity — every place that shows the user (the Home avatar disc, the Settings screen) reads it, so the same person is never spelled two ways. The full name is **one** name, not a first name and a last name held apart; initials for the avatar are derived from it at display time, never stored. Deliberately holds nothing about money — a Perfil owns **Movements**, but says nothing about them.
-_Avoid_: cuenta/account (taken by the Hapi brokerage account, where **Cash** lives), usuario (unqualified)
+Who is using the app: a full name and an email address. It is the single source of the user's identity *within itself* — every place that shows the user (the Home avatar disc, the Settings screen) reads the same Perfil, so a signed-in user is never spelled two ways. The full name is **one** name, not a first name and a last name held apart; initials for the avatar are derived from it at display time, never stored. Deliberately holds nothing about money — a Perfil owns **Movements**, but says nothing about them.
+
+A Perfil is **not a person**. It is one sign-in identity, distinguished by its email address. The same human who signs in a different way arrives as a *different* Perfil, and the two share nothing: separate **Movements**, separate holdings, separate **Total Portfolio Value**. Neither can see the other, and nothing in the app reconciles them.
+_Avoid_: cuenta/account (taken by the Hapi brokerage account, where **Cash** lives), usuario (unqualified), person/persona (a Perfil is an identity, not a human)
 
 ## Flagged ambiguities
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
 - **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − fee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.
 - **"Cuenta" is banned as a standalone term** — it reads as both the **Perfil** (who logs in) and the Hapi brokerage account (where **Cash** and the holdings live). Say which one.
+- **A **Perfil** is an identity, not a human.** One person can own several Perfiles — one per email they sign in with — and the app treats them as unrelated strangers. Say "Perfil" when you mean the identity whose Movements are on screen; say "the human" when you mean the person holding the phone. Never assume the two are one-to-one.
+- **A **Movement** carries no owner.** A Movement says nothing about whose it is. The **Perfil** is the *context* a list of Movements is read in, never a property of any one of them: ownership is established once, when the Movement is stored, and enforced again on every read — so the app neither states it nor checks it. If a Movement seems to need an owner field, the real question is "which Perfil's history am I looking at", and that is answered by the session, not by the Movement.
 - **A Movement's `executionDate` is a calendar date; its `createdAt` is an instant.** `executionDate` is the day the movement happened (`YYYY-MM-DD`, no time, no timezone — never convert it); `createdAt` is the UTC instant it was recorded, shown to no one and used only as the reducer's chronological tiebreaker. Naming convention: **`-Date` = calendar date, `-At` = instant**. See `docs/adr/0004-execution-date-is-a-calendar-date.md`.
