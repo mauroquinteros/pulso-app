@@ -72,7 +72,7 @@ Dividend income actually received, after withholding tax: `gross amount − tax`
 _Avoid_: dividends (unqualified — always specify gross or net)
 
 **Fee**:
-Any cost charged on a movement — transfer fee on deposits/withdrawals, commission on buys, commission plus regulatory fees on sells. **Trading fees** (buy/sell) reduce **Cash** directly. **Transfer fees** (deposit/withdrawal) do not touch Cash; they sit in the gap between **Cash** and **Net Contributions**. Either way, every fee erodes **Total Return** by its full amount.
+Any cost charged on a movement — transfer fee on deposits/withdrawals, commission on buys, commission plus regulatory fees on sells. **Trading fees** (buy/sell) reduce **Cash** directly. **Transfer fees** (deposit/withdrawal) do not touch Cash; they sit in the gap between **Cash** and **Net Contributions**. A transfer fee is **one concept in both directions**, not two: it is skimmed from the transfer while it is in flight — you send `amount + transferFee` and `amount` arrives, or `amount` leaves and `amount − transferFee` reaches the bank — so a deposit's and a withdrawal's are the same thing, and each raises Net Contributions by exactly the fee. Either way, every fee erodes **Total Return** by its full amount.
 _Avoid_: commission (unqualified), charge
 
 **Perfil**:
@@ -84,7 +84,7 @@ _Avoid_: cuenta/account (taken by the Hapi brokerage account, where **Cash** liv
 ## Flagged ambiguities
 
 - **"Invested amount" is banned as a standalone term** — it was used for both **Cost Basis** (what you paid) and **Market Value** (what it's worth now). Always use one of those two precise terms.
-- **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − fee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.
+- **A deposit's typed `amount` is the Cash/Efectivo added, not Aportado.** **Aportado** is `amount + transferFee` (the full out-of-pocket); the transfer fee is the gap between Cash and Aportado, and *is* part of what was contributed. Symmetrically, a withdrawal's `amount` is the Cash removed, and the user receives `amount − transferFee` at their bank. See `docs/adr/0003-cash-side-movement-amounts.md`.
 - **"Cuenta" is banned as a standalone term** — it reads as both the **Perfil** (who logs in) and the Hapi brokerage account (where **Cash** and the holdings live). Say which one.
 - **A **Perfil** is an identity, not a human.** One person can own several Perfiles — one per email they sign in with — and the app treats them as unrelated strangers. Say "Perfil" when you mean the identity whose Movements are on screen; say "the human" when you mean the person holding the phone. Never assume the two are one-to-one.
 - **A **Movement** carries no owner.** A Movement says nothing about whose it is. The **Perfil** is the *context* a list of Movements is read in, never a property of any one of them: ownership is established once, when the Movement is stored, and enforced again on every read — so the app neither states it nor checks it. If a Movement seems to need an owner field, the real question is "which Perfil's history am I looking at", and that is answered by the session, not by the Movement.
