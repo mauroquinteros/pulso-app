@@ -51,10 +51,7 @@ export function summarizeDeposit(input: DepositInput): DepositSummary {
  * (id, createdAt) come from injected generators so the result is
  * deterministic and unit-testable; an empty Comisión defaults to 0.
  */
-export function buildDepositMovement(
-  input: DepositInput,
-  deps: DepositDeps,
-): DepositMovement {
+export function buildDepositMovement(input: DepositInput, deps: DepositDeps): DepositMovement {
   return {
     id: deps.id(),
     type: "deposit",

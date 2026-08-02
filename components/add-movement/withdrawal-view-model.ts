@@ -34,10 +34,7 @@ export interface WithdrawalDeps {
  * gate compares Monto (not Monto + Comisión) against the available Cash, which the
  * caller passes in. A blank Monto shows $0.00 regardless of any fee.
  */
-export function summarizeWithdrawal(
-  input: WithdrawalInput,
-  availableCash: number,
-): WithdrawalSummary {
+export function summarizeWithdrawal(input: WithdrawalInput, availableCash: number): WithdrawalSummary {
   const amount = parseAmount(input.amount);
   const fee = parseAmount(input.transferFee);
   const recibiras = input.amount === "" ? 0 : amount - fee;
@@ -45,8 +42,7 @@ export function summarizeWithdrawal(
   const amountPositive = amount > 0;
   const amountInvalid = input.amount !== "" && amount <= 0;
   // Recibirás must stay > 0, so the fee has a ceiling. Empty fee is fine (→ 0).
-  const feeInvalid =
-    input.transferFee !== "" && amountPositive && fee >= amount;
+  const feeInvalid = input.transferFee !== "" && amountPositive && fee >= amount;
   const insufficientFunds = amountPositive && amount > availableCash;
 
   const feeOk = fee >= 0 && (input.transferFee === "" || fee < amount);
@@ -67,10 +63,7 @@ export function summarizeWithdrawal(
  * (id, createdAt) come from injected generators so the result is
  * deterministic and unit-testable; an empty Comisión defaults to 0.
  */
-export function buildWithdrawalMovement(
-  input: WithdrawalInput,
-  deps: WithdrawalDeps,
-): WithdrawalMovement {
+export function buildWithdrawalMovement(input: WithdrawalInput, deps: WithdrawalDeps): WithdrawalMovement {
   return {
     id: deps.id(),
     type: "withdrawal",

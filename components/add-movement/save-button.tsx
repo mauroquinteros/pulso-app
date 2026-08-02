@@ -4,13 +4,7 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { Colors } from "@/constants/theme";
 
 /** The "Guardar movimiento" primary button shared by every add-movement form. */
-export function SaveButton({
-  canSave,
-  onPress,
-}: {
-  canSave: boolean;
-  onPress: () => void;
-}) {
+export function SaveButton({ canSave, onPress }: { canSave: boolean; onPress: () => void }) {
   const pressed = useRef(false);
 
   const handlePress = () => {
@@ -21,19 +15,11 @@ export function SaveButton({
 
   return (
     <Pressable
-      style={[
-        styles.button,
-        { backgroundColor: canSave ? Colors.accent : "#161B3D" },
-        canSave && styles.buttonActive,
-      ]}
+      style={[styles.button, { backgroundColor: canSave ? Colors.accent : "#161B3D" }, canSave && styles.buttonActive]}
       onPress={handlePress}
       disabled={!canSave}
     >
-      <Text
-        style={[styles.buttonText, { color: canSave ? "#04211E" : "#4A5070" }]}
-      >
-        Guardar movimiento
-      </Text>
+      <Text style={[styles.buttonText, { color: canSave ? "#04211E" : "#4A5070" }]}>Guardar movimiento</Text>
     </Pressable>
   );
 }

@@ -53,14 +53,7 @@ type Props = {
  * (no allocation math here) with a center readout. Each arc is its own path,
  * so a tap selects the segment under the finger. Largest starts at 12
  * o'clock, clockwise. */
-export function Donut({
-  segments,
-  selectedKey,
-  onSelect,
-  centerTop,
-  centerTopColor,
-  centerBottom,
-}: Props) {
+export function Donut({ segments, selectedKey, onSelect, centerTop, centerTopColor, centerBottom }: Props) {
   // Accumulate the angular start of each segment so arcs sit end-to-end.
   let cumulativeDeg = 0;
   const arcs = segments.map((seg) => {
@@ -88,7 +81,7 @@ export function Donut({
     const dy = event.nativeEvent.locationY * scale - CENTER;
     if (Math.hypot(dx, dy) < INNER_HIT || Math.hypot(dx, dy) > OUTER_HIT) return;
     // 0° = 12 o'clock, clockwise (matches polar's angle convention).
-    const deg = (((Math.atan2(dy, dx) * 180) / Math.PI + 90) % 360 + 360) % 360;
+    const deg = ((((Math.atan2(dy, dx) * 180) / Math.PI + 90) % 360) + 360) % 360;
     let cumulative = 0;
     for (const seg of segments) {
       const sweep = seg.fraction * 360;
@@ -136,11 +129,7 @@ export function Donut({
       </Svg>
       <View style={styles.center} pointerEvents="none">
         <View style={styles.centerInner}>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={[styles.centerTop, { color: centerTopColor }]}
-          >
+          <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.centerTop, { color: centerTopColor }]}>
             {centerTop}
           </Text>
           <Text style={styles.centerBottom}>{centerBottom}</Text>

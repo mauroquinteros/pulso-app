@@ -9,41 +9,22 @@ type Props = {
 
 export function WorthCard({ worth }: Props) {
   return (
-    <LinearGradient
-      colors={Gradients.card}
-      start={{ x: 0.37, y: 0.02 }}
-      end={{ x: 0.63, y: 0.98 }}
-      style={styles.card}
-    >
+    <LinearGradient colors={Gradients.card} start={{ x: 0.37, y: 0.02 }} end={{ x: 0.63, y: 0.98 }} style={styles.card}>
       <Text style={styles.label}>Valor total</Text>
       <Text style={styles.value}>{worth.total}</Text>
 
       <View style={styles.bar}>
-        <View
-          style={[
-            styles.barSeg,
-            { flex: worth.invested.flex, backgroundColor: Colors.investedBar },
-          ]}
-        />
-        <View
-          style={[
-            styles.barSeg,
-            { flex: worth.cash.flex, backgroundColor: Colors.accent },
-          ]}
-        />
+        <View style={[styles.barSeg, { flex: worth.invested.flex, backgroundColor: Colors.investedBar }]} />
+        <View style={[styles.barSeg, { flex: worth.cash.flex, backgroundColor: Colors.accent }]} />
       </View>
 
       <View style={[styles.row, styles.rowGap]}>
         <View style={styles.legend}>
-          <View
-            style={[styles.swatch, { backgroundColor: Colors.investedBar }]}
-          />
+          <View style={[styles.swatch, { backgroundColor: Colors.investedBar }]} />
           <Text style={styles.legendLabel}>{worth.invested.label}</Text>
           <Text style={styles.legendPct}>{worth.invested.pct}</Text>
         </View>
-        <Text style={[styles.amount, { color: Colors.textBright }]}>
-          {worth.invested.amount}
-        </Text>
+        <Text style={[styles.amount, { color: Colors.textBright }]}>{worth.invested.amount}</Text>
       </View>
 
       <View style={styles.row}>
@@ -52,9 +33,7 @@ export function WorthCard({ worth }: Props) {
           <Text style={styles.legendLabel}>{worth.cash.label}</Text>
           <Text style={styles.legendPct}>{worth.cash.pct}</Text>
         </View>
-        <Text style={[styles.amount, { color: Colors.accent }]}>
-          {worth.cash.amount}
-        </Text>
+        <Text style={[styles.amount, { color: Colors.accent }]}>{worth.cash.amount}</Text>
       </View>
     </LinearGradient>
   );

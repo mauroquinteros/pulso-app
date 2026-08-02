@@ -13,12 +13,7 @@ const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   executionDate: "2025-01-01",
   createdAt: "2025-01-01T00:00:00Z",
 });
-const buy = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  fee = 0,
-): BuyMovement => ({
+const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
   type: "buy",
   ticker,

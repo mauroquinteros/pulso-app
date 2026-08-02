@@ -3,22 +3,10 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  buildDividendMovement,
-  summarizeDividend,
-} from "@/components/add-movement/dividend-view-model";
+import { buildDividendMovement, summarizeDividend } from "@/components/add-movement/dividend-view-model";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
@@ -34,9 +22,7 @@ export default function DividendFormScreen() {
   const [ticker, setTicker] = useState("");
   const [grossAmount, setGrossAmount] = useState("");
   const [tax, setTax] = useState("");
-  const [executionDate, setExecutionDate] = useState(() =>
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedTicker, setTouchedTicker] = useState(false);
   const [touchedGross, setTouchedGross] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
@@ -52,17 +38,9 @@ export default function DividendFormScreen() {
   const showTickerError = touchedTicker && summary.tickerInvalid;
   const showGrossError = touchedGross && summary.grossInvalid;
 
-  const tickerBorderColor = showTickerError
-    ? Colors.negative
-    : ticker !== ""
-      ? "rgba(0,229,204,0.5)"
-      : Colors.border;
+  const tickerBorderColor = showTickerError ? Colors.negative : ticker !== "" ? "rgba(0,229,204,0.5)" : Colors.border;
 
-  const grossBorderColor = showGrossError
-    ? Colors.negative
-    : grossActive
-      ? "rgba(0,229,204,0.5)"
-      : Colors.border;
+  const grossBorderColor = showGrossError ? Colors.negative : grossActive ? "rgba(0,229,204,0.5)" : Colors.border;
 
   const taxBorderColor = summary.taxExceedsGross
     ? Colors.negative
@@ -70,18 +48,11 @@ export default function DividendFormScreen() {
       ? "rgba(0,229,204,0.5)"
       : Colors.border;
 
-  const totalColor = summary.taxExceedsGross
-    ? Colors.negative
-    : summary.total > 0
-      ? Colors.textPrimary
-      : "#3E4470";
+  const totalColor = summary.taxExceedsGross ? Colors.negative : summary.total > 0 ? Colors.textPrimary : "#3E4470";
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildDividendMovement(
-      { ticker, grossAmount, tax, executionDate },
-      defaultMovementDeps(),
-    );
+    const movement = buildDividendMovement({ ticker, grossAmount, tax, executionDate }, defaultMovementDeps());
     addMovement(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
@@ -89,10 +60,7 @@ export default function DividendFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScreenHeader title="Dividendo" />
 
         <ScrollView
@@ -105,9 +73,7 @@ export default function DividendFormScreen() {
           <View style={styles.firstRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Símbolo</Text>
-              <View
-                style={[styles.smallBox, { borderColor: tickerBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: tickerBorderColor }]}>
                 <TextInput
                   style={styles.symbolInput}
                   autoCapitalize="characters"
@@ -115,39 +81,26 @@ export default function DividendFormScreen() {
                   placeholder="Ej. AAPL"
                   placeholderTextColor="#3E4470"
                   value={ticker}
-                  onChangeText={(t) =>
-                    setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))
-                  }
+                  onChangeText={(t) => setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))}
                   onBlur={() => setTouchedTicker(true)}
                 />
               </View>
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
-                onPress={() => setShowPicker(true)}
-              >
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={15}
-                  color={Colors.textSecondary}
-                />
+                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
               </Pressable>
             </View>
           </View>
-          {showTickerError && (
-            <Text style={styles.errorText}>Ingresa un símbolo.</Text>
-          )}
+          {showTickerError && <Text style={styles.errorText}>Ingresa un símbolo.</Text>}
 
           {/* MONTO BRUTO + IMPUESTOS */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Monto bruto</Text>
-              <View
-                style={[styles.smallBox, { borderColor: grossBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: grossBorderColor }]}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -175,13 +128,9 @@ export default function DividendFormScreen() {
               </View>
             </View>
           </View>
-          {showGrossError && (
-            <Text style={styles.errorText}>Ingresa un monto mayor a $0.</Text>
-          )}
+          {showGrossError && <Text style={styles.errorText}>Ingresa un monto mayor a $0.</Text>}
           {summary.taxExceedsGross && (
-            <Text style={styles.errorText}>
-              El impuesto no puede superar el monto bruto.
-            </Text>
+            <Text style={styles.errorText}>El impuesto no puede superar el monto bruto.</Text>
           )}
 
           <MovementDatePicker
@@ -197,22 +146,16 @@ export default function DividendFormScreen() {
           <View style={styles.breakdown}>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Monto bruto</Text>
-              <Text style={styles.breakdownValue}>
-                {formatUSD(summary.gross)}
-              </Text>
+              <Text style={styles.breakdownValue}>{formatUSD(summary.gross)}</Text>
             </View>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Impuestos</Text>
-              <Text style={styles.breakdownValue}>
-                {taxValue > 0 ? `-${formatUSD(taxValue)}` : formatUSD(0)}
-              </Text>
+              <Text style={styles.breakdownValue}>{taxValue > 0 ? `-${formatUSD(taxValue)}` : formatUSD(0)}</Text>
             </View>
             <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
               <Text style={styles.totalLabel}>Total a recibir</Text>
-              <Text style={[styles.totalValue, { color: totalColor }]}>
-                {formatUSD(summary.total)}
-              </Text>
+              <Text style={[styles.totalValue, { color: totalColor }]}>{formatUSD(summary.total)}</Text>
             </View>
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />

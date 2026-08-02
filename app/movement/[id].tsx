@@ -2,11 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  DetailIdentity,
-  NotFound,
-  Receipt,
-} from "@/components/movement-detail/receipt";
+import { DetailIdentity, NotFound, Receipt } from "@/components/movement-detail/receipt";
 import { buildMovementDetailView } from "@/components/movement-detail/view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";

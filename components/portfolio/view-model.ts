@@ -1,11 +1,6 @@
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import type { Portfolio, ValuedHolding } from "@/types/models";
-import {
-  formatShares,
-  formatSignedPercent,
-  formatSignedUSD,
-  formatUSD,
-} from "@/utils/format";
+import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
 export type Tone = "positive" | "negative";
 
@@ -63,12 +58,10 @@ export interface PortfolioView {
 }
 
 /** A signed figure is negative only past the ±0.005 rounding threshold. */
-const toneOf = (amount: number): Tone =>
-  amount < -0.005 ? "negative" : "positive";
+const toneOf = (amount: number): Tone => (amount < -0.005 ? "negative" : "positive");
 
 /** One-decimal share-of-total, e.g. "61.6%". */
-const allocationPct = (fraction: number): string =>
-  `${(fraction * 100).toFixed(1)}%`;
+const allocationPct = (fraction: number): string => `${(fraction * 100).toFixed(1)}%`;
 
 // Beyond this many priced holdings, the tail collapses into a single "Otros"
 // segment: the top TOP_WHEN_GROUPED plus "Otros". Efectivo is never grouped.
@@ -79,8 +72,7 @@ const marketValueOf = (h: ValuedHolding): number =>
   h.priceAvailable && h.marketValue !== null ? h.marketValue : -Infinity;
 
 /** Market Value descending; unpriced holdings (no market value) sort last. */
-const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number =>
-  marketValueOf(b) - marketValueOf(a);
+const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number => marketValueOf(b) - marketValueOf(a);
 
 /**
  * Pure view-model for the Portfolio screen: turns the derived Portfolio into a
@@ -98,16 +90,9 @@ export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
     ticker: h.ticker,
     sharesLabel: formatShares(h.shares),
     priceAvailable: h.priceAvailable,
-    value:
-      h.priceAvailable && h.marketValue !== null
-        ? formatUSD(h.marketValue)
-        : null,
-    pnl:
-      h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
-    pnlPct:
-      h.priceAvailable && h.netPnl !== null
-        ? formatSignedPercent(h.netPnlPercent ?? 0)
-        : null,
+    value: h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null,
+    pnl: h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
+    pnlPct: h.priceAvailable && h.netPnl !== null ? formatSignedPercent(h.netPnlPercent ?? 0) : null,
     pnlTone: toneOf(h.netPnl ?? 0),
   }));
 
@@ -138,19 +123,14 @@ function buildDistribution(
   missingPriceCount: number,
 ): PortfolioView["distribution"] {
   const { cash, totalPortfolioValue } = portfolio;
-  const priced = sorted.filter(
-    (h) => h.priceAvailable && h.marketValue !== null,
-  );
+  const priced = sorted.filter((h) => h.priceAvailable && h.marketValue !== null);
   const centerTotal = formatUSD(totalPortfolioValue);
 
   // Negative cash (degenerate, tolerated): segments proportional over the sum
   // of Market Values — never over a cash-distorted TPV — and Efectivo appears
   // in the legend only, in red and without a percentage.
   if (cash < 0) {
-    const sumMarketValue = priced.reduce(
-      (sum, h) => sum + (h.marketValue ?? 0),
-      0,
-    );
+    const sumMarketValue = priced.reduce((sum, h) => sum + (h.marketValue ?? 0), 0);
     const { segments, legend } = buildHoldingSegments(priced, sumMarketValue);
     legend.push({
       key: "cash",
@@ -223,10 +203,7 @@ function buildHoldingSegments(
 
   if (grouped) {
     const tail = priced.slice(TOP_WHEN_GROUPED);
-    const tailMarketValue = tail.reduce(
-      (sum, h) => sum + (h.marketValue ?? 0),
-      0,
-    );
+    const tailMarketValue = tail.reduce((sum, h) => sum + (h.marketValue ?? 0), 0);
     const fraction = denom !== 0 ? tailMarketValue / denom : 0;
     const amount = formatUSD(tailMarketValue);
     segments.push({

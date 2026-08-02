@@ -13,35 +13,10 @@ const BADGE_OUTLINE = "#3B4380";
 function EmptyLedger() {
   return (
     <Svg width={112} height={112} viewBox="0 0 120 120" fill="none">
-      <Rect
-        x={30}
-        y={18}
-        width={60}
-        height={84}
-        rx={10}
-        stroke={OUTLINE}
-        strokeWidth={2.5}
-      />
-      <Path
-        d="M42 40h36M42 54h36M42 68h24"
-        stroke={OUTLINE}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-      />
-      <Circle
-        cx={90}
-        cy={90}
-        r={16}
-        fill={Colors.surface}
-        stroke={BADGE_OUTLINE}
-        strokeWidth={2.5}
-      />
-      <Path
-        d="M90 83v14M83 90h14"
-        stroke={Colors.accent}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-      />
+      <Rect x={30} y={18} width={60} height={84} rx={10} stroke={OUTLINE} strokeWidth={2.5} />
+      <Path d="M42 40h36M42 54h36M42 68h24" stroke={OUTLINE} strokeWidth={2.5} strokeLinecap="round" />
+      <Circle cx={90} cy={90} r={16} fill={Colors.surface} stroke={BADGE_OUTLINE} strokeWidth={2.5} />
+      <Path d="M90 83v14M83 90h14" stroke={Colors.accent} strokeWidth={2.5} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -53,16 +28,9 @@ export function EmptyState({ onAddMovement }: { onAddMovement?: () => void }) {
     <View style={styles.wrap}>
       <EmptyLedger />
       <Text style={styles.title}>Todavía no hay movimientos</Text>
-      <Text style={styles.body}>
-        Cuando compres, vendas o muevas efectivo, aparecerá acá.
-      </Text>
+      <Text style={styles.body}>Cuando compres, vendas o muevas efectivo, aparecerá acá.</Text>
       <Pressable onPress={onAddMovement}>
-        <LinearGradient
-          colors={Gradients.avatar}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.cta}
-        >
+        <LinearGradient colors={Gradients.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
           <Text style={styles.ctaText}>Agregar movimiento</Text>
         </LinearGradient>
       </Pressable>

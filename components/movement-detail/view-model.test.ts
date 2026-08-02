@@ -1,12 +1,6 @@
 import { buildMovementsView } from "@/components/movements/view-model";
 import { MOCK_MOVEMENTS } from "@/lib/mock-data";
-import type {
-  BuyMovement,
-  DepositMovement,
-  DividendMovement,
-  SellMovement,
-  WithdrawalMovement,
-} from "@/types/models";
+import type { BuyMovement, DepositMovement, DividendMovement, SellMovement, WithdrawalMovement } from "@/types/models";
 import { cashImpact } from "@/utils/portfolio/cash";
 import { describe, expect, it } from "vitest";
 import { buildMovementDetailView, type DetailLine } from "./view-model";
@@ -46,11 +40,7 @@ const sell = (
   fee,
   regulatoryFees,
 });
-const dividend = (
-  ticker: string,
-  grossAmount: number,
-  tax: number,
-): DividendMovement => ({
+const dividend = (ticker: string, grossAmount: number, tax: number): DividendMovement => ({
   ...base("2025-11-15"),
   type: "dividend",
   ticker,
@@ -63,10 +53,7 @@ const deposit = (amount: number, transferFee: number): DepositMovement => ({
   amount,
   transferFee,
 });
-const withdrawal = (
-  amount: number,
-  transferFee: number,
-): WithdrawalMovement => ({
+const withdrawal = (amount: number, transferFee: number): WithdrawalMovement => ({
   ...base("2026-01-08"),
   type: "withdrawal",
   amount,
@@ -201,9 +188,7 @@ describe("buildMovementDetailView", () => {
     for (const movement of MOCK_MOVEMENTS) {
       const view = buildMovementDetailView(movement);
       if (view.money.length === 0) continue; // nothing to add up
-      const sum = round2(
-        view.money.reduce((total, line) => total + parseAmount(line.amount), 0),
-      );
+      const sum = round2(view.money.reduce((total, line) => total + parseAmount(line.amount), 0));
       expect(sum).toBe(parseAmount(view.total!.amount));
     }
   });
@@ -237,8 +222,6 @@ describe("buildMovementDetailView", () => {
     // Invariant 1 holds where the naive version would fail.
     expect(round2(8821.7 + 0.88)).toBe(parseAmount(view.total!.amount));
     // Invariant 2 holds: the total is still exactly the engine's Cash Impact.
-    expect(parseAmount(view.total!.amount)).toBe(
-      round2(Math.abs(cashImpact(movement))),
-    );
+    expect(parseAmount(view.total!.amount)).toBe(round2(Math.abs(cashImpact(movement))));
   });
 });

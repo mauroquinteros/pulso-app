@@ -14,18 +14,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HomeHeader />
         <WorthCard worth={view.worth} />
         <ReturnCard return={view.return} />
-        <AssetsCard
-          assets={view.assets}
-          onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
-        />
+        <AssetsCard assets={view.assets} onPressHolding={(ticker) => router.push(`/stock/${ticker}`)} />
       </ScrollView>
     </SafeAreaView>
   );

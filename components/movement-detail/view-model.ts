@@ -46,9 +46,7 @@ const adjustment = (label: string, signedValue: number): DetailLine | null =>
  *    short of adding up — in ~0.002% of buys, measured. Deriving the gross keeps
  *    the receipt self-consistent *and* the total equal to the list's figure.
  */
-export function buildMovementDetailView(
-  movement: Movement | undefined,
-): MovementDetailView {
+export function buildMovementDetailView(movement: Movement | undefined): MovementDetailView {
   if (!movement) {
     return {
       state: "not-found",
@@ -61,8 +59,7 @@ export function buildMovementDetailView(
 
   const meta = MOVEMENT_TYPE_META[movement.type];
   const header = {
-    title:
-      "ticker" in movement ? `${meta.label} ${movement.ticker}` : meta.label,
+    title: "ticker" in movement ? `${meta.label} ${movement.ticker}` : meta.label,
     dateLabel: formatDate(movement.executionDate),
     type: movement.type,
   };
@@ -149,11 +146,7 @@ const tradeFacts = (shares: number, executionPrice: number): DetailLine[] => [
 
 /** Base line plus its surviving adjustments. When every adjustment is zero the
  * base equals the total, so the whole block is dropped rather than printed twice. */
-function withBase(
-  label: string,
-  base: number,
-  adjustments: (DetailLine | null)[],
-): DetailLine[] {
+function withBase(label: string, base: number, adjustments: (DetailLine | null)[]): DetailLine[] {
   const present = adjustments.filter((line): line is DetailLine => line !== null);
   if (present.length === 0) return [];
   return [{ label, amount: formatUSD(base) }, ...present];

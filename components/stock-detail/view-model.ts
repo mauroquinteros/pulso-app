@@ -1,7 +1,4 @@
-import {
-  byChronologicalDesc,
-  type MovementRow,
-} from "@/components/movements/view-model";
+import { byChronologicalDesc, type MovementRow } from "@/components/movements/view-model";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import type { Movement, ValuedHolding } from "@/types/models";
 import {
@@ -66,8 +63,7 @@ export interface StockDetailView {
 }
 
 /** A signed figure is negative only past the ±0.005 rounding threshold. */
-const toneOf = (amount: number): Tone =>
-  amount < -0.005 ? "negative" : "positive";
+const toneOf = (amount: number): Tone => (amount < -0.005 ? "negative" : "positive");
 
 /** ±1% around today's price reads as "bought at today's price": neither cheap
  * nor expensive. Deliberately NOT the ±0.005 sign threshold above — that one
@@ -127,10 +123,7 @@ export function buildStockDetailView(
       amount: formatUSD(Math.abs(cashImpact(m))),
       type: m.type,
       sharesLabel: "shares" in m ? formatSharesLabel(m.shares) : null,
-      buyTone:
-        m.type === "buy" && price !== undefined
-          ? buyToneOf(m.executionPrice, price)
-          : null,
+      buyTone: m.type === "buy" && price !== undefined ? buyToneOf(m.executionPrice, price) : null,
     }));
 
   return {
@@ -141,8 +134,7 @@ export function buildStockDetailView(
       shares: formatShares(holding.shares),
       avgCost: formatUSD(holding.avgCost),
       costBasis: formatUSD(holding.costBasis),
-      marketValue:
-        holding.marketValue !== null ? formatUSD(holding.marketValue) : null,
+      marketValue: holding.marketValue !== null ? formatUSD(holding.marketValue) : null,
       return: buildReturnBlock(holding),
     },
     rows,
@@ -158,19 +150,13 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 function buildReturnBlock(holding: ValuedHolding): StockReturnBlock | null {
   if (holding.netPnl === null || holding.netPnlPercent === null) return null;
 
-  const total = round2(
-    holding.netPnl +
-      holding.realizedPnl +
-      holding.totalDividends -
-      holding.totalFees,
-  );
+  const total = round2(holding.netPnl + holding.realizedPnl + holding.totalDividends - holding.totalFees);
   return {
     netPnl: formatSignedUSD(holding.netPnl),
     netPnlPercent: formatSignedPercent(holding.netPnlPercent),
     netPnlTone: toneOf(holding.netPnl),
     dividends: formatUSD(holding.totalDividends),
-    realized:
-      holding.realizedPnl !== 0 ? formatSignedUSD(holding.realizedPnl) : null,
+    realized: holding.realizedPnl !== 0 ? formatSignedUSD(holding.realizedPnl) : null,
     realizedTone: toneOf(holding.realizedPnl),
     fees: formatUSD(holding.totalFees),
     total: formatSignedUSD(total),

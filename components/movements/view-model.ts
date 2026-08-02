@@ -1,7 +1,4 @@
-import {
-  MOVEMENT_TYPE_META,
-  MOVEMENT_TYPE_ORDER,
-} from "@/constants/movement-type";
+import { MOVEMENT_TYPE_META, MOVEMENT_TYPE_ORDER } from "@/constants/movement-type";
 import type { Movement, MovementType } from "@/types/models";
 import { formatDate, formatUSD } from "@/utils/format";
 import { cashImpact } from "@/utils/portfolio/cash";
@@ -61,10 +58,7 @@ const titleOf = (movement: Movement): string => {
  * derivable from the type, and green/red in Pulso mean gain/loss — a buy is
  * neither.
  */
-export function buildMovementsView(
-  movements: Movement[],
-  selectedType: MovementType | null,
-): MovementsView {
+export function buildMovementsView(movements: Movement[], selectedType: MovementType | null): MovementsView {
   if (movements.length === 0) {
     return { state: "empty", chips: [], filteredEmptyMessage: null, rows: [] };
   }
@@ -76,9 +70,7 @@ export function buildMovementsView(
   }));
 
   const ordered = [...movements].sort(byChronologicalDesc);
-  const filtered = selectedType
-    ? ordered.filter((m) => m.type === selectedType)
-    : ordered;
+  const filtered = selectedType ? ordered.filter((m) => m.type === selectedType) : ordered;
 
   if (selectedType && filtered.length === 0) {
     const { labelPlural } = MOVEMENT_TYPE_META[selectedType];

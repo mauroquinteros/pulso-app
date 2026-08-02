@@ -1,10 +1,5 @@
 import type { Portfolio } from "@/types/models";
-import {
-  formatSharesLabel,
-  formatSignedPercent,
-  formatSignedUSD,
-  formatUSD,
-} from "@/utils/format";
+import { formatSharesLabel, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
 export type Tone = "positive" | "negative";
 
@@ -48,8 +43,7 @@ export interface HomeView {
 }
 
 /** A signed figure is negative only past the ±0.005 rounding threshold. */
-const toneOf = (amount: number): Tone =>
-  amount < -0.005 ? "negative" : "positive";
+const toneOf = (amount: number): Tone => (amount < -0.005 ? "negative" : "positive");
 
 /** One-decimal share-of-total percent, e.g. "94.7%". Guards a zero total. */
 const compositionPct = (part: number, total: number): string =>
@@ -92,12 +86,8 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
     { label: "Dividendos netos", amount: totalReturn.netDividends },
     { label: "Comisiones", amount: -totalReturn.totalFees },
   ];
-  const maxAbs = Math.max(
-    ...componentAmounts.map((c) => Math.abs(c.amount)),
-    0.0001,
-  );
-  const peakExceedsNet =
-    portfolio.peakContributions > portfolio.netContributions;
+  const maxAbs = Math.max(...componentAmounts.map((c) => Math.abs(c.amount)), 0.0001);
+  const peakExceedsNet = portfolio.peakContributions > portfolio.netContributions;
   const returnView: HomeView["return"] = {
     total: formatSignedUSD(totalReturn.total),
     tone: toneOf(totalReturn.total),
@@ -118,8 +108,7 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
 
   // Assets — aggregate Net P&L over Cost Basis, plus per-holding rows.
   const netPnl = totalReturn.unrealizedPnl;
-  const netPnlPercent =
-    portfolio.costBasis !== 0 ? (netPnl / portfolio.costBasis) * 100 : 0;
+  const netPnlPercent = portfolio.costBasis !== 0 ? (netPnl / portfolio.costBasis) * 100 : 0;
   const assets: HomeView["assets"] = {
     netPnl: `${formatSignedUSD(netPnl)} · ${formatSignedPercent(netPnlPercent)}`,
     netPnlTone: toneOf(netPnl),
@@ -127,10 +116,7 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
       ticker: h.ticker,
       shares: formatSharesLabel(h.shares),
       priceAvailable: h.priceAvailable,
-      value:
-        h.priceAvailable && h.marketValue !== null
-          ? formatUSD(h.marketValue)
-          : null,
+      value: h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null,
       pnl:
         h.priceAvailable && h.netPnl !== null
           ? `${formatSignedUSD(h.netPnl)} · ${formatSignedPercent(h.netPnlPercent ?? 0)}`

@@ -86,7 +86,7 @@ Spanish UI copy keeps its accents and `¿¡` — those carry meaning. This rule 
 about **punctuation that has an ASCII equivalent**.
 
 Applies to string literals, comments and test assertions alike. To assert the
-*absence* of a lookalike in a test, write it as a unicode escape —
+_absence_ of a lookalike in a test, write it as a unicode escape —
 `not.toContain("\u2212")` — rather than pasting the glyph, so the assertion
 says out loud which character it means.
 

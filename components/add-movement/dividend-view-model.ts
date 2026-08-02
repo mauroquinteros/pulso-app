@@ -69,10 +69,7 @@ export function summarizeDividend(input: DividendInput): DividendSummary {
  * stored uppercase and empty Impuestos defaults to 0. The UI label "Impuestos" maps to the model
  * field `tax` (the withholding tax — a dividend has no `fee`).
  */
-export function buildDividendMovement(
-  input: DividendInput,
-  deps: DividendDeps,
-): DividendMovement {
+export function buildDividendMovement(input: DividendInput, deps: DividendDeps): DividendMovement {
   return {
     id: deps.id(),
     type: "dividend",

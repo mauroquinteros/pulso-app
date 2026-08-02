@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildDepositMovement,
-  summarizeDeposit,
-  type DepositDeps,
-} from "./deposit-view-model";
+import { buildDepositMovement, summarizeDeposit, type DepositDeps } from "./deposit-view-model";
 
 const deps: DepositDeps = {
   id: () => "dep-1",
@@ -41,30 +37,15 @@ describe("summarizeDeposit", () => {
 
   it("enables save only when Monto > 0", () => {
     const date = "2025-06-25";
-    expect(
-      summarizeDeposit({ amount: "", transferFee: "", executionDate: date })
-        .saveEnabled,
-    ).toBe(false);
-    expect(
-      summarizeDeposit({ amount: "0", transferFee: "", executionDate: date })
-        .saveEnabled,
-    ).toBe(false);
-    expect(
-      summarizeDeposit({ amount: "100", transferFee: "", executionDate: date })
-        .saveEnabled,
-    ).toBe(true);
+    expect(summarizeDeposit({ amount: "", transferFee: "", executionDate: date }).saveEnabled).toBe(false);
+    expect(summarizeDeposit({ amount: "0", transferFee: "", executionDate: date }).saveEnabled).toBe(false);
+    expect(summarizeDeposit({ amount: "100", transferFee: "", executionDate: date }).saveEnabled).toBe(true);
   });
 
   it("flags a Monto entered as 0 as invalid (but blank is not)", () => {
     const date = "2025-06-25";
-    expect(
-      summarizeDeposit({ amount: "0", transferFee: "", executionDate: date })
-        .amountInvalid,
-    ).toBe(true);
-    expect(
-      summarizeDeposit({ amount: "", transferFee: "", executionDate: date })
-        .amountInvalid,
-    ).toBe(false);
+    expect(summarizeDeposit({ amount: "0", transferFee: "", executionDate: date }).amountInvalid).toBe(true);
+    expect(summarizeDeposit({ amount: "", transferFee: "", executionDate: date }).amountInvalid).toBe(false);
   });
 
   it("accepts any non-negative Comisión, even one larger than Monto", () => {
@@ -90,10 +71,7 @@ describe("summarizeDeposit", () => {
 
 describe("buildDepositMovement", () => {
   it("maps fields to a typed DepositMovement with injected system fields", () => {
-    const movement = buildDepositMovement(
-      { amount: "1250", transferFee: "5", executionDate: "2023-10-24" },
-      deps,
-    );
+    const movement = buildDepositMovement({ amount: "1250", transferFee: "5", executionDate: "2023-10-24" }, deps);
     expect(movement).toEqual({
       id: "dep-1",
       type: "deposit",
@@ -105,10 +83,7 @@ describe("buildDepositMovement", () => {
   });
 
   it("defaults an empty Comisión to 0", () => {
-    const movement = buildDepositMovement(
-      { amount: "500", transferFee: "", executionDate: "2025-06-25" },
-      deps,
-    );
+    const movement = buildDepositMovement({ amount: "500", transferFee: "", executionDate: "2025-06-25" }, deps);
     expect(movement.transferFee).toBe(0);
   });
 });

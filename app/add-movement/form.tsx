@@ -3,22 +3,10 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  buildDepositMovement,
-  summarizeDeposit,
-} from "@/components/add-movement/deposit-view-model";
+import { buildDepositMovement, summarizeDeposit } from "@/components/add-movement/deposit-view-model";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
@@ -33,9 +21,7 @@ export default function DepositFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
-  const [executionDate, setExecutionDate] = useState(() =>
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -56,10 +42,7 @@ export default function DepositFormScreen() {
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildDepositMovement(
-      { amount, transferFee: fee, executionDate },
-      defaultMovementDeps(),
-    );
+    const movement = buildDepositMovement({ amount, transferFee: fee, executionDate }, defaultMovementDeps());
     addMovement(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
@@ -67,10 +50,7 @@ export default function DepositFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScreenHeader title="Depósito" />
 
         <ScrollView
@@ -86,9 +66,7 @@ export default function DepositFormScreen() {
               style={[
                 styles.amountDollar,
                 {
-                  color: summary.amountPositive
-                    ? Colors.textPrimary
-                    : "#5A6080",
+                  color: summary.amountPositive ? Colors.textPrimary : "#5A6080",
                 },
               ]}
             >
@@ -104,9 +82,7 @@ export default function DepositFormScreen() {
               onBlur={() => setTouchedAmount(true)}
             />
           </View>
-          {showAmountError && (
-            <Text style={styles.errorText}>Ingresa un monto mayor a $0.</Text>
-          )}
+          {showAmountError && <Text style={styles.errorText}>Ingresa un monto mayor a $0.</Text>}
 
           {/* COMISIÓN + FECHA */}
           <View style={styles.pairRow}>
@@ -126,16 +102,9 @@ export default function DepositFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
-                onPress={() => setShowPicker(true)}
-              >
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={15}
-                  color={Colors.textSecondary}
-                />
+                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
               </Pressable>
             </View>
           </View>
@@ -149,15 +118,8 @@ export default function DepositFormScreen() {
 
           {/* INFO HINT */}
           <View style={styles.hint}>
-            <Ionicons
-              name="information-circle-outline"
-              size={16}
-              color="#7BA7E8"
-              style={styles.hintIcon}
-            />
-            <Text style={styles.hintText}>
-              Revisa la comisión. Se suma a tu monto para formar lo que aportas.
-            </Text>
+            <Ionicons name="information-circle-outline" size={16} color="#7BA7E8" style={styles.hintIcon} />
+            <Text style={styles.hintText}>Revisa la comisión. Se suma a tu monto para formar lo que aportas.</Text>
           </View>
         </ScrollView>
 
@@ -165,9 +127,7 @@ export default function DepositFormScreen() {
         <View style={styles.bottom}>
           <View style={styles.summaryWrap}>
             <Text style={styles.summaryLabel}>APORTARÁS</Text>
-            <Text style={[styles.summaryValue, { color: summaryColor }]}>
-              {formatUSD(summary.aportado)}
-            </Text>
+            <Text style={[styles.summaryValue, { color: summaryColor }]}>{formatUSD(summary.aportado)}</Text>
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />
         </View>

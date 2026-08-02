@@ -1,18 +1,9 @@
-import type {
-  BuyMovement,
-  DividendMovement,
-  SellMovement,
-} from "@/types/models";
+import type { BuyMovement, DividendMovement, SellMovement } from "@/types/models";
 import { describe, expect, it } from "vitest";
 import { deriveHoldingFacts, maxSellableAsOf } from "./reducer";
 
 let seq = 0;
-const buy = (
-  executionPrice: number,
-  shares: number,
-  executionDate: string,
-  fee = 0,
-): BuyMovement => ({
+const buy = (executionPrice: number, shares: number, executionDate: string, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
   type: "buy",
   ticker: "AAPL",
@@ -39,11 +30,7 @@ const sell = (
   executionDate,
   createdAt: `${executionDate}T00:00:00Z`,
 });
-const dividend = (
-  grossAmount: number,
-  tax: number,
-  executionDate: string,
-): DividendMovement => ({
+const dividend = (grossAmount: number, tax: number, executionDate: string): DividendMovement => ({
   id: `d${seq++}`,
   type: "dividend",
   ticker: "AAPL",
@@ -55,10 +42,7 @@ const dividend = (
 
 describe("deriveHoldingFacts", () => {
   it("computes a weighted average over multiple buys", () => {
-    const facts = deriveHoldingFacts([
-      buy(100, 10, "2025-01-01"),
-      buy(200, 10, "2025-02-01"),
-    ]);
+    const facts = deriveHoldingFacts([buy(100, 10, "2025-01-01"), buy(200, 10, "2025-02-01")]);
     expect(facts.shares).toBe(20);
     expect(facts.avgCost).toBe(150);
     expect(facts.costBasis).toBe(3000);
@@ -66,10 +50,7 @@ describe("deriveHoldingFacts", () => {
   });
 
   it("leaves average cost unchanged after a partial sell (only shares drop)", () => {
-    const facts = deriveHoldingFacts([
-      buy(100, 10, "2025-01-01"),
-      sell(120, 4, "2025-02-01"),
-    ]);
+    const facts = deriveHoldingFacts([buy(100, 10, "2025-01-01"), sell(120, 4, "2025-02-01")]);
     expect(facts.shares).toBe(6);
     expect(facts.avgCost).toBe(100);
     expect(facts.costBasis).toBe(600);
@@ -101,10 +82,7 @@ describe("deriveHoldingFacts", () => {
   });
 
   it("handles fractional shares accurately", () => {
-    const facts = deriveHoldingFacts([
-      buy(100, 2.45321, "2025-01-01", 0.15),
-      buy(200, 1.5, "2025-02-01", 0.1),
-    ]);
+    const facts = deriveHoldingFacts([buy(100, 2.45321, "2025-01-01", 0.15), buy(200, 1.5, "2025-02-01", 0.1)]);
     expect(facts.shares).toBeCloseTo(3.95321, 8);
     expect(facts.costBasis).toBeCloseTo(545.321, 2); // 2.45321*100 + 1.5*200
     expect(facts.totalFees).toBe(0.25);

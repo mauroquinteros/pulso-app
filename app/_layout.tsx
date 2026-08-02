@@ -53,10 +53,7 @@ export default function RootLayout() {
         {/* Draw their own ScreenHeader, like the add-movement forms. */}
         <Stack.Screen name="stock/[ticker]" options={{ headerShown: false }} />
         <Stack.Screen name="movement/[id]" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="add-movement"
-          options={{ presentation: "modal", headerShown: false }}
-        />
+        <Stack.Screen name="add-movement" options={{ presentation: "modal", headerShown: false }} />
       </Stack>
       <StatusBar style="light" />
     </ThemeProvider>

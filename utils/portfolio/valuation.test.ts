@@ -18,12 +18,7 @@ const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   executionDate: "2025-01-01",
   createdAt: "2025-01-01T00:00:00Z",
 });
-const buy = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  fee = 0,
-): BuyMovement => ({
+const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
   type: "buy",
   ticker,
@@ -33,13 +28,7 @@ const buy = (
   executionDate: "2025-02-01",
   createdAt: "2025-02-01T00:00:00Z",
 });
-const sell = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  fee = 0,
-  regulatoryFees = 0,
-): SellMovement => ({
+const sell = (ticker: string, executionPrice: number, shares: number, fee = 0, regulatoryFees = 0): SellMovement => ({
   id: `s${seq++}`,
   type: "sell",
   ticker,
@@ -50,11 +39,7 @@ const sell = (
   executionDate: "2025-03-01",
   createdAt: "2025-03-01T00:00:00Z",
 });
-const dividend = (
-  ticker: string,
-  grossAmount: number,
-  tax: number,
-): DividendMovement => ({
+const dividend = (ticker: string, grossAmount: number, tax: number): DividendMovement => ({
   id: `div${seq++}`,
   type: "dividend",
   ticker,
@@ -63,11 +48,7 @@ const dividend = (
   executionDate: "2025-04-01",
   createdAt: "2025-04-01T00:00:00Z",
 });
-const withdrawal = (
-  amount: number,
-  transferFee = 0,
-  executionDate = "2025-05-01",
-): WithdrawalMovement => ({
+const withdrawal = (amount: number, transferFee = 0, executionDate = "2025-05-01"): WithdrawalMovement => ({
   id: `wd${seq++}`,
   type: "withdrawal",
   amount,
@@ -126,21 +107,14 @@ describe("assemblePortfolio", () => {
   it("reconciles Cash + Market Value with net contributions + Total Return", () => {
     // Multi-ticker, including a fully-exited ticker (MSFT) whose realized P&L
     // must still count even though it lists no holding.
-    const movements: Movement[] = [
-      ...knownPortfolio,
-      buy("MSFT", 200, 2, 1),
-      sell("MSFT", 250, 2, 1),
-    ];
+    const movements: Movement[] = [...knownPortfolio, buy("MSFT", 200, 2, 1), sell("MSFT", 250, 2, 1)];
     const p = assemblePortfolio(movements, { AAPL: 140 });
 
     // MSFT is fully exited — not a holding, but its realized P&L is counted.
     expect(p.holdings.map((h) => h.ticker)).toEqual(["AAPL"]);
     expect(p.realizedPnl).toBe(200); // 100 AAPL + 100 MSFT
 
-    expect(p.cash + p.marketValue).toBeCloseTo(
-      p.netContributions + p.totalReturn.total,
-      8,
-    );
+    expect(p.cash + p.marketValue).toBeCloseTo(p.netContributions + p.totalReturn.total, 8);
   });
 
   it("takes the Total Return % over Peak Contributions, not current net contributions", () => {
@@ -149,12 +123,7 @@ describe("assemblePortfolio", () => {
     // Return by it would flip the sign. The percentage must divide by the peak
     // of contributions instead — the most money ever actually put in.
     //   deposit 1000 -> buy 10@100 -> sell 10@400 (realized +3000) -> withdraw 3000
-    const movements: Movement[] = [
-      deposit(1000),
-      buy("AAPL", 100, 10),
-      sell("AAPL", 400, 10),
-      withdrawal(3000),
-    ];
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 10), sell("AAPL", 400, 10), withdrawal(3000)];
     const p = assemblePortfolio(movements, {}); // no holding left to price
 
     expect(p.cash).toBe(1000); // 1000 - 1000 + 4000 - 3000

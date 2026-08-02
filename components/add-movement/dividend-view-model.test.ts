@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildDividendMovement,
-  summarizeDividend,
-  type DividendDeps,
-} from "./dividend-view-model";
+import { buildDividendMovement, summarizeDividend, type DividendDeps } from "./dividend-view-model";
 
 const deps: DividendDeps = {
   id: () => "dividend-1",
@@ -52,44 +48,21 @@ describe("summarizeDividend", () => {
   });
 
   it("enables save only when ticker and Monto bruto are valid and tax is within range", () => {
-    expect(
-      summarizeDividend({ ...base, grossAmount: "", tax: "" }).saveEnabled,
-    ).toBe(false);
-    expect(
-      summarizeDividend({ ...base, ticker: "", grossAmount: "130", tax: "" })
-        .saveEnabled,
-    ).toBe(false);
-    expect(
-      summarizeDividend({ ...base, grossAmount: "130", tax: "200" })
-        .saveEnabled,
-    ).toBe(false);
-    expect(
-      summarizeDividend({ ...base, grossAmount: "130", tax: "5.50" })
-        .saveEnabled,
-    ).toBe(true);
+    expect(summarizeDividend({ ...base, grossAmount: "", tax: "" }).saveEnabled).toBe(false);
+    expect(summarizeDividend({ ...base, ticker: "", grossAmount: "130", tax: "" }).saveEnabled).toBe(false);
+    expect(summarizeDividend({ ...base, grossAmount: "130", tax: "200" }).saveEnabled).toBe(false);
+    expect(summarizeDividend({ ...base, grossAmount: "130", tax: "5.50" }).saveEnabled).toBe(true);
   });
 
   it("flags an empty ticker as invalid (whitespace-only too)", () => {
-    expect(
-      summarizeDividend({ ...base, ticker: "", grossAmount: "130", tax: "" })
-        .tickerInvalid,
-    ).toBe(true);
-    expect(
-      summarizeDividend({ ...base, ticker: "   ", grossAmount: "130", tax: "" })
-        .tickerInvalid,
-    ).toBe(true);
-    expect(
-      summarizeDividend({ ...base, grossAmount: "130", tax: "" }).tickerInvalid,
-    ).toBe(false);
+    expect(summarizeDividend({ ...base, ticker: "", grossAmount: "130", tax: "" }).tickerInvalid).toBe(true);
+    expect(summarizeDividend({ ...base, ticker: "   ", grossAmount: "130", tax: "" }).tickerInvalid).toBe(true);
+    expect(summarizeDividend({ ...base, grossAmount: "130", tax: "" }).tickerInvalid).toBe(false);
   });
 
   it("flags a Monto bruto value entered as 0 as invalid (but blank is not)", () => {
-    expect(
-      summarizeDividend({ ...base, grossAmount: "0", tax: "" }).grossInvalid,
-    ).toBe(true);
-    expect(
-      summarizeDividend({ ...base, grossAmount: "", tax: "" }).grossInvalid,
-    ).toBe(false);
+    expect(summarizeDividend({ ...base, grossAmount: "0", tax: "" }).grossInvalid).toBe(true);
+    expect(summarizeDividend({ ...base, grossAmount: "", tax: "" }).grossInvalid).toBe(false);
   });
 
   it("blocks save and flags taxExceedsGross when Impuestos exceeds Monto bruto", () => {
@@ -142,18 +115,12 @@ describe("buildDividendMovement", () => {
   });
 
   it("stores the ticker uppercase and trimmed", () => {
-    const movement = buildDividendMovement(
-      { ...base, ticker: "  aapl ", grossAmount: "130", tax: "" },
-      deps,
-    );
+    const movement = buildDividendMovement({ ...base, ticker: "  aapl ", grossAmount: "130", tax: "" }, deps);
     expect(movement.ticker).toBe("AAPL");
   });
 
   it("defaults empty Impuestos to 0", () => {
-    const movement = buildDividendMovement(
-      { ...base, ticker: "GOOG", grossAmount: "80", tax: "" },
-      deps,
-    );
+    const movement = buildDividendMovement({ ...base, ticker: "GOOG", grossAmount: "80", tax: "" }, deps);
     expect(movement.tax).toBe(0);
   });
 });

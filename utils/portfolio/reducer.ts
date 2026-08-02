@@ -1,9 +1,5 @@
 import type { BuyMovement, Movement, SellMovement } from "@/types/models";
-import {
-  isBuyMovement,
-  isDividendMovement,
-  isSellMovement,
-} from "@/types/models";
+import { isBuyMovement, isDividendMovement, isSellMovement } from "@/types/models";
 import { roundShares } from "@/utils/input";
 
 /**
@@ -92,16 +88,9 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
  * A sell dated the same day as an existing movement sorts after it (its
  * `createdAt` is newest), so same-day buys count as held.
  */
-export function maxSellableAsOf(
-  movements: Movement[],
-  ticker: string,
-  date: string,
-): number {
+export function maxSellableAsOf(movements: Movement[], ticker: string, date: string): number {
   const ordered = movements
-    .filter(
-      (m): m is BuyMovement | SellMovement =>
-        (isBuyMovement(m) || isSellMovement(m)) && m.ticker === ticker,
-    )
+    .filter((m): m is BuyMovement | SellMovement => (isBuyMovement(m) || isSellMovement(m)) && m.ticker === ticker)
     .sort(compareChronological);
 
   let held = 0;

@@ -41,21 +41,9 @@ function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
       hitSlop={HIT_SLOP}
       accessibilityRole="button"
       accessibilityState={{ selected: chip.selected }}
-      style={[
-        styles.chip,
-        chip.selected
-          ? { backgroundColor: bg, borderColor: color }
-          : styles.chipIdle,
-      ]}
+      style={[styles.chip, chip.selected ? { backgroundColor: bg, borderColor: color } : styles.chipIdle]}
     >
-      <Text
-        style={[
-          styles.label,
-          { color: chip.selected ? color : Colors.textSecondary },
-        ]}
-      >
-        {chip.label}
-      </Text>
+      <Text style={[styles.label, { color: chip.selected ? color : Colors.textSecondary }]}>{chip.label}</Text>
     </Pressable>
   );
 }

@@ -7,11 +7,7 @@ import type { DetailLine, MovementDetailView } from "./view-model";
 
 /** Badge + type + ticker + date. Identity, never figures — the badge matches the
  * row the user tapped, so the list and its detail read as the same thing. */
-export function DetailIdentity({
-  header,
-}: {
-  header: NonNullable<MovementDetailView["header"]>;
-}) {
+export function DetailIdentity({ header }: { header: NonNullable<MovementDetailView["header"]> }) {
   const meta = MOVEMENT_TYPE_META[header.type];
   return (
     <View style={styles.identity}>

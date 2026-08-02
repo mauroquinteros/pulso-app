@@ -15,12 +15,7 @@ const base = (executionDate: string) => ({
   executionDate,
   createdAt: `${executionDate}T00:00:00Z`,
 });
-const buy = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  executionDate = "2025-01-15",
-): BuyMovement => ({
+const buy = (ticker: string, executionPrice: number, shares: number, executionDate = "2025-01-15"): BuyMovement => ({
   ...base(executionDate),
   type: "buy",
   ticker,
@@ -28,12 +23,7 @@ const buy = (
   shares,
   fee: 0.5,
 });
-const sell = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  executionDate = "2025-06-10",
-): SellMovement => ({
+const sell = (ticker: string, executionPrice: number, shares: number, executionDate = "2025-06-10"): SellMovement => ({
   ...base(executionDate),
   type: "sell",
   ticker,
@@ -42,11 +32,7 @@ const sell = (
   fee: 0.5,
   regulatoryFees: 0.02,
 });
-const dividend = (
-  ticker: string,
-  grossAmount: number,
-  executionDate = "2025-08-01",
-): DividendMovement => ({
+const dividend = (ticker: string, grossAmount: number, executionDate = "2025-08-01"): DividendMovement => ({
   ...base(executionDate),
   type: "dividend",
   ticker,
@@ -68,10 +54,7 @@ const withdrawal = (amount: number): WithdrawalMovement => ({
 
 /** A priced holding by default; pass overrides for the no-price variant.
  * The lifetime figures add up: 20.71 + 4.20 + 0.85 - 0.25 = 25.51. */
-const valued = (
-  ticker: string,
-  over: Partial<ValuedHolding> = {},
-): ValuedHolding => ({
+const valued = (ticker: string, over: Partial<ValuedHolding> = {}): ValuedHolding => ({
   ticker,
   shares: 1.4532,
   avgCost: 175.2,
@@ -156,12 +139,8 @@ describe("buildStockDetailView", () => {
 
   it("finds the holding by ticker, whatever its position in the array", () => {
     const holdings = [valued("AAPL"), valued("VOO")];
-    expect(buildStockDetailView("VOO", holdings, 458.6, []).state).toBe(
-      "found",
-    );
-    expect(
-      buildStockDetailView("VOO", [...holdings].reverse(), 458.6, []).state,
-    ).toBe("found");
+    expect(buildStockDetailView("VOO", holdings, 458.6, []).state).toBe("found");
+    expect(buildStockDetailView("VOO", [...holdings].reverse(), 458.6, []).state).toBe("found");
   });
 
   it("a losing position renders a negative tone and an ASCII hyphen, never U+2212", () => {
@@ -177,9 +156,7 @@ describe("buildStockDetailView", () => {
 
   describe("not-found", () => {
     it("unknown ticker → not-found with no position and no rows", () => {
-      const view = buildStockDetailView("MSFT", [valued("AAPL")], 402.1, [
-        buy("MSFT", 380, 1),
-      ]);
+      const view = buildStockDetailView("MSFT", [valued("AAPL")], 402.1, [buy("MSFT", 380, 1)]);
       expect(view.state).toBe("not-found");
       expect(view.position).toBeNull();
       expect(view.rows).toEqual([]);
@@ -194,12 +171,7 @@ describe("buildStockDetailView", () => {
 
   describe("no-price collapse", () => {
     it("nulls the hero, market value, and the WHOLE return block; the cost figures survive", () => {
-      const view = buildStockDetailView(
-        "AAPL",
-        [unpriced("AAPL")],
-        undefined,
-        [],
-      );
+      const view = buildStockDetailView("AAPL", [unpriced("AAPL")], undefined, []);
 
       expect(view.state).toBe("found");
       expect(view.price).toBeNull();
@@ -233,16 +205,8 @@ describe("buildStockDetailView", () => {
         withdrawal(100), // no ticker — out
       ]);
 
-      expect(view.rows.map((r) => r.title)).toEqual([
-        "Dividendo",
-        "Compra",
-        "Venta",
-      ]);
-      expect(view.rows.map((r) => r.dateLabel)).toEqual([
-        "1 nov 2023",
-        "12 oct 2023",
-        "15 ago 2023",
-      ]);
+      expect(view.rows.map((r) => r.title)).toEqual(["Dividendo", "Compra", "Venta"]);
+      expect(view.rows.map((r) => r.dateLabel)).toEqual(["1 nov 2023", "12 oct 2023", "15 ago 2023"]);
     });
 
     it("buy/sell rows carry a sharesLabel next to the date; dividends don't", () => {
@@ -299,24 +263,16 @@ describe("buildStockDetailView", () => {
 
     it("the exact ±1.0% edge falls in the neutral band", () => {
       // (101 - 100) / 100 = +0.01 exactly; (99 - 100) / 100 = -0.01 exactly.
-      const up = buildStockDetailView("AAPL", [valued("AAPL")], 101, [
-        buy("AAPL", 100, 1),
-      ]);
-      const down = buildStockDetailView("AAPL", [valued("AAPL")], 99, [
-        buy("AAPL", 100, 1),
-      ]);
+      const up = buildStockDetailView("AAPL", [valued("AAPL")], 101, [buy("AAPL", 100, 1)]);
+      const down = buildStockDetailView("AAPL", [valued("AAPL")], 99, [buy("AAPL", 100, 1)]);
 
       expect(up.rows[0].buyTone).toBe("neutral");
       expect(down.rows[0].buyTone).toBe("neutral");
     });
 
     it("just past the band it tips: +1.5% → up, -1.5% → down", () => {
-      const up = buildStockDetailView("AAPL", [valued("AAPL")], 101.5, [
-        buy("AAPL", 100, 1),
-      ]);
-      const down = buildStockDetailView("AAPL", [valued("AAPL")], 98.5, [
-        buy("AAPL", 100, 1),
-      ]);
+      const up = buildStockDetailView("AAPL", [valued("AAPL")], 101.5, [buy("AAPL", 100, 1)]);
+      const down = buildStockDetailView("AAPL", [valued("AAPL")], 98.5, [buy("AAPL", 100, 1)]);
 
       expect(up.rows[0].buyTone).toBe("up");
       expect(down.rows[0].buyTone).toBe("down");
@@ -338,18 +294,9 @@ describe("buildStockDetailView", () => {
     const others: (string | null)[] = [
       view.ticker,
       view.price,
-      ...Object.values(positionRest).filter(
-        (v): v is string => typeof v === "string",
-      ),
-      ...Object.values(returnRest).filter(
-        (v): v is string => typeof v === "string",
-      ),
-      ...view.rows.flatMap((r) => [
-        r.title,
-        r.dateLabel,
-        r.amount,
-        r.sharesLabel,
-      ]),
+      ...Object.values(positionRest).filter((v): v is string => typeof v === "string"),
+      ...Object.values(returnRest).filter((v): v is string => typeof v === "string"),
+      ...view.rows.flatMap((r) => [r.title, r.dateLabel, r.amount, r.sharesLabel]),
     ];
     for (const s of others) expect(s ?? "").not.toContain("%");
   });

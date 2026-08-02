@@ -3,15 +3,8 @@ import { Fragment } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  MovementRow,
-  MovementSeparator,
-} from "@/components/movements/movement-row";
-import {
-  NotFound,
-  PositionCard,
-  StockIdentity,
-} from "@/components/stock-detail/position";
+import { MovementRow, MovementSeparator } from "@/components/movements/movement-row";
+import { NotFound, PositionCard, StockIdentity } from "@/components/stock-detail/position";
 import { buildStockDetailView } from "@/components/stock-detail/view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
@@ -26,12 +19,7 @@ export default function StockDetailScreen() {
   const { ticker } = useLocalSearchParams<{ ticker: string }>();
   const { holdings } = usePortfolio();
   const movements = useMovementsStore((s) => s.movements);
-  const view = buildStockDetailView(
-    ticker,
-    holdings,
-    MOCK_PRICES[ticker],
-    movements,
-  );
+  const view = buildStockDetailView(ticker, holdings, MOCK_PRICES[ticker], movements);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -40,15 +28,8 @@ export default function StockDetailScreen() {
       {view.state === "not-found" || !view.position ? (
         <NotFound />
       ) : (
-        <ScrollView
-          style={styles.body}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <StockIdentity
-            ticker={view.ticker}
-            price={view.price}
-          />
+        <ScrollView style={styles.body} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <StockIdentity ticker={view.ticker} price={view.price} />
           <PositionCard position={view.position} />
 
           {/* The full history — no "View All": there is no per-ticker

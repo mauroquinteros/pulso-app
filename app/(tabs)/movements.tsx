@@ -6,10 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/movements/empty-state";
 import { FilterChips } from "@/components/movements/filter-chips";
 import { FilteredEmpty } from "@/components/movements/filtered-empty";
-import {
-  MovementRow,
-  MovementSeparator,
-} from "@/components/movements/movement-row";
+import { MovementRow, MovementSeparator } from "@/components/movements/movement-row";
 import { buildMovementsView } from "@/components/movements/view-model";
 import { Colors } from "@/constants/theme";
 import { useMovementsStore } from "@/stores/movements";
@@ -22,8 +19,7 @@ export default function MovementsScreen() {
   const [selectedType, setSelectedType] = useState<MovementType | null>(null);
   const view = buildMovementsView(movements, selectedType);
 
-  const toggleType = (type: MovementType) =>
-    setSelectedType((current) => (current === type ? null : type));
+  const toggleType = (type: MovementType) => setSelectedType((current) => (current === type ? null : type));
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -32,19 +28,12 @@ export default function MovementsScreen() {
       </View>
 
       {/* Nothing recorded yet means nothing to filter. */}
-      {view.state !== "empty" && (
-        <FilterChips chips={view.chips} onToggle={toggleType} />
-      )}
+      {view.state !== "empty" && <FilterChips chips={view.chips} onToggle={toggleType} />}
 
-      {view.state === "empty" && (
-        <EmptyState onAddMovement={() => router.push("/add-movement")} />
-      )}
+      {view.state === "empty" && <EmptyState onAddMovement={() => router.push("/add-movement")} />}
 
       {view.state === "filtered-empty" && (
-        <FilteredEmpty
-          message={view.filteredEmptyMessage ?? ""}
-          onClear={() => setSelectedType(null)}
-        />
+        <FilteredEmpty message={view.filteredEmptyMessage ?? ""} onClear={() => setSelectedType(null)} />
       )}
 
       {view.state === "ready" && (
@@ -54,12 +43,7 @@ export default function MovementsScreen() {
           contentContainerStyle={styles.card}
           data={view.rows}
           keyExtractor={(row) => row.id}
-          renderItem={({ item }) => (
-            <MovementRow
-              row={item}
-              onPress={() => router.push(`/movement/${item.id}`)}
-            />
-          )}
+          renderItem={({ item }) => <MovementRow row={item} onPress={() => router.push(`/movement/${item.id}`)} />}
           ItemSeparatorComponent={MovementSeparator}
           showsVerticalScrollIndicator={false}
         />

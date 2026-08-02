@@ -88,21 +88,14 @@ export default function SelectMovementTypeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable
-          style={styles.closeBtn}
-          onPress={() => router.dismiss()}
-          hitSlop={8}
-        >
+        <Pressable style={styles.closeBtn} onPress={() => router.dismiss()} hitSlop={8}>
           <Ionicons name="close" size={16} color={Colors.textSecondary} />
         </Pressable>
         <Text style={styles.headerTitle}>Nuevo movimiento</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionLabel}>OPERACIONES</Text>
         <View style={styles.group}>
           {OPERACIONES.map((spec) => (
@@ -110,9 +103,7 @@ export default function SelectMovementTypeScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>
-          EFECTIVO
-        </Text>
+        <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>EFECTIVO</Text>
         <View style={styles.group}>
           {EFECTIVO.map((spec) => (
             <TypeRow key={spec.type} spec={spec} />

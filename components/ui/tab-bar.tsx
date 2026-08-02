@@ -5,11 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -35,15 +31,7 @@ const TAB_LABELS: Record<string, string> = {
 
 const FAB_SIZE = 56;
 
-function TabButton({
-  routeName,
-  isFocused,
-  onPress,
-}: {
-  routeName: string;
-  isFocused: boolean;
-  onPress: () => void;
-}) {
+function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFocused: boolean; onPress: () => void }) {
   const icons = TAB_ICONS[routeName];
   const label = TAB_LABELS[routeName];
   const color = isFocused ? Colors.tint : Colors.tabIconDefault;
@@ -91,11 +79,7 @@ function FabButton() {
   );
 }
 
-export default function TabBar({
-  state,
-  navigation,
-  insets,
-}: BottomTabBarProps) {
+export default function TabBar({ state, navigation, insets }: BottomTabBarProps) {
   const routeNames = state.routes.map((route) => route.name);
 
   // Find the index where we insert the FAB (after the second tab)

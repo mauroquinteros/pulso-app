@@ -3,26 +3,14 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
-import {
-  buildWithdrawalMovement,
-  summarizeWithdrawal,
-} from "@/components/add-movement/withdrawal-view-model";
+import { buildWithdrawalMovement, summarizeWithdrawal } from "@/components/add-movement/withdrawal-view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -35,23 +23,17 @@ export default function WithdrawalFormScreen() {
   const availableCash = usePortfolio().cash;
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
-  const [executionDate, setExecutionDate] = useState(() =>
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [touchedFee, setTouchedFee] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const summary = summarizeWithdrawal(
-    { amount, transferFee: fee, executionDate },
-    availableCash,
-  );
+  const summary = summarizeWithdrawal({ amount, transferFee: fee, executionDate }, availableCash);
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
-  const showAmountError =
-    touchedAmount && (summary.amountInvalid || summary.insufficientFunds);
+  const showAmountError = touchedAmount && (summary.amountInvalid || summary.insufficientFunds);
   const showFeeError = touchedFee && summary.feeInvalid;
 
   const amountErrorMsg = summary.amountInvalid
@@ -73,10 +55,7 @@ export default function WithdrawalFormScreen() {
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildWithdrawalMovement(
-      { amount, transferFee: fee, executionDate },
-      defaultMovementDeps(),
-    );
+    const movement = buildWithdrawalMovement({ amount, transferFee: fee, executionDate }, defaultMovementDeps());
     addMovement(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
@@ -84,10 +63,7 @@ export default function WithdrawalFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScreenHeader title="Retiro" />
 
         <ScrollView
@@ -99,18 +75,14 @@ export default function WithdrawalFormScreen() {
           {/* MONTO */}
           <View style={styles.labelRow}>
             <Text style={[styles.label, styles.labelInRow]}>Monto</Text>
-            <Text style={styles.available}>
-              Disponible {formatUSD(availableCash)}
-            </Text>
+            <Text style={styles.available}>Disponible {formatUSD(availableCash)}</Text>
           </View>
           <View style={[styles.amountBox, { borderColor: amountBorderColor }]}>
             <Text
               style={[
                 styles.amountDollar,
                 {
-                  color: summary.amountPositive
-                    ? Colors.textPrimary
-                    : "#5A6080",
+                  color: summary.amountPositive ? Colors.textPrimary : "#5A6080",
                 },
               ]}
             >
@@ -126,20 +98,13 @@ export default function WithdrawalFormScreen() {
               onBlur={() => setTouchedAmount(true)}
             />
           </View>
-          {showAmountError && (
-            <Text style={styles.errorText}>{amountErrorMsg}</Text>
-          )}
+          {showAmountError && <Text style={styles.errorText}>{amountErrorMsg}</Text>}
 
           {/* COMISIÓN + FECHA */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Comisión</Text>
-              <View
-                style={[
-                  styles.smallBox,
-                  showFeeError && { borderColor: Colors.negative },
-                ]}
-              >
+              <View style={[styles.smallBox, showFeeError && { borderColor: Colors.negative }]}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -154,24 +119,13 @@ export default function WithdrawalFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
-                onPress={() => setShowPicker(true)}
-              >
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={15}
-                  color={Colors.textSecondary}
-                />
+                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
               </Pressable>
             </View>
           </View>
-          {showFeeError && (
-            <Text style={styles.errorText}>
-              La comisión debe ser menor al monto.
-            </Text>
-          )}
+          {showFeeError && <Text style={styles.errorText}>La comisión debe ser menor al monto.</Text>}
 
           <MovementDatePicker
             value={executionDate}
@@ -182,15 +136,9 @@ export default function WithdrawalFormScreen() {
 
           {/* INFO HINT */}
           <View style={styles.hint}>
-            <Ionicons
-              name="information-circle-outline"
-              size={16}
-              color="#7BA7E8"
-              style={styles.hintIcon}
-            />
+            <Ionicons name="information-circle-outline" size={16} color="#7BA7E8" style={styles.hintIcon} />
             <Text style={styles.hintText}>
-              Revisa la comisión que aplica tu banco; se descuenta de lo que
-              recibes, no del efectivo que sale.
+              Revisa la comisión que aplica tu banco; se descuenta de lo que recibes, no del efectivo que sale.
             </Text>
           </View>
         </ScrollView>
@@ -199,9 +147,7 @@ export default function WithdrawalFormScreen() {
         <View style={styles.bottom}>
           <View style={styles.summaryWrap}>
             <Text style={styles.summaryLabel}>RECIBIRÁS EN TU BANCO</Text>
-            <Text style={[styles.summaryValue, { color: summaryColor }]}>
-              {formatUSD(summary.recibiras)}
-            </Text>
+            <Text style={[styles.summaryValue, { color: summaryColor }]}>{formatUSD(summary.recibiras)}</Text>
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />
         </View>

@@ -22,21 +22,13 @@ const deposit = (amount: number, transferFee: number): DepositMovement => ({
   amount,
   transferFee,
 });
-const withdrawal = (
-  amount: number,
-  transferFee: number,
-): WithdrawalMovement => ({
+const withdrawal = (amount: number, transferFee: number): WithdrawalMovement => ({
   ...base("2025-01-01"),
   type: "withdrawal",
   amount,
   transferFee,
 });
-const buy = (
-  executionPrice: number,
-  shares: number,
-  fee: number,
-  ticker = "AAPL",
-): BuyMovement => ({
+const buy = (executionPrice: number, shares: number, fee: number, ticker = "AAPL"): BuyMovement => ({
   ...base("2025-01-01"),
   type: "buy",
   ticker,
@@ -44,12 +36,7 @@ const buy = (
   shares,
   fee,
 });
-const sell = (
-  executionPrice: number,
-  shares: number,
-  fee: number,
-  regulatoryFees: number,
-): SellMovement => ({
+const sell = (executionPrice: number, shares: number, fee: number, regulatoryFees: number): SellMovement => ({
   ...base("2025-01-01"),
   type: "sell",
   ticker: "AAPL",

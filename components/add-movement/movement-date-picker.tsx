@@ -1,6 +1,4 @@
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { format, parseISO } from "date-fns";
 import { Modal, Platform, Pressable, StyleSheet, Text } from "react-native";
 
@@ -34,14 +32,7 @@ export function MovementDatePicker({
   };
 
   if (Platform.OS !== "ios") {
-    return (
-      <DateTimePicker
-        value={parseISO(value)}
-        mode="date"
-        maximumDate={new Date()}
-        onChange={onAndroidChange}
-      />
-    );
+    return <DateTimePicker value={parseISO(value)} mode="date" maximumDate={new Date()} onChange={onAndroidChange} />;
   }
 
   return (

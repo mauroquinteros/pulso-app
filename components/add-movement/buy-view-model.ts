@@ -55,10 +55,7 @@ function deriveShares(amount: number, price: number): number {
  * is $0.00. The funds gate is strict: the whole total must fit within the available
  * Cash, which the caller passes in.
  */
-export function summarizeBuy(
-  input: BuyInput,
-  availableCash: number,
-): BuySummary {
+export function summarizeBuy(input: BuyInput, availableCash: number): BuySummary {
   const amount = parseAmount(input.amount);
   const price = parseAmount(input.executionPrice);
   const fee = parseAmount(input.fee);
@@ -71,12 +68,7 @@ export function summarizeBuy(
   const priceInvalid = input.executionPrice !== "" && price <= 0;
   const insufficientFunds = total > 0 && total > availableCash;
 
-  const saveEnabled =
-    !tickerInvalid &&
-    amount > 0 &&
-    price > 0 &&
-    fee >= 0 &&
-    total <= availableCash;
+  const saveEnabled = !tickerInvalid && amount > 0 && price > 0 && fee >= 0 && total <= availableCash;
 
   return {
     shares,

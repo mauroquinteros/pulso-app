@@ -9,26 +9,15 @@ import { StyleSheet, Text, View } from "react-native";
 export function HomeHeader() {
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={Gradients.avatar}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.avatar}
-      >
-        <Text style={styles.avatarInitials}>
-          {initialsFrom(MOCK_PROFILE.name)}
-        </Text>
+      <LinearGradient colors={Gradients.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+        <Text style={styles.avatarInitials}>{initialsFrom(MOCK_PROFILE.name)}</Text>
       </LinearGradient>
       <View style={styles.search}>
         <Ionicons name="search" size={16} color={Colors.textSecondary} />
         <Text style={styles.searchText}>Buscar activo o ticker</Text>
       </View>
       <View style={styles.bell}>
-        <Ionicons
-          name="notifications-outline"
-          size={18}
-          color={Colors.textSecondary}
-        />
+        <Ionicons name="notifications-outline" size={18} color={Colors.textSecondary} />
         <View style={styles.bellDot} />
       </View>
     </View>

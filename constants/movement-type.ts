@@ -64,10 +64,4 @@ export const MOVEMENT_TYPE_META: Record<MovementType, MovementTypeMeta> = {
 
 /** The app's one taxonomy: operations first, cash movements second. Mirrors the
  * add-movement picker's OPERACIONES → EFECTIVO grouping. */
-export const MOVEMENT_TYPE_ORDER: MovementType[] = [
-  "buy",
-  "sell",
-  "dividend",
-  "deposit",
-  "withdrawal",
-];
+export const MOVEMENT_TYPE_ORDER: MovementType[] = ["buy", "sell", "dividend", "deposit", "withdrawal"];

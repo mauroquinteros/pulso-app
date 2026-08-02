@@ -1,10 +1,5 @@
 import type { Movement } from "@/types/models";
-import {
-  isBuyMovement,
-  isDepositMovement,
-  isSellMovement,
-  isWithdrawalMovement,
-} from "@/types/models";
+import { isBuyMovement, isDepositMovement, isSellMovement, isWithdrawalMovement } from "@/types/models";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -25,14 +20,9 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export function cashImpact(movement: Movement): number {
   if (isDepositMovement(movement)) return movement.amount;
   if (isWithdrawalMovement(movement)) return -movement.amount;
-  if (isBuyMovement(movement))
-    return -(movement.executionPrice * movement.shares + movement.fee);
+  if (isBuyMovement(movement)) return -(movement.executionPrice * movement.shares + movement.fee);
   if (isSellMovement(movement))
-    return (
-      movement.executionPrice * movement.shares -
-      movement.fee -
-      movement.regulatoryFees
-    );
+    return movement.executionPrice * movement.shares - movement.fee - movement.regulatoryFees;
   return movement.grossAmount - movement.tax; // dividend — the only variant left
 }
 

@@ -12,17 +12,10 @@ import {
   UIManager,
   View,
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import type { HomeView, Tone } from "./view-model";
 
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -30,8 +23,7 @@ type Props = {
   return: HomeView["return"];
 };
 
-const toneColor = (tone: Tone) =>
-  tone === "negative" ? Colors.negative : Colors.positive;
+const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
 export function ReturnCard({ return: ret }: Props) {
   const [open, setOpen] = useState(false);
@@ -75,9 +67,7 @@ export function ReturnCard({ return: ret }: Props) {
             <Text style={styles.title}>Rendimiento total</Text>
           </View>
           <View style={styles.valueRow}>
-            <Text style={[styles.total, { color: totalColor }]}>
-              {ret.total}
-            </Text>
+            <Text style={[styles.total, { color: totalColor }]}>{ret.total}</Text>
             {ret.percentTooltip ? (
               <Pressable
                 ref={anchorRef}
@@ -87,32 +77,18 @@ export function ReturnCard({ return: ret }: Props) {
                 accessibilityLabel="Cómo se calcula el porcentaje"
                 style={styles.pctTip}
               >
-                <Text style={[styles.totalPct, { color: totalColor }]}>
-                  {ret.percent}
-                </Text>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={16}
-                  color={totalColor}
-                />
+                <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
+                <Ionicons name="information-circle-outline" size={16} color={totalColor} />
               </Pressable>
             ) : (
-              <Text style={[styles.totalPct, { color: totalColor }]}>
-                {ret.percent}
-              </Text>
+              <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
             )}
           </View>
         </View>
         <View style={styles.toggle}>
-          <Text style={styles.toggleLabel}>
-            {open ? "Ocultar" : "Ver desglose"}
-          </Text>
+          <Text style={styles.toggleLabel}>{open ? "Ocultar" : "Ver desglose"}</Text>
           <Animated.View style={chevronStyle}>
-            <Ionicons
-              name="chevron-down"
-              size={12}
-              color={Colors.textSecondary}
-            />
+            <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
           </Animated.View>
         </View>
       </Pressable>
@@ -138,9 +114,7 @@ export function ReturnCard({ return: ret }: Props) {
                 <View style={styles.compRow}>
                   <Text style={styles.compLabel}>
                     {c.label}
-                    {c.sub ? (
-                      <Text style={styles.compSub}> {c.sub}</Text>
-                    ) : null}
+                    {c.sub ? <Text style={styles.compSub}> {c.sub}</Text> : null}
                   </Text>
                   <Text style={[styles.compValue, { color }]}>{c.value}</Text>
                 </View>
@@ -157,26 +131,14 @@ export function ReturnCard({ return: ret }: Props) {
               </View>
             );
           })}
-          <Text style={styles.footnote}>
-            Los componentes suman el rendimiento total
-          </Text>
+          <Text style={styles.footnote}>Los componentes suman el rendimiento total</Text>
         </View>
       )}
 
-      <Modal
-        transparent
-        visible={!!tip}
-        animationType="fade"
-        onRequestClose={() => setTip(null)}
-      >
+      <Modal transparent visible={!!tip} animationType="fade" onRequestClose={() => setTip(null)}>
         <Pressable style={styles.tipBackdrop} onPress={() => setTip(null)}>
           {tip && (
-            <View
-              style={[
-                styles.tip,
-                { top: tip.top, left: tip.left, width: tip.width },
-              ]}
-            >
+            <View style={[styles.tip, { top: tip.top, left: tip.left, width: tip.width }]}>
               <Text style={styles.tipText}>{ret.percentTooltip}</Text>
             </View>
           )}

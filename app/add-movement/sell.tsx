@@ -3,26 +3,14 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
-import {
-  buildSellMovement,
-  summarizeSell,
-} from "@/components/add-movement/sell-view-model";
+import { buildSellMovement, summarizeSell } from "@/components/add-movement/sell-view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -40,9 +28,7 @@ export default function SellFormScreen() {
   const [executionPrice, setExecutionPrice] = useState("");
   const [fee, setFee] = useState("");
   const [regulatoryFees, setRegulatoryFees] = useState("");
-  const [executionDate, setExecutionDate] = useState(() =>
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedTicker, setTouchedTicker] = useState(false);
   const [touchedShares, setTouchedShares] = useState(false);
   const [touchedPrice, setTouchedPrice] = useState(false);
@@ -68,8 +54,7 @@ export default function SellFormScreen() {
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showTickerError = touchedTicker && summary.tickerInvalid;
-  const showSharesError =
-    touchedShares && (summary.sharesInvalid || summary.insufficientShares);
+  const showSharesError = touchedShares && (summary.sharesInvalid || summary.insufficientShares);
   const showPriceError = touchedPrice && summary.priceInvalid;
 
   // The date-qualified variants only appear when the chosen date (not the
@@ -84,16 +69,9 @@ export default function SellFormScreen() {
           ? `Solo tienes ${formatShares(availableShares)} acciones.`
           : `En esa fecha solo puedes vender ${formatShares(availableShares)} acciones.`;
 
-  const showDisponible =
-    ticker !== "" &&
-    availableShares > 0 &&
-    !(touchedShares && summary.insufficientShares);
+  const showDisponible = ticker !== "" && availableShares > 0 && !(touchedShares && summary.insufficientShares);
 
-  const tickerBorderColor = showTickerError
-    ? Colors.negative
-    : ticker !== ""
-      ? "rgba(0,229,204,0.5)"
-      : Colors.border;
+  const tickerBorderColor = showTickerError ? Colors.negative : ticker !== "" ? "rgba(0,229,204,0.5)" : Colors.border;
 
   const sharesBorderColor = showSharesError
     ? Colors.negative
@@ -127,10 +105,7 @@ export default function SellFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScreenHeader title="Venta" />
 
         <ScrollView
@@ -143,9 +118,7 @@ export default function SellFormScreen() {
           <View style={styles.firstRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Símbolo</Text>
-              <View
-                style={[styles.smallBox, { borderColor: tickerBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: tickerBorderColor }]}>
                 <TextInput
                   style={styles.symbolInput}
                   autoCapitalize="characters"
@@ -153,39 +126,26 @@ export default function SellFormScreen() {
                   placeholder="Ej. AAPL"
                   placeholderTextColor="#3E4470"
                   value={ticker}
-                  onChangeText={(t) =>
-                    setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))
-                  }
+                  onChangeText={(t) => setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))}
                   onBlur={() => setTouchedTicker(true)}
                 />
               </View>
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
-                onPress={() => setShowPicker(true)}
-              >
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={15}
-                  color={Colors.textSecondary}
-                />
+                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
               </Pressable>
             </View>
           </View>
-          {showTickerError && (
-            <Text style={styles.errorText}>Ingresa un símbolo.</Text>
-          )}
+          {showTickerError && <Text style={styles.errorText}>Ingresa un símbolo.</Text>}
 
           {/* ACCIONES + PRECIO */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Acciones</Text>
-              <View
-                style={[styles.smallBox, { borderColor: sharesBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: sharesBorderColor }]}>
                 <TextInput
                   style={styles.smallInput}
                   keyboardType="decimal-pad"
@@ -196,17 +156,11 @@ export default function SellFormScreen() {
                   onBlur={() => setTouchedShares(true)}
                 />
               </View>
-              {showDisponible && (
-                <Text style={styles.helperText}>
-                  Disponible {formatShares(availableShares)}
-                </Text>
-              )}
+              {showDisponible && <Text style={styles.helperText}>Disponible {formatShares(availableShares)}</Text>}
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Precio de ejecución</Text>
-              <View
-                style={[styles.smallBox, { borderColor: priceBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: priceBorderColor }]}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -220,12 +174,8 @@ export default function SellFormScreen() {
               </View>
             </View>
           </View>
-          {showSharesError && (
-            <Text style={styles.errorText}>{sharesErrorMsg}</Text>
-          )}
-          {showPriceError && !showSharesError && (
-            <Text style={styles.errorText}>Ingresa un precio mayor a $0.</Text>
-          )}
+          {showSharesError && <Text style={styles.errorText}>{sharesErrorMsg}</Text>}
+          {showPriceError && !showSharesError && <Text style={styles.errorText}>Ingresa un precio mayor a $0.</Text>}
 
           {/* COMISIÓN + IMPUESTOS */}
           <View style={styles.pairRow}>
@@ -272,33 +222,23 @@ export default function SellFormScreen() {
           <View style={styles.breakdown}>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Monto bruto</Text>
-              <Text style={styles.breakdownValue}>
-                {formatUSD(summary.gross)}
-              </Text>
+              <Text style={styles.breakdownValue}>{formatUSD(summary.gross)}</Text>
             </View>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Comisión</Text>
-              <Text style={styles.breakdownValue}>
-                {feeValue > 0 ? `-${formatUSD(feeValue)}` : formatUSD(0)}
-              </Text>
+              <Text style={styles.breakdownValue}>{feeValue > 0 ? `-${formatUSD(feeValue)}` : formatUSD(0)}</Text>
             </View>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Impuestos</Text>
-              <Text style={styles.breakdownValue}>
-                {regValue > 0 ? `-${formatUSD(regValue)}` : formatUSD(0)}
-              </Text>
+              <Text style={styles.breakdownValue}>{regValue > 0 ? `-${formatUSD(regValue)}` : formatUSD(0)}</Text>
             </View>
             <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
               <Text style={styles.totalLabel}>Total a recibir</Text>
-              <Text style={[styles.totalValue, { color: totalColor }]}>
-                {formatUSD(summary.total)}
-              </Text>
+              <Text style={[styles.totalValue, { color: totalColor }]}>{formatUSD(summary.total)}</Text>
             </View>
             {summary.feesExceedGross && (
-              <Text style={styles.errorText}>
-                La comisión y los impuestos superan el monto bruto
-              </Text>
+              <Text style={styles.errorText}>La comisión y los impuestos superan el monto bruto</Text>
             )}
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />

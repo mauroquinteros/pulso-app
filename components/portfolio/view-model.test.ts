@@ -13,12 +13,7 @@ const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   executionDate: "2025-01-01",
   createdAt: "2025-01-01T00:00:00Z",
 });
-const buy = (
-  ticker: string,
-  executionPrice: number,
-  shares: number,
-  fee = 0,
-): BuyMovement => ({
+const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
   type: "buy",
   ticker,
@@ -41,11 +36,7 @@ describe("buildPortfolioView", () => {
     expect(view.distribution.missingPriceCount).toBe(0);
 
     // Segments: AAPL, VOO, then Efectivo last. Fractions are Market Value ÷ TPV.
-    expect(view.distribution.segments.map((s) => s.key)).toEqual([
-      "AAPL",
-      "VOO",
-      "cash",
-    ]);
+    expect(view.distribution.segments.map((s) => s.key)).toEqual(["AAPL", "VOO", "cash"]);
     const [aapl, voo, cash] = view.distribution.segments;
     expect(aapl).toMatchObject({
       label: "AAPL",
@@ -102,23 +93,15 @@ describe("buildPortfolioView", () => {
   // by colour — so two slices sharing one makes the mapping unreadable. This
   // used to break from 5 priced holdings on: the palette held 4 colours and
   // segmentColor wrapped with `% 4`, so the 5th slice reused the 1st's.
-  it.each([5, 6, 7, 9])(
-    "gives every drawn segment its own colour with %i priced holdings",
-    (n) => {
-      const tickers = Array.from({ length: n }, (_, i) => `T${i}`);
-      const movements: Movement[] = [
-        deposit(100_000),
-        ...tickers.map((t, i) => buy(t, 100, 100 - i)),
-      ];
-      const prices = Object.fromEntries(tickers.map((t) => [t, 100]));
-      const view = buildPortfolioView(assemblePortfolio(movements, prices));
+  it.each([5, 6, 7, 9])("gives every drawn segment its own colour with %i priced holdings", (n) => {
+    const tickers = Array.from({ length: n }, (_, i) => `T${i}`);
+    const movements: Movement[] = [deposit(100_000), ...tickers.map((t, i) => buy(t, 100, 100 - i))];
+    const prices = Object.fromEntries(tickers.map((t) => [t, 100]));
+    const view = buildPortfolioView(assemblePortfolio(movements, prices));
 
-      const colors = view.distribution.segments.map((s) =>
-        segmentColor(s.colorIndex),
-      );
-      expect(new Set(colors).size).toBe(colors.length);
-    },
-  );
+    const colors = view.distribution.segments.map((s) => segmentColor(s.colorIndex));
+    expect(new Set(colors).size).toBe(colors.length);
+  });
 
   it("groups 7+ holdings into top 5 + Otros; Efectivo never inside Otros", () => {
     // Seven priced holdings, cash spent to ~0 so the donut shows holdings only.
@@ -144,14 +127,7 @@ describe("buildPortfolioView", () => {
     const view = buildPortfolioView(assemblePortfolio(movements, prices));
 
     // cash == 0 → no Efectivo segment: exactly 6 segments (top 5 + Otros).
-    expect(view.distribution.segments.map((s) => s.key)).toEqual([
-      "AAA",
-      "BBB",
-      "CCC",
-      "DDD",
-      "EEE",
-      "others",
-    ]);
+    expect(view.distribution.segments.map((s) => s.key)).toEqual(["AAA", "BBB", "CCC", "DDD", "EEE", "others"]);
     const others = view.distribution.segments.at(-1)!;
     expect(others.label).toBe("Otros");
     expect(others.colorIndex).toBe("others");
@@ -161,15 +137,7 @@ describe("buildPortfolioView", () => {
     expect(fractionSum(view)).toBeCloseTo(1, 8);
 
     // All seven holdings still list individually in "Mis Activos".
-    expect(view.holdings.map((h) => h.ticker)).toEqual([
-      "AAA",
-      "BBB",
-      "CCC",
-      "DDD",
-      "EEE",
-      "FFF",
-      "GGG",
-    ]);
+    expect(view.holdings.map((h) => h.ticker)).toEqual(["AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG"]);
   });
 
   it("excludes an unpriced holding from the donut and flags its row", () => {
@@ -178,16 +146,11 @@ describe("buildPortfolioView", () => {
       buy("AAPL", 100, 10), // priced
       buy("XYZ", 100, 5), // no price
     ];
-    const view = buildPortfolioView(
-      assemblePortfolio(movements, { AAPL: 120 }),
-    );
+    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: 120 }));
 
     expect(view.distribution.missingPriceCount).toBe(1);
     // Only AAPL and Efectivo appear in the donut/legend — never XYZ.
-    expect(view.distribution.segments.map((s) => s.key)).toEqual([
-      "AAPL",
-      "cash",
-    ]);
+    expect(view.distribution.segments.map((s) => s.key)).toEqual(["AAPL", "cash"]);
     expect(view.distribution.legend.some((l) => l.key === "XYZ")).toBe(false);
 
     // XYZ still lists, flagged, with null price-applied fields.
@@ -250,9 +213,7 @@ describe("buildPortfolioView", () => {
 
   it("formats a loss with an ASCII-signed percent and a negative tone", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5)];
-    const view = buildPortfolioView(
-      assemblePortfolio(movements, { AAPL: 60 }),
-    );
+    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: 60 }));
 
     const aapl = view.holdings[0];
     expect(aapl.pnlTone).toBe("negative");

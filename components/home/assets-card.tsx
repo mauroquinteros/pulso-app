@@ -7,8 +7,7 @@ type Props = {
   onPressHolding?: (ticker: string) => void;
 };
 
-const toneColor = (tone: Tone) =>
-  tone === "negative" ? Colors.negative : Colors.positive;
+const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
 export function AssetsCard({ assets, onPressHolding }: Props) {
   return (
@@ -16,41 +15,21 @@ export function AssetsCard({ assets, onPressHolding }: Props) {
       <View style={styles.header}>
         <Text style={styles.title}>Activos</Text>
         <Text style={styles.headerStat}>
-          Net P&L{" "}
-          <Text
-            style={[
-              styles.headerStatValue,
-              { color: toneColor(assets.netPnlTone) },
-            ]}
-          >
-            {assets.netPnl}
-          </Text>
+          Net P&L <Text style={[styles.headerStatValue, { color: toneColor(assets.netPnlTone) }]}>{assets.netPnl}</Text>
         </Text>
       </View>
       {assets.holdings.map((h) => (
-        <HoldingRow
-          key={h.ticker}
-          holding={h}
-          onPress={() => onPressHolding?.(h.ticker)}
-        />
+        <HoldingRow key={h.ticker} holding={h} onPress={() => onPressHolding?.(h.ticker)} />
       ))}
     </View>
   );
 }
 
-function HoldingRow({
-  holding,
-  onPress,
-}: {
-  holding: HomeView["assets"]["holdings"][number];
-  onPress?: () => void;
-}) {
+function HoldingRow({ holding, onPress }: { holding: HomeView["assets"]["holdings"][number]; onPress?: () => void }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
-        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>
-          {holding.ticker}
-        </Text>
+        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{holding.ticker}</Text>
       </View>
       <View style={styles.middle}>
         <Text style={styles.ticker}>{holding.ticker}</Text>
@@ -60,9 +39,7 @@ function HoldingRow({
         {holding.priceAvailable && holding.value !== null ? (
           <>
             <Text style={styles.value}>{holding.value}</Text>
-            <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>
-              {holding.pnl}
-            </Text>
+            <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>{holding.pnl}</Text>
           </>
         ) : (
           <Text style={styles.noPrice}>Sin precio</Text>

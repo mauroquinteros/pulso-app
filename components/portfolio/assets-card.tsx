@@ -7,8 +7,7 @@ type Props = {
   onPressHolding?: (ticker: string) => void;
 };
 
-const toneColor = (tone: Tone) =>
-  tone === "negative" ? Colors.negative : Colors.positive;
+const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
 /** "Mis Activos": positions ordered by Market Value (view-model order), each
  * row with its badge, ticker, shares, Market Value and Net P&L. Cash lives in
@@ -18,29 +17,17 @@ export function AssetsCard({ holdings, onPressHolding }: Props) {
     <View style={styles.card}>
       <Text style={styles.title}>Mis Activos</Text>
       {holdings.map((h) => (
-        <HoldingRowView
-          key={h.ticker}
-          holding={h}
-          onPress={() => onPressHolding?.(h.ticker)}
-        />
+        <HoldingRowView key={h.ticker} holding={h} onPress={() => onPressHolding?.(h.ticker)} />
       ))}
     </View>
   );
 }
 
-function HoldingRowView({
-  holding,
-  onPress,
-}: {
-  holding: HoldingRow;
-  onPress?: () => void;
-}) {
+function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: () => void }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
-        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>
-          {holding.ticker}
-        </Text>
+        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{holding.ticker}</Text>
       </View>
       <View style={styles.middle}>
         <Text style={styles.ticker}>{holding.ticker}</Text>

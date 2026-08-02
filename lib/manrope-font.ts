@@ -49,8 +49,7 @@ export function applyManropeDefaultFont(): void {
     if (!isValidElement<{ style?: StyleProp<TextStyle> }>(element)) return element;
 
     const flat = StyleSheet.flatten(element.props.style) ?? {};
-    const fontFamily =
-      WEIGHT_TO_FAMILY[String(flat.fontWeight ?? "400")] ?? "Manrope_400Regular";
+    const fontFamily = WEIGHT_TO_FAMILY[String(flat.fontWeight ?? "400")] ?? "Manrope_400Regular";
 
     // fontFamily first so `flat` keeps its own fontWeight (and any explicit
     // fontFamily) on top — the family sets Manrope, the weight stays for fallbacks.

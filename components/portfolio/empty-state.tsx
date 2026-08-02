@@ -11,9 +11,7 @@ export function EmptyState({ onAddMovement }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Tu portafolio está vacío</Text>
-      <Text style={styles.body}>
-        Registra tu primer movimiento para ver cómo se distribuye tu dinero.
-      </Text>
+      <Text style={styles.body}>Registra tu primer movimiento para ver cómo se distribuye tu dinero.</Text>
       <Pressable style={styles.cta} onPress={onAddMovement}>
         <Text style={styles.ctaText}>Agregar movimiento</Text>
       </Pressable>

@@ -7,19 +7,11 @@ import type { StockDetailView, StockReturnBlock, Tone } from "./view-model";
  * holding row, so the list and its detail read as the same thing. Without a
  * price the hero degrades to a small "Sin precio": quietly dropping it would
  * read as a bug, a minimal marker reads as "we don't have it". */
-export function StockIdentity({
-  ticker,
-  price,
-}: {
-  ticker: string;
-  price: string | null;
-}) {
+export function StockIdentity({ ticker, price }: { ticker: string; price: string | null }) {
   return (
     <View style={styles.identity}>
       <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
-        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>
-          {ticker}
-        </Text>
+        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{ticker}</Text>
       </View>
       <View style={styles.identityText}>
         <Text style={styles.heroLabel}>Precio actual</Text>
@@ -43,31 +35,15 @@ function Cell({ label, value }: { label: string; value: string }) {
   );
 }
 
-const toneColor = (tone: Tone) =>
-  tone === "negative" ? Colors.negative : Colors.positive;
+const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
 /** One lifetime-return component row: Dividendos / Realizado / Comisiones.
  * Untoned rows are magnitudes whose direction lives in the label. */
-function ComponentRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: Tone;
-}) {
+function ComponentRow({ label, value, tone }: { label: string; value: string; tone?: Tone }) {
   return (
     <View style={styles.componentRow}>
       <Text style={styles.componentLabel}>{label}</Text>
-      <Text
-        style={[
-          styles.componentValue,
-          tone !== undefined && { color: toneColor(tone) },
-        ]}
-      >
-        {value}
-      </Text>
+      <Text style={[styles.componentValue, tone !== undefined && { color: toneColor(tone) }]}>{value}</Text>
     </View>
   );
 }
@@ -84,33 +60,21 @@ function ReturnBlock({ block }: { block: StockReturnBlock }) {
       <View style={styles.pnlRow}>
         <Text style={styles.pnlLabel}>P&L no realizada</Text>
         <View style={styles.pnlFigures}>
-          <Text style={[styles.pnlValue, { color: pnlColor }]}>
-            {block.netPnl}
-          </Text>
-          <Text style={[styles.pnlPercent, { color: pnlColor }]}>
-            {block.netPnlPercent}
-          </Text>
+          <Text style={[styles.pnlValue, { color: pnlColor }]}>{block.netPnl}</Text>
+          <Text style={[styles.pnlPercent, { color: pnlColor }]}>{block.netPnlPercent}</Text>
         </View>
       </View>
 
       <View style={styles.components}>
         <ComponentRow label="Dividendos" value={block.dividends} />
-        {block.realized !== null && (
-          <ComponentRow
-            label="Realizado"
-            value={block.realized}
-            tone={block.realizedTone}
-          />
-        )}
+        {block.realized !== null && <ComponentRow label="Realizado" value={block.realized} tone={block.realizedTone} />}
         <ComponentRow label="Comisiones" value={block.fees} />
       </View>
 
       <View style={styles.divider} />
       <View style={styles.totalRow}>
         <Text style={styles.totalLabel}>Retorno total</Text>
-        <Text style={[styles.totalValue, { color: toneColor(block.totalTone) }]}>
-          {block.total}
-        </Text>
+        <Text style={[styles.totalValue, { color: toneColor(block.totalTone) }]}>{block.total}</Text>
       </View>
     </>
   );
@@ -123,11 +87,7 @@ function ReturnBlock({ block }: { block: StockReturnBlock }) {
  * neutral fact. Renders the view verbatim: a null market value drops its cell,
  * a null return block drops entirely and shows the no-price copy instead.
  */
-export function PositionCard({
-  position,
-}: {
-  position: NonNullable<StockDetailView["position"]>;
-}) {
+export function PositionCard({ position }: { position: NonNullable<StockDetailView["position"]> }) {
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Tu posición</Text>
@@ -138,9 +98,7 @@ export function PositionCard({
       </View>
       <View style={[styles.gridRow, styles.gridRowLast]}>
         <Cell label="Costo total" value={position.costBasis} />
-        {position.marketValue !== null && (
-          <Cell label="Valor de mercado" value={position.marketValue} />
-        )}
+        {position.marketValue !== null && <Cell label="Valor de mercado" value={position.marketValue} />}
       </View>
 
       {position.return !== null ? (
@@ -148,9 +106,7 @@ export function PositionCard({
       ) : (
         <>
           <View style={styles.divider} />
-          <Text style={styles.noPriceCopy}>
-            Sin precio actual no podemos calcular tu retorno.
-          </Text>
+          <Text style={styles.noPriceCopy}>Sin precio actual no podemos calcular tu retorno.</Text>
         </>
       )}
     </View>

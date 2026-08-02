@@ -190,9 +190,6 @@ export const MOCK_PRICES: PriceMap = {
 // Total Return without listing as a holding.
 // ---------------------------------------------------------------------------
 
-export const MOCK_PORTFOLIO_SUMMARY = assemblePortfolio(
-  MOCK_MOVEMENTS,
-  MOCK_PRICES,
-);
+export const MOCK_PORTFOLIO_SUMMARY = assemblePortfolio(MOCK_MOVEMENTS, MOCK_PRICES);
 
 export const MOCK_HOLDINGS = MOCK_PORTFOLIO_SUMMARY.holdings;

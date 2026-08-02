@@ -1,6 +1,6 @@
 # Movements can be edited and deleted without revalidating the resulting history
 
-A **Movement** can be edited or deleted at any time, and the app does **not** check whether the history that results is still coherent. This is deliberate, and it is a real asymmetry: the forms refuse to *add* an illegal movement — a buy costing more than available **Cash**, a sell of shares not held on that date — but those gates judge a movement against the history *as it stood when it was added*, and an edit changes that history underneath everything that came after it. The record is the user's account of their own money, so its accuracy is theirs to keep.
+A **Movement** can be edited or deleted at any time, and the app does **not** check whether the history that results is still coherent. This is deliberate, and it is a real asymmetry: the forms refuse to _add_ an illegal movement — a buy costing more than available **Cash**, a sell of shares not held on that date — but those gates judge a movement against the history _as it stood when it was added_, and an edit changes that history underneath everything that came after it. The record is the user's account of their own money, so its accuracy is theirs to keep.
 
 ## What this permits
 
@@ -18,6 +18,6 @@ None of these are rejected, and nothing warns.
 ## Consequences
 
 - All three movement tables carry `update` **and** `delete` policies alongside `insert` and `select`. Deletes are hard, matching how a **Perfil** is deleted.
-- `updatedAt` records only *that* a row changed. It feeds no calculation, is shown to no one, and exists for the same reason `createdAt` does.
-- **A broken history yields wrong numbers, not a broken app.** Total Return % is computed only when **Peak Contributions** is positive, so a mangled history cannot put `Infinity` or `NaN` on screen. Anything that would break rendering rather than merely mislead — a negative Cash reaching **Allocation**, where a negative share of **Total Portfolio Value** is not a shape the donut expects — is a bug in *this* policy's implementation, not an instance of it.
+- `updatedAt` records only _that_ a row changed. It feeds no calculation, is shown to no one, and exists for the same reason `createdAt` does.
+- **A broken history yields wrong numbers, not a broken app.** Total Return % is computed only when **Peak Contributions** is positive, so a mangled history cannot put `Infinity` or `NaN` on screen. Anything that would break rendering rather than merely mislead — a negative Cash reaching **Allocation**, where a negative share of **Total Portfolio Value** is not a shape the donut expects — is a bug in _this_ policy's implementation, not an instance of it.
 - **Row-level security protects ownership, not arithmetic.** With the engine on-device the server has no way to judge whether a history is coherent, so this policy is not merely chosen but also, at present, the only one enforceable. Moving the engine server-side would be a precondition for ever reversing it.

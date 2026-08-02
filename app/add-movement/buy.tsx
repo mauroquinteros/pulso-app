@@ -3,22 +3,10 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  buildBuyMovement,
-  summarizeBuy,
-} from "@/components/add-movement/buy-view-model";
+import { buildBuyMovement, summarizeBuy } from "@/components/add-movement/buy-view-model";
 import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
@@ -37,18 +25,13 @@ export default function BuyFormScreen() {
   const [amount, setAmount] = useState("");
   const [executionPrice, setExecutionPrice] = useState("");
   const [fee, setFee] = useState("");
-  const [executionDate, setExecutionDate] = useState(() =>
-    format(new Date(), "yyyy-MM-dd"),
-  );
+  const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedTicker, setTouchedTicker] = useState(false);
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [touchedPrice, setTouchedPrice] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const summary = summarizeBuy(
-    { ticker, amount, executionPrice, fee, executionDate },
-    availableCash,
-  );
+  const summary = summarizeBuy({ ticker, amount, executionPrice, fee, executionDate }, availableCash);
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
@@ -58,19 +41,14 @@ export default function BuyFormScreen() {
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showTickerError = touchedTicker && summary.tickerInvalid;
-  const showAmountError =
-    touchedAmount && (summary.amountInvalid || summary.insufficientFunds);
+  const showAmountError = touchedAmount && (summary.amountInvalid || summary.insufficientFunds);
   const showPriceError = touchedPrice && summary.priceInvalid;
 
   const amountErrorMsg = summary.amountInvalid
     ? "Ingresa un monto mayor a $0."
     : `Solo tienes ${formatUSD(availableCash)} disponible.`;
 
-  const tickerBorderColor = showTickerError
-    ? Colors.negative
-    : ticker !== ""
-      ? "rgba(0,229,204,0.5)"
-      : Colors.border;
+  const tickerBorderColor = showTickerError ? Colors.negative : ticker !== "" ? "rgba(0,229,204,0.5)" : Colors.border;
 
   const amountBorderColor = showAmountError
     ? Colors.negative
@@ -84,18 +62,11 @@ export default function BuyFormScreen() {
       ? "rgba(0,229,204,0.5)"
       : Colors.border;
 
-  const totalColor = summary.insufficientFunds
-    ? Colors.negative
-    : summary.total > 0
-      ? Colors.textPrimary
-      : "#3E4470";
+  const totalColor = summary.insufficientFunds ? Colors.negative : summary.total > 0 ? Colors.textPrimary : "#3E4470";
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildBuyMovement(
-      { ticker, amount, executionPrice, fee, executionDate },
-      defaultMovementDeps(),
-    );
+    const movement = buildBuyMovement({ ticker, amount, executionPrice, fee, executionDate }, defaultMovementDeps());
     addMovement(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
@@ -103,10 +74,7 @@ export default function BuyFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScreenHeader title="Compra" />
 
         <ScrollView
@@ -119,9 +87,7 @@ export default function BuyFormScreen() {
           <View style={styles.firstRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Símbolo</Text>
-              <View
-                style={[styles.smallBox, { borderColor: tickerBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: tickerBorderColor }]}>
                 <TextInput
                   style={styles.symbolInput}
                   autoCapitalize="characters"
@@ -129,50 +95,28 @@ export default function BuyFormScreen() {
                   placeholder="Ej. AAPL"
                   placeholderTextColor="#3E4470"
                   value={ticker}
-                  onChangeText={(t) =>
-                    setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))
-                  }
+                  onChangeText={(t) => setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))}
                   onBlur={() => setTouchedTicker(true)}
                 />
               </View>
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
-                onPress={() => setShowPicker(true)}
-              >
+              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={15}
-                  color={Colors.textSecondary}
-                />
+                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
               </Pressable>
             </View>
           </View>
-          {showTickerError && (
-            <Text style={styles.errorText}>Ingresa un símbolo.</Text>
-          )}
+          {showTickerError && <Text style={styles.errorText}>Ingresa un símbolo.</Text>}
 
           {/* MONTO COMPRADO */}
           <View style={styles.labelRow}>
-            <Text style={[styles.label, styles.labelInRow]}>
-              Monto comprado
-            </Text>
-            <Text style={styles.available}>
-              Disponible {formatUSD(availableCash)}
-            </Text>
+            <Text style={[styles.label, styles.labelInRow]}>Monto comprado</Text>
+            <Text style={styles.available}>Disponible {formatUSD(availableCash)}</Text>
           </View>
           <View style={[styles.amountBox, { borderColor: amountBorderColor }]}>
-            <Text
-              style={[
-                styles.amountDollar,
-                { color: amountActive ? Colors.textPrimary : "#5A6080" },
-              ]}
-            >
-              $
-            </Text>
+            <Text style={[styles.amountDollar, { color: amountActive ? Colors.textPrimary : "#5A6080" }]}>$</Text>
             <TextInput
               style={styles.amountInput}
               keyboardType="decimal-pad"
@@ -183,17 +127,13 @@ export default function BuyFormScreen() {
               onBlur={() => setTouchedAmount(true)}
             />
           </View>
-          {showAmountError && (
-            <Text style={styles.errorText}>{amountErrorMsg}</Text>
-          )}
+          {showAmountError && <Text style={styles.errorText}>{amountErrorMsg}</Text>}
 
           {/* PRECIO + COMISIÓN */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
               <Text style={styles.label}>Precio de ejecución</Text>
-              <View
-                style={[styles.smallBox, { borderColor: priceBorderColor }]}
-              >
+              <View style={[styles.smallBox, { borderColor: priceBorderColor }]}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput
                   style={styles.smallInput}
@@ -221,20 +161,12 @@ export default function BuyFormScreen() {
               </View>
             </View>
           </View>
-          {showPriceError && (
-            <Text style={styles.errorText}>Ingresa un precio mayor a $0.</Text>
-          )}
+          {showPriceError && <Text style={styles.errorText}>Ingresa un precio mayor a $0.</Text>}
 
           {/* FEE HINT (one line) */}
           <View style={styles.hint}>
-            <Ionicons
-              name="information-circle-outline"
-              size={14}
-              color="#7BA7E8"
-            />
-            <Text style={styles.hintText}>
-              La comisión se suma al total a pagar.
-            </Text>
+            <Ionicons name="information-circle-outline" size={14} color="#7BA7E8" />
+            <Text style={styles.hintText}>La comisión se suma al total a pagar.</Text>
           </View>
 
           <MovementDatePicker
@@ -254,16 +186,12 @@ export default function BuyFormScreen() {
             </View>
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Comisión</Text>
-              <Text style={styles.breakdownValue}>
-                {feeValue > 0 ? `+${formatUSD(feeValue)}` : formatUSD(0)}
-              </Text>
+              <Text style={styles.breakdownValue}>{feeValue > 0 ? `+${formatUSD(feeValue)}` : formatUSD(0)}</Text>
             </View>
             <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
               <Text style={styles.totalLabel}>Total a pagar</Text>
-              <Text style={[styles.totalValue, { color: totalColor }]}>
-                {formatUSD(summary.total)}
-              </Text>
+              <Text style={[styles.totalValue, { color: totalColor }]}>{formatUSD(summary.total)}</Text>
             </View>
           </View>
           <SaveButton canSave={canSave} onPress={onSave} />

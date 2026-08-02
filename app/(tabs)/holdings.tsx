@@ -13,11 +13,7 @@ export default function HoldingsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>Portafolio</Text>
         </View>
@@ -28,10 +24,7 @@ export default function HoldingsScreen() {
           <>
             <DistributionCard distribution={view.distribution} />
             {view.holdings.length > 0 && (
-              <AssetsCard
-                holdings={view.holdings}
-                onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
-              />
+              <AssetsCard holdings={view.holdings} onPressHolding={(ticker) => router.push(`/stock/${ticker}`)} />
             )}
           </>
         )}

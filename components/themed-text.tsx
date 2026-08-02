@@ -1,22 +1,13 @@
 import { Colors } from "@/constants/theme";
 import { StyleSheet, Text, type TextProps } from "react-native";
 
-export type TextType =
-  | "default"
-  | "title"
-  | "defaultSemiBold"
-  | "subtitle"
-  | "link";
+export type TextType = "default" | "title" | "defaultSemiBold" | "subtitle" | "link";
 
 export type ThemedTextProps = TextProps & {
   type?: TextType;
 };
 
-export function ThemedText({
-  style,
-  type = "default",
-  ...rest
-}: ThemedTextProps) {
+export function ThemedText({ style, type = "default", ...rest }: ThemedTextProps) {
   return (
     <Text
       style={[

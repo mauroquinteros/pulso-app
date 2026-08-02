@@ -1,10 +1,4 @@
-import type {
-  Holding,
-  Movement,
-  Portfolio,
-  TotalReturn,
-  ValuedHolding,
-} from "@/types/models";
+import type { Holding, Movement, Portfolio, TotalReturn, ValuedHolding } from "@/types/models";
 import { isDepositMovement, isWithdrawalMovement } from "@/types/models";
 import { computeNetDividends, computeTotalFees } from "@/utils/calculations";
 import { computeCash } from "./cash";
@@ -20,10 +14,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * price, the price-applied figures are reported as null and priceAvailable is
  * false — never fabricated (missing-price policy "exclude + flag").
  */
-export function valueHolding(
-  holding: Holding,
-  prices: PriceMap,
-): ValuedHolding {
+export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding {
   const price = prices[holding.ticker];
   if (price === undefined) {
     return {
@@ -36,8 +27,7 @@ export function valueHolding(
   }
   const marketValue = round2(price * holding.shares);
   const netPnl = round2(marketValue - holding.costBasis);
-  const netPnlPercent =
-    holding.costBasis !== 0 ? round2((netPnl / holding.costBasis) * 100) : 0;
+  const netPnlPercent = holding.costBasis !== 0 ? round2((netPnl / holding.costBasis) * 100) : 0;
   return {
     ...holding,
     priceAvailable: true,
@@ -57,10 +47,7 @@ export function valueHolding(
  * Reconciliation invariant (holds when every held ticker is priced):
  *   Cash + Market Value == net contributions + Total Return.
  */
-export function assemblePortfolio(
-  movements: Movement[],
-  prices: PriceMap,
-): Portfolio {
+export function assemblePortfolio(movements: Movement[], prices: PriceMap): Portfolio {
   const cash = computeCash(movements);
   const totalFees = computeTotalFees(movements);
   const totalDividends = computeNetDividends(movements);
@@ -86,27 +73,18 @@ export function assemblePortfolio(
 
   // Price-applied aggregates exclude holdings whose price is unavailable.
   const priced = holdings.filter((h) => h.priceAvailable);
-  const marketValue = round2(
-    priced.reduce((sum, h) => sum + (h.marketValue ?? 0), 0),
-  );
-  const unrealizedPnl = round2(
-    priced.reduce((sum, h) => sum + (h.netPnl ?? 0), 0),
-  );
+  const marketValue = round2(priced.reduce((sum, h) => sum + (h.marketValue ?? 0), 0));
+  const unrealizedPnl = round2(priced.reduce((sum, h) => sum + (h.netPnl ?? 0), 0));
   const holdingsMissingPrice = holdings.length - priced.length;
 
-  const totalReturnTotal = round2(
-    unrealizedPnl + realizedPnl + totalDividends - totalFees,
-  );
+  const totalReturnTotal = round2(unrealizedPnl + realizedPnl + totalDividends - totalFees);
   const totalReturn: TotalReturn = {
     total: totalReturnTotal,
     unrealizedPnl,
     realizedPnl,
     netDividends: totalDividends,
     totalFees,
-    percent:
-      peakContributions > 0
-        ? round2((totalReturnTotal / peakContributions) * 100)
-        : 0,
+    percent: peakContributions > 0 ? round2((totalReturnTotal / peakContributions) * 100) : 0,
   };
 
   return {
@@ -144,9 +122,7 @@ function computeNetContributions(movements: Movement[]): number {
  * The peak is the money actually put at risk to earn that return, so it stays positive and gives the true percentage. See docs/adr on the Total Return percentage base.
  */
 function computePeakContributions(movements: Movement[]): number {
-  const ordered = movements
-    .filter((m) => isDepositMovement(m) || isWithdrawalMovement(m))
-    .sort(compareChronological);
+  const ordered = movements.filter((m) => isDepositMovement(m) || isWithdrawalMovement(m)).sort(compareChronological);
 
   let running = 0;
   let peak = 0;

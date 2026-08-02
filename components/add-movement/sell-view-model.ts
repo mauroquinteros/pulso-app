@@ -54,10 +54,7 @@ export interface SellDeps {
  * caller passes in the available shares for the typed ticker AT the chosen execution date
  * (`maxSellableAsOf` — 0 if not held then), so a backdated sale can never outrun its backing buy.
  */
-export function summarizeSell(
-  input: SellInput,
-  availableShares: number,
-): SellSummary {
+export function summarizeSell(input: SellInput, availableShares: number): SellSummary {
   const shares = roundShares(parseAmount(input.shares));
   const price = parseAmount(input.executionPrice);
   const fee = parseAmount(input.fee);
@@ -104,10 +101,7 @@ export function summarizeSell(
  * is stored uppercase and empty Comisión/Impuestos default to 0. The UI label "Impuestos"
  * maps to the model field `regulatoryFees` (a sell has no `tax`).
  */
-export function buildSellMovement(
-  input: SellInput,
-  deps: SellDeps,
-): SellMovement {
+export function buildSellMovement(input: SellInput, deps: SellDeps): SellMovement {
   return {
     id: deps.id(),
     type: "sell",
@@ -115,8 +109,7 @@ export function buildSellMovement(
     shares: roundShares(parseAmount(input.shares)),
     executionPrice: parseAmount(input.executionPrice),
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
-    regulatoryFees:
-      input.regulatoryFees === "" ? 0 : parseAmount(input.regulatoryFees),
+    regulatoryFees: input.regulatoryFees === "" ? 0 : parseAmount(input.regulatoryFees),
     executionDate: input.executionDate,
     createdAt: deps.now(),
   };

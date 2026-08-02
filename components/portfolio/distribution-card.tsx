@@ -18,18 +18,13 @@ export function DistributionCard({ distribution }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [legendOpen, setLegendOpen] = useState(true);
 
-  const toggle = (key: string) =>
-    setSelectedKey((prev) => (prev === key ? null : key));
+  const toggle = (key: string) => setSelectedKey((prev) => (prev === key ? null : key));
 
   // Center: the Total by default; a selected row's tinted label + amount when
   // a segment (or the negative-cash legend row) is selected.
-  const selectedRow = selectedKey
-    ? legend.find((l) => l.key === selectedKey)
-    : undefined;
+  const selectedRow = selectedKey ? legend.find((l) => l.key === selectedKey) : undefined;
   const centerTop = selectedRow ? selectedRow.label : centerTotal;
-  const centerTopColor = selectedRow
-    ? segmentColor(selectedRow.colorIndex)
-    : Colors.textPrimary;
+  const centerTopColor = selectedRow ? segmentColor(selectedRow.colorIndex) : Colors.textPrimary;
   const centerBottom = selectedRow ? selectedRow.amount : "Total";
 
   return (
@@ -56,9 +51,7 @@ export function DistributionCard({ distribution }: Props) {
       )}
 
       <Pressable style={styles.legendToggle} onPress={() => setLegendOpen((o) => !o)}>
-        <Text style={styles.legendToggleText}>
-          {legendOpen ? "Ocultar leyenda" : "Ver leyenda"}
-        </Text>
+        <Text style={styles.legendToggleText}>{legendOpen ? "Ocultar leyenda" : "Ver leyenda"}</Text>
         <Ionicons
           name="chevron-down"
           size={12}
@@ -72,27 +65,12 @@ export function DistributionCard({ distribution }: Props) {
           {legend.map((row) => (
             <Pressable
               key={row.key}
-              style={[
-                styles.legendRow,
-                selectedKey === row.key && styles.legendRowSelected,
-              ]}
+              style={[styles.legendRow, selectedKey === row.key && styles.legendRowSelected]}
               onPress={() => toggle(row.key)}
             >
-              <View
-                style={[
-                  styles.swatch,
-                  { backgroundColor: segmentColor(row.colorIndex) },
-                ]}
-              />
+              <View style={[styles.swatch, { backgroundColor: segmentColor(row.colorIndex) }]} />
               <Text style={styles.legendLabel}>{row.label}</Text>
-              <Text
-                style={[
-                  styles.legendPct,
-                  row.negative && styles.legendNegative,
-                ]}
-              >
-                {row.pct ?? row.amount}
-              </Text>
+              <Text style={[styles.legendPct, row.negative && styles.legendNegative]}>{row.pct ?? row.amount}</Text>
             </Pressable>
           ))}
         </View>

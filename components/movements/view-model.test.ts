@@ -16,21 +16,13 @@ const base = (executionDate: string, createdAt?: string) => ({
   executionDate,
   createdAt: createdAt ?? `${executionDate}T00:00:00Z`,
 });
-const deposit = (
-  amount: number,
-  transferFee = 0,
-  executionDate = "2025-01-10",
-): DepositMovement => ({
+const deposit = (amount: number, transferFee = 0, executionDate = "2025-01-10"): DepositMovement => ({
   ...base(executionDate),
   type: "deposit",
   amount,
   transferFee,
 });
-const withdrawal = (
-  amount: number,
-  transferFee = 0,
-  executionDate = "2026-01-08",
-): WithdrawalMovement => ({
+const withdrawal = (amount: number, transferFee = 0, executionDate = "2026-01-08"): WithdrawalMovement => ({
   ...base(executionDate),
   type: "withdrawal",
   amount,
@@ -87,11 +79,7 @@ describe("buildMovementsView", () => {
       deposit(1000, 0, "2025-06-01"),
     ];
     const view = buildMovementsView(movements, null);
-    expect(view.rows.map((r) => r.dateLabel)).toEqual([
-      "15 nov 2025",
-      "1 jun 2025",
-      "15 ene 2025",
-    ]);
+    expect(view.rows.map((r) => r.dateLabel)).toEqual(["15 nov 2025", "1 jun 2025", "15 ene 2025"]);
   });
 
   it("breaks a same-day tie with createdAt, newest recorded first", () => {
@@ -107,10 +95,7 @@ describe("buildMovementsView", () => {
       createdAt: "2025-02-03T10:00:00Z",
     };
     const view = buildMovementsView([first, second], null);
-    expect(view.rows.map((r) => r.id)).toEqual([
-      "recorded-second",
-      "recorded-first",
-    ]);
+    expect(view.rows.map((r) => r.id)).toEqual(["recorded-second", "recorded-first"]);
   });
 
   it("places a backdated movement where it happened, not at the top", () => {
@@ -154,23 +139,13 @@ describe("buildMovementsView", () => {
     expect(view.filteredEmptyMessage).toBe("No tienes retiros");
     expect(view.rows).toHaveLength(0);
     expect(view.chips).toHaveLength(5); // the filter stays escapable
-    expect(view.chips.find((c) => c.type === "withdrawal")?.selected).toBe(
-      true,
-    );
+    expect(view.chips.find((c) => c.type === "withdrawal")?.selected).toBe(true);
   });
 
   it("lists the five chips in taxonomy order with the selected one flagged", () => {
     const view = buildMovementsView(MOCK_MOVEMENTS, "deposit");
-    expect(view.chips.map((c) => c.label)).toEqual([
-      "Compras",
-      "Ventas",
-      "Dividendos",
-      "Depósitos",
-      "Retiros",
-    ]);
-    expect(view.chips.filter((c) => c.selected).map((c) => c.type)).toEqual([
-      "deposit",
-    ]);
+    expect(view.chips.map((c) => c.label)).toEqual(["Compras", "Ventas", "Dividendos", "Depósitos", "Retiros"]);
+    expect(view.chips.filter((c) => c.selected).map((c) => c.type)).toEqual(["deposit"]);
   });
 
   it("titles ticker movements with their ticker and cash movements without one", () => {
@@ -184,13 +159,7 @@ describe("buildMovementsView", () => {
     const titles = buildMovementsView(movements, null)
       .rows.map((r) => r.title)
       .sort();
-    expect(titles).toEqual([
-      "Compra AAPL",
-      "Depósito",
-      "Dividendo AAPL",
-      "Retiro",
-      "Venta VOO",
-    ]);
+    expect(titles).toEqual(["Compra AAPL", "Depósito", "Dividendo AAPL", "Retiro", "Venta VOO"]);
   });
 
   it("shows each type's Cash Impact as an unsigned magnitude", () => {
@@ -201,9 +170,7 @@ describe("buildMovementsView", () => {
       sell("AAPL", 195.5, 3, 0.15, 0.03), // net of fees
       dividend("AAPL", 18.5, 5.55), // net of tax
     ];
-    const amounts = Object.fromEntries(
-      buildMovementsView(movements, null).rows.map((r) => [r.type, r.amount]),
-    );
+    const amounts = Object.fromEntries(buildMovementsView(movements, null).rows.map((r) => [r.type, r.amount]));
     expect(amounts).toEqual({
       deposit: "$3,000.00",
       withdrawal: "$500.00",
@@ -214,10 +181,7 @@ describe("buildMovementsView", () => {
   });
 
   it("never signs an amount, not even for cash leaving the account", () => {
-    const rows = buildMovementsView(
-      [buy("AAPL", 182.5, 2.45321, 0.15), withdrawal(500, 1)],
-      null,
-    ).rows;
+    const rows = buildMovementsView([buy("AAPL", 182.5, 2.45321, 0.15), withdrawal(500, 1)], null).rows;
     for (const row of rows) {
       // The list shows a magnitude: no sign of any kind, in either encoding.
       expect(row.amount).not.toContain("-");

@@ -38,11 +38,7 @@ export function MovementRow({
   const markColor = buyTone === "up" ? Colors.positive : Colors.negative;
   return (
     <Pressable
-      style={[
-        styles.row,
-        buyTone !== undefined && styles.rowInset,
-        marked && { borderLeftColor: markColor },
-      ]}
+      style={[styles.row, buyTone !== undefined && styles.rowInset, marked && { borderLeftColor: markColor }]}
       onPress={onPress}
     >
       <View style={[styles.badge, { backgroundColor: meta.bg }]}>
@@ -50,17 +46,11 @@ export function MovementRow({
       </View>
       <View style={styles.middle}>
         <Text style={styles.title}>{row.title}</Text>
-        <Text style={styles.date}>
-          {sharesLabel ? `${row.dateLabel} · ${sharesLabel}` : row.dateLabel}
-        </Text>
+        <Text style={styles.date}>{sharesLabel ? `${row.dateLabel} · ${sharesLabel}` : row.dateLabel}</Text>
       </View>
       <View style={styles.amountGroup}>
         <Text style={styles.amount}>{row.amount}</Text>
-        {marked && (
-          <Text style={[styles.arrow, { color: markColor }]}>
-            {buyTone === "up" ? "↑" : "↓"}
-          </Text>
-        )}
+        {marked && <Text style={[styles.arrow, { color: markColor }]}>{buyTone === "up" ? "↑" : "↓"}</Text>}
       </View>
     </Pressable>
   );

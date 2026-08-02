@@ -16,6 +16,5 @@ interface MovementsState {
  */
 export const useMovementsStore = create<MovementsState>((set) => ({
   movements: MOCK_MOVEMENTS,
-  addMovement: (movement) =>
-    set((state) => ({ movements: [...state.movements, movement] })),
+  addMovement: (movement) => set((state) => ({ movements: [...state.movements, movement] })),
 }));
