@@ -14,7 +14,6 @@ const buy = (
   fee = 0,
 ): BuyMovement => ({
   id: `b${seq++}`,
-  userId: "u",
   type: "buy",
   ticker: "AAPL",
   executionPrice,
@@ -31,7 +30,6 @@ const sell = (
   regulatoryFees = 0,
 ): SellMovement => ({
   id: `s${seq++}`,
-  userId: "u",
   type: "sell",
   ticker: "AAPL",
   executionPrice,
@@ -47,7 +45,6 @@ const dividend = (
   executionDate: string,
 ): DividendMovement => ({
   id: `d${seq++}`,
-  userId: "u",
   type: "dividend",
   ticker: "AAPL",
   grossAmount,

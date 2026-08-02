@@ -8,7 +8,6 @@ import {
 
 const deps: DividendDeps = {
   id: () => "dividend-1",
-  userId: () => "mock-user-001",
   now: () => "2025-06-25T12:00:00Z",
 };
 
@@ -133,7 +132,6 @@ describe("buildDividendMovement", () => {
     );
     expect(movement).toEqual({
       id: "dividend-1",
-      userId: "mock-user-001",
       type: "dividend",
       ticker: "AAPL",
       grossAmount: 130,

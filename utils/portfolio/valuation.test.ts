@@ -12,7 +12,6 @@ import { assemblePortfolio } from "./valuation";
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   id: `dep${seq++}`,
-  userId: "u",
   type: "deposit",
   amount,
   transferFee,
@@ -26,7 +25,6 @@ const buy = (
   fee = 0,
 ): BuyMovement => ({
   id: `b${seq++}`,
-  userId: "u",
   type: "buy",
   ticker,
   executionPrice,
@@ -43,7 +41,6 @@ const sell = (
   regulatoryFees = 0,
 ): SellMovement => ({
   id: `s${seq++}`,
-  userId: "u",
   type: "sell",
   ticker,
   executionPrice,
@@ -59,7 +56,6 @@ const dividend = (
   tax: number,
 ): DividendMovement => ({
   id: `div${seq++}`,
-  userId: "u",
   type: "dividend",
   ticker,
   grossAmount,
@@ -73,7 +69,6 @@ const withdrawal = (
   executionDate = "2025-05-01",
 ): WithdrawalMovement => ({
   id: `wd${seq++}`,
-  userId: "u",
   type: "withdrawal",
   amount,
   transferFee,

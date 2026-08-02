@@ -4,7 +4,6 @@ import { buildBuyMovement, summarizeBuy, type BuyDeps } from "./buy-view-model";
 
 const deps: BuyDeps = {
   id: () => "buy-1",
-  userId: () => "mock-user-001",
   now: () => "2025-06-25T12:00:00Z",
 };
 
@@ -193,7 +192,6 @@ describe("buildBuyMovement", () => {
     );
     expect(movement).toEqual({
       id: "buy-1",
-      userId: "mock-user-001",
       type: "buy",
       ticker: "AAPL",
       executionPrice: 182.5,

@@ -8,7 +8,6 @@ import {
 
 const deps: WithdrawalDeps = {
   id: () => "wd-1",
-  userId: () => "mock-user-001",
   now: () => "2025-06-25T12:00:00Z",
 };
 
@@ -136,7 +135,6 @@ describe("buildWithdrawalMovement", () => {
     );
     expect(movement).toEqual({
       id: "wd-1",
-      userId: "mock-user-001",
       type: "withdrawal",
       amount: 200,
       transferFee: 1,

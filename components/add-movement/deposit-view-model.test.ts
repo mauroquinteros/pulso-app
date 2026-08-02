@@ -8,7 +8,6 @@ import {
 
 const deps: DepositDeps = {
   id: () => "dep-1",
-  userId: () => "mock-user-001",
   now: () => "2025-06-25T12:00:00Z",
 };
 
@@ -97,7 +96,6 @@ describe("buildDepositMovement", () => {
     );
     expect(movement).toEqual({
       id: "dep-1",
-      userId: "mock-user-001",
       type: "deposit",
       amount: 1250,
       transferFee: 5,

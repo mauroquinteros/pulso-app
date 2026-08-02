@@ -34,7 +34,6 @@ export interface BuySummary {
 
 export interface BuyDeps {
   id: () => string;
-  userId: () => string;
   now: () => string; // ISO timestamp for createdAt
 }
 
@@ -97,7 +96,7 @@ export function summarizeBuy(
  * Maps validated form input to a typed BuyMovement. The cash-side Monto is converted
  * to shares (`Monto / Precio`) and rounded to the app-wide 5-decimal share precision, so
  * `executionPrice × shares` reconciles back to the Monto to within that rounding (a
- * fraction of a cent). System fields (id, userId, createdAt) come from injected generators
+ * fraction of a cent). System fields (id, createdAt) come from injected generators
  * so the result is deterministic and unit-testable; the ticker is stored uppercase and an
  * empty Comisión defaults to 0.
  */
@@ -107,7 +106,6 @@ export function buildBuyMovement(input: BuyInput, deps: BuyDeps): BuyMovement {
 
   return {
     id: deps.id(),
-    userId: deps.userId(),
     type: "buy",
     ticker: normalizeTicker(input.ticker),
     executionPrice: price,

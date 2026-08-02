@@ -27,7 +27,6 @@ export interface DividendSummary {
 
 export interface DividendDeps {
   id: () => string;
-  userId: () => string;
   now: () => string; // ISO timestamp for createdAt
 }
 
@@ -65,7 +64,7 @@ export function summarizeDividend(input: DividendInput): DividendSummary {
 }
 
 /**
- * Maps validated form input to a typed DividendMovement. System fields (id, userId, createdAt)
+ * Maps validated form input to a typed DividendMovement. System fields (id, createdAt)
  * come from injected generators so the result is deterministic and unit-testable; the ticker is
  * stored uppercase and empty Impuestos defaults to 0. The UI label "Impuestos" maps to the model
  * field `tax` (the withholding tax — a dividend has no `fee`).
@@ -76,7 +75,6 @@ export function buildDividendMovement(
 ): DividendMovement {
   return {
     id: deps.id(),
-    userId: deps.userId(),
     type: "dividend",
     ticker: normalizeTicker(input.ticker),
     grossAmount: parseAmount(input.grossAmount),

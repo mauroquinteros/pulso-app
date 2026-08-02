@@ -7,7 +7,6 @@ import { buildHomeView } from "./view-model";
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   id: `dep${seq++}`,
-  userId: "u",
   type: "deposit",
   amount,
   transferFee,
@@ -21,7 +20,6 @@ const buy = (
   fee = 0,
 ): BuyMovement => ({
   id: `b${seq++}`,
-  userId: "u",
   type: "buy",
   ticker,
   executionPrice,

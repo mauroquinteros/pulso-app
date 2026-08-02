@@ -20,7 +20,6 @@ export interface DepositSummary {
 
 export interface DepositDeps {
   id: () => string;
-  userId: () => string;
   now: () => string; // ISO timestamp for createdAt
 }
 
@@ -49,7 +48,7 @@ export function summarizeDeposit(input: DepositInput): DepositSummary {
 
 /**
  * Maps validated form input to a typed DepositMovement. System fields
- * (id, userId, createdAt) come from injected generators so the result is
+ * (id, createdAt) come from injected generators so the result is
  * deterministic and unit-testable; an empty Comisión defaults to 0.
  */
 export function buildDepositMovement(
@@ -58,7 +57,6 @@ export function buildDepositMovement(
 ): DepositMovement {
   return {
     id: deps.id(),
-    userId: deps.userId(),
     type: "deposit",
     amount: parseAmount(input.amount),
     transferFee: input.transferFee === "" ? 0 : parseAmount(input.transferFee),

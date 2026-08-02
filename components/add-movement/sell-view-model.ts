@@ -41,7 +41,6 @@ export interface SellSummary {
 
 export interface SellDeps {
   id: () => string;
-  userId: () => string;
   now: () => string; // ISO timestamp for createdAt
 }
 
@@ -100,7 +99,7 @@ export function summarizeSell(
 }
 
 /**
- * Maps validated form input to a typed SellMovement. System fields (id, userId, createdAt)
+ * Maps validated form input to a typed SellMovement. System fields (id, createdAt)
  * come from injected generators so the result is deterministic and unit-testable; the ticker
  * is stored uppercase and empty Comisión/Impuestos default to 0. The UI label "Impuestos"
  * maps to the model field `regulatoryFees` (a sell has no `tax`).
@@ -111,7 +110,6 @@ export function buildSellMovement(
 ): SellMovement {
   return {
     id: deps.id(),
-    userId: deps.userId(),
     type: "sell",
     ticker: normalizeTicker(input.ticker),
     shares: roundShares(parseAmount(input.shares)),

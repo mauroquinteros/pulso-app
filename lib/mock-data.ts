@@ -31,7 +31,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- Deposits (2) --------------------------------------------------------
   {
     id: "mock-001",
-    userId: "mock-user-001",
     type: "deposit",
     amount: 3000.0,
     transferFee: 3.99,
@@ -40,7 +39,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   } satisfies DepositMovement,
   {
     id: "mock-002",
-    userId: "mock-user-001",
     type: "deposit",
     amount: 2000.0,
     transferFee: 3.99,
@@ -51,7 +49,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- AAPL buys (3) -------------------------------------------------------
   {
     id: "mock-003",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "AAPL",
     executionPrice: 182.5,
@@ -62,7 +59,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   } satisfies BuyMovement,
   {
     id: "mock-004",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "AAPL",
     executionPrice: 178.3,
@@ -73,7 +69,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   } satisfies BuyMovement,
   {
     id: "mock-005",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "AAPL",
     executionPrice: 191.0,
@@ -86,7 +81,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- VOO buys (2) --------------------------------------------------------
   {
     id: "mock-006",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "VOO",
     executionPrice: 445.2,
@@ -97,7 +91,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   } satisfies BuyMovement,
   {
     id: "mock-007",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "VOO",
     executionPrice: 452.8,
@@ -110,7 +103,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- MSFT buy (1) --------------------------------------------------------
   {
     id: "mock-008",
-    userId: "mock-user-001",
     type: "buy",
     ticker: "MSFT",
     executionPrice: 415.6,
@@ -123,7 +115,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- AAPL sell (partial) -------------------------------------------------
   {
     id: "mock-009",
-    userId: "mock-user-001",
     type: "sell",
     ticker: "AAPL",
     executionPrice: 195.5,
@@ -137,7 +128,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- MSFT sell (full — ticker exits portfolio) ---------------------------
   {
     id: "mock-010",
-    userId: "mock-user-001",
     type: "sell",
     ticker: "MSFT",
     executionPrice: 425.0,
@@ -151,7 +141,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- AAPL dividend -------------------------------------------------------
   {
     id: "mock-011",
-    userId: "mock-user-001",
     type: "dividend",
     ticker: "AAPL",
     grossAmount: 18.5,
@@ -163,7 +152,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- VOO dividend --------------------------------------------------------
   {
     id: "mock-012",
-    userId: "mock-user-001",
     type: "dividend",
     ticker: "VOO",
     grossAmount: 12.3,
@@ -175,7 +163,6 @@ export const MOCK_MOVEMENTS: Movement[] = [
   // --- Withdrawal (1) ------------------------------------------------------
   {
     id: "mock-013",
-    userId: "mock-user-001",
     type: "withdrawal",
     amount: 500.0,
     transferFee: 1.0,

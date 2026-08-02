@@ -12,7 +12,6 @@ import {
 
 const deps: SellDeps = {
   id: () => "sell-1",
-  userId: () => "mock-user-001",
   now: () => "2025-06-25T12:00:00Z",
 };
 
@@ -349,7 +348,6 @@ describe("buildSellMovement", () => {
     );
     expect(movement).toEqual({
       id: "sell-1",
-      userId: "mock-user-001",
       type: "sell",
       ticker: "GOOG",
       shares: 2,
@@ -407,7 +405,7 @@ describe("selling the full position shown as Disponible", () => {
         fee: "",
         executionDate: "2025-01-01",
       },
-      { id: () => "buy-x", userId: () => "u", now: () => "2025-01-01T00:00:00Z" },
+      { id: () => "buy-x", now: () => "2025-01-01T00:00:00Z" },
     );
     const available = maxSellableAsOf([buy], "NVDA", "2025-06-01");
     const shown = formatShares(available); // what the Acciones helper displays

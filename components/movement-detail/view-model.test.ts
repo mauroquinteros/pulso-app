@@ -14,7 +14,6 @@ import { buildMovementDetailView, type DetailLine } from "./view-model";
 let seq = 0;
 const base = (executionDate: string) => ({
   id: `m${seq++}`,
-  userId: "u",
   executionDate,
   createdAt: `${executionDate}T00:00:00Z`,
 });

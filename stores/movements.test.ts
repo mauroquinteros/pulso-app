@@ -6,7 +6,6 @@ import { useMovementsStore } from "./movements";
 
 const sampleDeposit: DepositMovement = {
   id: "test-deposit-1",
-  userId: "test-user",
   type: "deposit",
   amount: 1250,
   transferFee: 5,

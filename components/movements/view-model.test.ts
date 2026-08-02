@@ -13,7 +13,6 @@ import { buildMovementsView } from "./view-model";
 let seq = 0;
 const base = (executionDate: string, createdAt?: string) => ({
   id: `m${seq++}`,
-  userId: "u",
   executionDate,
   createdAt: createdAt ?? `${executionDate}T00:00:00Z`,
 });

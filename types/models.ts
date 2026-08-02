@@ -17,7 +17,6 @@ export interface Profile {
 
 export interface BaseMovement {
   id: string;
-  userId: string;
   type: MovementType;
   executionDate: string;
   createdAt: string;
