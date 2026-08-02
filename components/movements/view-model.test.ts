@@ -29,9 +29,14 @@ const deposit = (
 });
 const withdrawal = (
   amount: number,
-  fee = 0,
+  transferFee = 0,
   executionDate = "2026-01-08",
-): WithdrawalMovement => ({ ...base(executionDate), type: "withdrawal", amount, fee });
+): WithdrawalMovement => ({
+  ...base(executionDate),
+  type: "withdrawal",
+  amount,
+  transferFee,
+});
 const buy = (
   ticker: string,
   executionPrice: number,
@@ -150,7 +155,9 @@ describe("buildMovementsView", () => {
     expect(view.filteredEmptyMessage).toBe("No tienes retiros");
     expect(view.rows).toHaveLength(0);
     expect(view.chips).toHaveLength(5); // the filter stays escapable
-    expect(view.chips.find((c) => c.type === "withdrawal")?.selected).toBe(true);
+    expect(view.chips.find((c) => c.type === "withdrawal")?.selected).toBe(
+      true,
+    );
   });
 
   it("lists the five chips in taxonomy order with the selected one flagged", () => {

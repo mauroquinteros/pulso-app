@@ -23,11 +23,14 @@ const deposit = (amount: number, transferFee: number): DepositMovement => ({
   amount,
   transferFee,
 });
-const withdrawal = (amount: number, fee: number): WithdrawalMovement => ({
+const withdrawal = (
+  amount: number,
+  transferFee: number,
+): WithdrawalMovement => ({
   ...base("2025-01-01"),
   type: "withdrawal",
   amount,
-  fee,
+  transferFee,
 });
 const buy = (
   executionPrice: number,

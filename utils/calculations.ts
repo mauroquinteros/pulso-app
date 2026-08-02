@@ -12,7 +12,7 @@ import {
  * - BuyMovement: fee
  * - SellMovement: fee + regulatoryFees
  * - DepositMovement: transferFee
- * - WithdrawalMovement: fee
+ * - WithdrawalMovement: transferFee
  * - DividendMovement: no fee (skipped)
  */
 export function computeTotalFees(movements: Movement[]): number {
@@ -24,7 +24,7 @@ export function computeTotalFees(movements: Movement[]): number {
       total += m.fee;
       total += m.regulatoryFees;
     } else if (isDepositMovement(m)) total += m.transferFee;
-    else if (isWithdrawalMovement(m)) total += m.fee;
+    else if (isWithdrawalMovement(m)) total += m.transferFee;
   }
 
   return Math.round(total * 100) / 100;

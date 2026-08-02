@@ -3,7 +3,7 @@ import { parseAmount } from "@/utils/input";
 
 export interface WithdrawalInput {
   amount: string;
-  fee: string;
+  transferFee: string;
   executionDate: string; // YYYY-MM-DD
 }
 
@@ -40,16 +40,17 @@ export function summarizeWithdrawal(
   availableCash: number,
 ): WithdrawalSummary {
   const amount = parseAmount(input.amount);
-  const fee = parseAmount(input.fee);
+  const fee = parseAmount(input.transferFee);
   const recibiras = input.amount === "" ? 0 : amount - fee;
 
   const amountPositive = amount > 0;
   const amountInvalid = input.amount !== "" && amount <= 0;
   // Recibirás must stay > 0, so the fee has a ceiling. Empty fee is fine (→ 0).
-  const feeInvalid = input.fee !== "" && amountPositive && fee >= amount;
+  const feeInvalid =
+    input.transferFee !== "" && amountPositive && fee >= amount;
   const insufficientFunds = amountPositive && amount > availableCash;
 
-  const feeOk = fee >= 0 && (input.fee === "" || fee < amount);
+  const feeOk = fee >= 0 && (input.transferFee === "" || fee < amount);
   const saveEnabled = amountPositive && feeOk && amount <= availableCash;
 
   return {
@@ -76,7 +77,7 @@ export function buildWithdrawalMovement(
     userId: deps.userId(),
     type: "withdrawal",
     amount: parseAmount(input.amount),
-    fee: input.fee === "" ? 0 : parseAmount(input.fee),
+    transferFee: input.transferFee === "" ? 0 : parseAmount(input.transferFee),
     executionDate: input.executionDate,
     createdAt: deps.now(),
   };

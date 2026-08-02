@@ -64,11 +64,14 @@ const deposit = (amount: number, transferFee: number): DepositMovement => ({
   amount,
   transferFee,
 });
-const withdrawal = (amount: number, fee: number): WithdrawalMovement => ({
+const withdrawal = (
+  amount: number,
+  transferFee: number,
+): WithdrawalMovement => ({
   ...base("2026-01-08"),
   type: "withdrawal",
   amount,
-  fee,
+  transferFee,
 });
 
 /** Reads back a figure the view-model rendered: "$8,821.70" | "+$0.88" | "-$5.55".
@@ -140,7 +143,7 @@ describe("buildMovementDetailView", () => {
     // The base is what left the bank; the total is what landed as Cash.
     expect(pairs(view.money)).toEqual([
       ["Total transferido", "$3,003.99"],
-      ["Comisión de transferencia", "-$3.99"],
+      ["Comisión", "-$3.99"],
     ]);
     expect(view.total).toEqual({
       label: "Efectivo agregado",

@@ -127,13 +127,13 @@ export function assemblePortfolio(
 
 /** Net contributions (out of pocket, measured at the bank boundary): a deposit
  * contributes amount + transferFee (what left your bank); a withdrawal removes
- * amount - fee (what reached your bank). The transfer fee thus lives here, in the
+ * amount - transferFee (what reached your bank). The transfer fee thus lives here, in the
  * gap between Cash and Net Contributions, which is what makes it erode Total Return. */
 function computeNetContributions(movements: Movement[]): number {
   let total = 0;
   for (const m of movements) {
     if (isDepositMovement(m)) total += m.amount + m.transferFee;
-    else if (isWithdrawalMovement(m)) total -= m.amount - m.fee;
+    else if (isWithdrawalMovement(m)) total -= m.amount - m.transferFee;
   }
   return total;
 }
@@ -152,7 +152,7 @@ function computePeakContributions(movements: Movement[]): number {
   let peak = 0;
   for (const m of ordered) {
     if (isDepositMovement(m)) running += m.amount + m.transferFee;
-    else if (isWithdrawalMovement(m)) running -= m.amount - m.fee;
+    else if (isWithdrawalMovement(m)) running -= m.amount - m.transferFee;
     if (running > peak) peak = running;
   }
   return peak;

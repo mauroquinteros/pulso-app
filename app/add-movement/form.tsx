@@ -111,7 +111,7 @@ export default function DepositFormScreen() {
           {/* COMISIÓN + FECHA */}
           <View style={styles.pairRow}>
             <View style={styles.flex}>
-              <Text style={styles.label}>Comisión transf.</Text>
+              <Text style={styles.label}>Comisión</Text>
               <View style={styles.smallBox}>
                 <Text style={styles.smallDollar}>$</Text>
                 <TextInput

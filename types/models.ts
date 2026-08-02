@@ -56,7 +56,7 @@ export interface DepositMovement extends BaseMovement {
 export interface WithdrawalMovement extends BaseMovement {
   type: "withdrawal";
   amount: number;
-  fee: number;
+  transferFee: number;
 }
 
 export type Movement =

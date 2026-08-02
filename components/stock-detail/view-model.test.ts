@@ -64,7 +64,7 @@ const withdrawal = (amount: number): WithdrawalMovement => ({
   ...base("2025-12-20"),
   type: "withdrawal",
   amount,
-  fee: 1,
+  transferFee: 1,
 });
 
 /** A priced holding by default; pass overrides for the no-price variant.
@@ -157,10 +157,12 @@ describe("buildStockDetailView", () => {
 
   it("finds the holding by ticker, whatever its position in the array", () => {
     const holdings = [valued("AAPL"), valued("VOO")];
-    expect(buildStockDetailView("VOO", holdings, 458.6, []).state).toBe("found");
-    expect(buildStockDetailView("VOO", [...holdings].reverse(), 458.6, []).state).toBe(
+    expect(buildStockDetailView("VOO", holdings, 458.6, []).state).toBe(
       "found",
     );
+    expect(
+      buildStockDetailView("VOO", [...holdings].reverse(), 458.6, []).state,
+    ).toBe("found");
   });
 
   it("a losing position renders a negative tone and an ASCII hyphen, never U+2212", () => {

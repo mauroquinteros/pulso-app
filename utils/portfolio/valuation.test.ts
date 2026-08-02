@@ -69,14 +69,14 @@ const dividend = (
 });
 const withdrawal = (
   amount: number,
-  fee = 0,
+  transferFee = 0,
   executionDate = "2025-05-01",
 ): WithdrawalMovement => ({
   id: `wd${seq++}`,
   userId: "u",
   type: "withdrawal",
   amount,
-  fee,
+  transferFee,
   executionDate,
   createdAt: `${executionDate}T00:00:00Z`,
 });

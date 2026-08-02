@@ -178,7 +178,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
     userId: "mock-user-001",
     type: "withdrawal",
     amount: 500.0,
-    fee: 1.0,
+    transferFee: 1.0,
     executionDate: "2026-01-08",
     createdAt: "2026-01-08T16:00:00Z",
   } satisfies WithdrawalMovement,

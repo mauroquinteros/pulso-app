@@ -43,7 +43,7 @@ export default function WithdrawalFormScreen() {
   const [showPicker, setShowPicker] = useState(false);
 
   const summary = summarizeWithdrawal(
-    { amount, fee, executionDate },
+    { amount, transferFee: fee, executionDate },
     availableCash,
   );
   const canSave = summary.saveEnabled;
@@ -74,7 +74,7 @@ export default function WithdrawalFormScreen() {
   const onSave = () => {
     if (!canSave) return;
     const movement = buildWithdrawalMovement(
-      { amount, fee, executionDate },
+      { amount, transferFee: fee, executionDate },
       defaultMovementDeps(),
     );
     addMovement(movement);

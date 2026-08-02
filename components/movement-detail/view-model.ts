@@ -121,9 +121,7 @@ function buildReceipt(
     case "deposit": {
       // Backwards: from what left the bank down to the cash that landed.
       const transferred = round2(movement.amount + movement.transferFee);
-      const adjustments = [
-        adjustment("Comisión de transferencia", -movement.transferFee),
-      ];
+      const adjustments = [adjustment("Comisión", -movement.transferFee)];
       return {
         facts: [],
         money: withBase("Total transferido", transferred, adjustments),
@@ -132,8 +130,8 @@ function buildReceipt(
     }
     case "withdrawal": {
       // Backwards: from what reached the bank up to the cash that left.
-      const receivedAtBank = round2(movement.amount - movement.fee);
-      const adjustments = [adjustment("Comisión", movement.fee)];
+      const receivedAtBank = round2(movement.amount - movement.transferFee);
+      const adjustments = [adjustment("Comisión", movement.transferFee)];
       return {
         facts: [],
         money: withBase("Recibido en banco", receivedAtBank, adjustments),
