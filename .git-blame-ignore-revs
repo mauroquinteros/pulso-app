@@ -1,0 +1,9 @@
+# Revisions to skip in `git blame` -- bulk reformats that touched many files
+# without changing behaviour. Blame attributes each line to the last commit
+# that said something about it instead.
+#
+# Locally:  git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub honours this file automatically.
+
+# style: widen printWidth to 120 and reformat (71 files, pure prettier output)
+fe25385e3087a3419357ba202fc469a7e2019674

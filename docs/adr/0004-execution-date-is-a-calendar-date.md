@@ -14,9 +14,10 @@ date, `-At` denotes an instant.** The field was renamed from `executedAt`, whose
 `-At` suffix promised a timestamp and invited a UTC→local conversion. Put side
 by side, the two fields now document themselves:
 
+<!-- prettier-ignore -->
 ```ts
-executionDate: "2025-01-15"; // calendar date  — when it happened
-createdAt: "2025-02-03T21:14:00Z"; // instant        — when it was recorded
+executionDate: "2025-01-15"             // calendar date  — when it happened
+createdAt:     "2025-02-03T21:14:00Z"   // instant        — when it was recorded
 ```
 
 ## Considered Options
