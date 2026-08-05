@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Pulso">
+  <!-- Latido: one construction only - teal disc, ink beat. Never outlined or recolored. -->
+  <circle cx="50" cy="50" r="50" fill="#00E5CC"/>
+  <path d="M10 50 H30 L41 26 L55 70 L63 50 H90" fill="none" stroke="#04211E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
