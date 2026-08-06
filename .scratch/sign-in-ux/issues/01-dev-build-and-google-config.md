@@ -24,16 +24,23 @@ through, and the native Google Sign-In module. `@supabase/supabase-js` is alread
 installed and still unused.
 
 Configuration lands in a **gitignored `.env`** with a committed `.env.example`
-naming `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+naming `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+**The key is a publishable key (`sb_publishable_...`), not the legacy `anon`
+JWT.** The dashboard offers both schemes; a new app takes the new one. No code
+changes with it: `supabase-js` treats the key as an opaque string, and the
+`Authorization: Bearer` restriction on publishable keys exempts the case where
+the header equals `apikey` - exactly what the client sends while signed out.
 
 **`.gitignore` needs a line added before the file is created.** It currently
 ignores `.env*.local` but *not* `.env`, so a plain `.env` would be committed
 today. This is the first thing to do in this slice, not the last.
 
-Worth keeping straight: the anon key is **not a secret** - it ships inside the
-`.ipa` no matter what. It differs from a Finnhub key, which is a bearer
-credential. The anon key is a public identifier whose safety rests entirely on
-RLS.
+Worth keeping straight: the publishable key is **not a secret** - it ships inside
+the `.ipa` no matter what. It differs from a Finnhub key, which is a bearer
+credential. The publishable key is a public identifier whose safety rests
+entirely on RLS. The **secret key** (`sb_secret_...`) sitting beside it in the
+dashboard is the opposite: it bypasses RLS and never reaches the app.
 
 **Developer-owned prerequisites** (do these first, the rest depends on them):
 
@@ -50,7 +57,7 @@ RLS.
 
 - [ ] `.gitignore` ignores `.env`, and `git check-ignore .env` confirms it
 - [ ] `.env.example` is committed and names both `EXPO_PUBLIC_` variables with placeholder values
-- [ ] A local `.env` holds the real Supabase URL and anon key, and `git status` does not list it
+- [ ] A local `.env` holds the real Supabase URL and publishable key, and `git status` does not list it
 - [ ] `@react-native-async-storage/async-storage` and `@react-native-google-signin/google-signin` are in `package.json`
 - [ ] `app.json` carries the Google Sign-In config plugin entry, including the reversed iOS client ID as a URL scheme
 - [ ] No file under `/ios` is edited by hand

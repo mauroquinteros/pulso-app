@@ -117,7 +117,7 @@ is no "Crear cuenta" anywhere, because under OAuth the first successful sign-in
 44. As a developer, I want the sign-in state machine to be a pure module, so that I can test cancelled/offline/generic without a phone.
 45. As a developer, I want the native Google module behind a thin adapter, so that the state machine never imports it.
 46. As a developer, I want every Perfil-scoped store emptied from one named teardown function, so that the next store that needs clearing has an obvious place to go.
-47. As a developer, I want the anon key and project URL read from the environment, so that they are not baked into source.
+47. As a developer, I want the publishable key and project URL read from the environment, so that they are not baked into source.
 48. As a developer, I want `.env` genuinely ignored by git, so that the file this PRD introduces is not committed by accident.
 49. As a developer, I want the brand mark rendered from the committed SVG, so that the sign-in screen and the app icon cannot drift.
 
@@ -179,11 +179,13 @@ The scenario that forces it: you lend someone your phone, tap "Cerrar sesion", t
 
 ### Configuration
 
-`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in a **gitignored `.env`**, with a committed `.env.example`.
+`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in a **gitignored `.env`**, with a committed `.env.example`.
+
+**The key is a publishable key (`sb_publishable_...`), not the legacy `anon` JWT.** The project's dashboard offers both; the new scheme is the one a new app should adopt. `supabase-js` treats the key as an opaque string - it is set as the `apikey` header and, while signed out, also as `Authorization: Bearer`. Supabase forbids a publishable key in that header *except* when its value exactly equals `apikey`, which is precisely what the client does, so the swap needs no code change. That caveat about `Authorization` in the migration guide is scoped to Edge Functions, which this app does not have.
 
 **`.gitignore` needs a line added.** It currently ignores `.env*.local` but not `.env`, so a plain `.env` would be committed today. This is a prerequisite, not a nicety.
 
-Framing worth keeping: the anon key is **not a secret** - it ships inside the `.ipa` no matter what you do. It differs from a Finnhub key, which is a bearer credential (whoever holds it spends your quota); the anon key is a public identifier whose safety rests **entirely on RLS**.
+Framing worth keeping: the publishable key is **not a secret** - it ships inside the `.ipa` no matter what you do. It differs from a Finnhub key, which is a bearer credential (whoever holds it spends your quota); the publishable key is a public identifier whose safety rests **entirely on RLS**. The dashboard says as much in its own words: safe to expose *if* RLS is enabled and policies are configured. The **secret key** (`sb_secret_...`) is the opposite - it bypasses RLS and must never reach the app.
 
 **Unverified:** that RLS is actually enabled on every table in `public`. The migration was applied and the policies were specified, but nobody has confirmed it. The Supabase MCP is unauthorized in this session.
 
