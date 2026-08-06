@@ -1,14 +1,46 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
+import { AUTH_STORAGE_KEY, supabase } from "@/lib/supabase";
+import { clearPerfilScopedState } from "@/stores/perfil-scoped-state";
 import { useSessionStore } from "@/stores/session";
 import { profileFrom } from "@/utils/profile";
 
-/** Nowhere to go yet: there is no login screen, no session and no route guard.
- * This is the seam the auth feature will pick up. */
-function signOut() {
-  // Deliberately empty until auth exists.
+/**
+ * Ends the session on this phone, and nowhere else.
+ *
+ * `scope: "local"` because closing a session here must not close the Perfil's
+ * sessions on its other devices - "Cerrar sesión" is about this phone.
+ *
+ * No navigation, deliberately. Dropping the session fires `SIGNED_OUT`, the
+ * mirror in `useSessionStore` goes null, the guard in `app/_layout.tsx` inverts,
+ * and Expo Router takes `(tabs)` out of the tree and clears the history itself.
+ * A `router.replace` here would be a second, competing answer to "where am I".
+ */
+async function signOut() {
+  const { error } = await supabase.auth.signOut({ scope: "local" });
+
+  // Signing out has to work on a plane, and by itself the call above does not:
+  // auth-js revokes the refresh token *before* it touches local storage and
+  // returns early when that request fails, so with no connection you ask the
+  // server, get nothing, and stay signed in. (Verified in @supabase/auth-js
+  // 2.98.0, `GoTrueClient._signOut`: a dead network is an
+  // `AuthRetryableFetchError` with status 0, which is not among the 401/403/404
+  // it forgives, so `_removeSession()` - the only thing that fires `SIGNED_OUT`
+  // - never runs.)
+  //
+  // Dropping the persisted session ourselves and asking again finishes the job:
+  // the second call finds no token to revoke, skips the network entirely, and
+  // removes the session. The refresh token is left unrevoked, which is what
+  // local scope leaves behind anyway - it expires on its own.
+  if (error) {
+    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    await supabase.auth.signOut({ scope: "local" });
+  }
+
+  clearPerfilScopedState();
 }
 
 export default function SettingsScreen() {

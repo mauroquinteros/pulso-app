@@ -10,12 +10,21 @@ import { AppState } from "react-native";
  * where the session arrives in the URL fragment. The native Google sheet hands
  * back an id token directly, so there is no URL to read.
  */
+/**
+ * Where the persisted session lives in AsyncStorage. Declared rather than left
+ * to the library's default so that signing out can reach it: the client keeps
+ * its own copy of this as a `protected` field, and sign-out has to delete the
+ * entry by hand when the network is down. See `signOut` in the Ajustes screen.
+ */
+export const AUTH_STORAGE_KEY = "pulso-auth";
+
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
   process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
   {
     auth: {
       storage: AsyncStorage,
+      storageKey: AUTH_STORAGE_KEY,
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
