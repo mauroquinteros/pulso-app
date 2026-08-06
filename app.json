@@ -9,6 +9,7 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.pulso.app",
       "supportsTablet": true
     },
     "android": {
@@ -40,7 +41,13 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.212547149650-uqtd3u7ct352s18bpl7496gaa06d4tld"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
