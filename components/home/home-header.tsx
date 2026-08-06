@@ -1,16 +1,18 @@
 import { BorderRadius } from "@/constants/layout";
 import { Colors, Gradients } from "@/constants/theme";
-import { MOCK_PROFILE } from "@/lib/mock-data";
-import { initialsFrom } from "@/utils/profile";
+import { useSessionStore } from "@/stores/session";
+import { initialsFrom, profileFrom } from "@/utils/profile";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
 export function HomeHeader() {
+  const { name } = profileFrom(useSessionStore((state) => state.session));
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={Gradients.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
-        <Text style={styles.avatarInitials}>{initialsFrom(MOCK_PROFILE.name)}</Text>
+        <Text style={styles.avatarInitials}>{initialsFrom(name)}</Text>
       </LinearGradient>
       <View style={styles.search}>
         <Ionicons name="search" size={16} color={Colors.textSecondary} />

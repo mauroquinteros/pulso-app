@@ -3,23 +3,10 @@ import type {
   DepositMovement,
   DividendMovement,
   Movement,
-  Profile,
   SellMovement,
   WithdrawalMovement,
 } from "@/types/models";
 import { assemblePortfolio, type PriceMap } from "@/utils/portfolio/valuation";
-
-// ---------------------------------------------------------------------------
-// MOCK_PROFILE
-// The user's identity until auth exists. A constant, not a store: the Perfil
-// never mutates from inside the app, and once auth lands it will come from the
-// session instead.
-// ---------------------------------------------------------------------------
-
-export const MOCK_PROFILE: Profile = {
-  name: "Mauro Quinteros",
-  email: "mauro@ejemplo.com",
-};
 
 // ---------------------------------------------------------------------------
 // MOCK_MOVEMENTS

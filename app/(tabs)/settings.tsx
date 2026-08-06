@@ -2,7 +2,8 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
-import { MOCK_PROFILE } from "@/lib/mock-data";
+import { useSessionStore } from "@/stores/session";
+import { profileFrom } from "@/utils/profile";
 
 /** Nowhere to go yet: there is no login screen, no session and no route guard.
  * This is the seam the auth feature will pick up. */
@@ -11,6 +12,8 @@ function signOut() {
 }
 
 export default function SettingsScreen() {
+  const profile = profileFrom(useSessionStore((state) => state.session));
+
   const askSignOut = () =>
     Alert.alert("¿Cerrar sesión?", undefined, [
       { text: "Cancelar", style: "cancel" },
@@ -28,8 +31,8 @@ export default function SettingsScreen() {
           the divider below already does what the card came to do - separate
           the information from the action. No labels: an email explains itself. */}
       <View style={styles.profile}>
-        <Text style={styles.name}>{MOCK_PROFILE.name}</Text>
-        <Text style={styles.email}>{MOCK_PROFILE.email}</Text>
+        <Text style={styles.name}>{profile.name}</Text>
+        <Text style={styles.email}>{profile.email}</Text>
       </View>
 
       <View style={styles.divider} />
