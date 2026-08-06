@@ -79,6 +79,8 @@ _Avoid_: commission (unqualified), charge
 Who is using the app: a full name and an email address. It is the single source of the user's identity _within itself_ — every place that shows the user (the Home avatar disc, the Settings screen) reads the same Perfil, so a signed-in user is never spelled two ways. The full name is **one** name, not a first name and a last name held apart; initials for the avatar are derived from it at display time, never stored. Deliberately holds nothing about money — a Perfil owns **Movements**, but says nothing about them.
 
 A Perfil is **not a person**. It is one sign-in identity, distinguished by its email address. The same human who signs in a different way arrives as a _different_ Perfil, and the two share nothing: separate **Movements**, separate holdings, separate **Total Portfolio Value**. Neither can see the other, and nothing in the app reconciles them.
+
+A Perfil is never **registered**. There is no such act: the first time a human signs in, the Perfil begins; every later sign-in finds the one already there. The app cannot tell those two moments apart, and does not try — so it never asks a human whether they are new, and there is no "create an account" anywhere to be found.
 _Avoid_: cuenta/account (taken by the Hapi brokerage account, where **Cash** lives), usuario (unqualified), person/persona (a Perfil is an identity, not a human)
 
 ## Flagged ambiguities
