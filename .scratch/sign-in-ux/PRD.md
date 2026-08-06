@@ -187,6 +187,8 @@ The scenario that forces it: you lend someone your phone, tap "Cerrar sesion", t
 
 Framing worth keeping: the publishable key is **not a secret** - it ships inside the `.ipa` no matter what you do. It differs from a Finnhub key, which is a bearer credential (whoever holds it spends your quota); the publishable key is a public identifier whose safety rests **entirely on RLS**. The dashboard says as much in its own words: safe to expose *if* RLS is enabled and policies are configured. The **secret key** (`sb_secret_...`) is the opposite - it bypasses RLS and must never reach the app.
 
+**`Skip Nonce Check` is enabled** on the Google provider. Google's iOS SDK puts a nonce in the id_token and the MIT build of the native module exposes no way to read or supply it, so Supabase rejects the exchange outright. This is Supabase's documented path for native iOS, and the cost is real: an id_token minted for this client ID is no longer bound to the request that asked for it, so it would be accepted on replay within its ~1h lifetime. Reversible by buying the library's premium tier, which restores custom nonce support.
+
 **Unverified:** that RLS is actually enabled on every table in `public`. The migration was applied and the policies were specified, but nobody has confirmed it. The Supabase MCP is unauthorized in this session.
 
 ### Visual

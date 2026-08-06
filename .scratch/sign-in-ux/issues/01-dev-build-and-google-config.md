@@ -55,16 +55,52 @@ dashboard is the opposite: it bypasses RLS and never reaches the app.
 
 ## Acceptance criteria
 
-- [ ] `.gitignore` ignores `.env`, and `git check-ignore .env` confirms it
-- [ ] `.env.example` is committed and names both `EXPO_PUBLIC_` variables with placeholder values
-- [ ] A local `.env` holds the real Supabase URL and publishable key, and `git status` does not list it
-- [ ] `@react-native-async-storage/async-storage` and `@react-native-google-signin/google-signin` are in `package.json`
-- [ ] `app.json` carries the Google Sign-In config plugin entry, including the reversed iOS client ID as a URL scheme
-- [ ] No file under `/ios` is edited by hand
-- [ ] `npx expo run:ios` builds and boots the app on the simulator, and every existing tab still works exactly as before
-- [ ] The iOS and Web OAuth clients exist in Google Cloud
-- [ ] The Google provider is enabled in Supabase with the authorized client IDs loaded
-- [ ] `npm test`, `tsc` and `eslint` are still green
+- [x] `.gitignore` ignores `.env`, and `git check-ignore .env` confirms it
+- [x] `.env.example` is committed and names both `EXPO_PUBLIC_` variables with placeholder values
+- [x] A local `.env` holds the real Supabase URL and publishable key, and `git status` does not list it
+- [x] `@react-native-async-storage/async-storage` and `@react-native-google-signin/google-signin` are in `package.json`
+- [x] `app.json` carries the Google Sign-In config plugin entry, including the reversed iOS client ID as a URL scheme
+- [x] No file under `/ios` is edited by hand
+- [x] `npx expo run:ios` builds and boots the app on the simulator, and every existing tab still works exactly as before
+- [x] The iOS and Web OAuth clients exist in Google Cloud
+- [x] The Google provider is enabled in Supabase with the authorized client IDs loaded
+- [x] `npm test`, `tsc` and `eslint` are still green
+
+## Done
+
+Closed in `169a27f`, on top of `6b32e05` which had already set the bundle
+identifier and the config plugin.
+
+**Verified, not assumed:** the Google provider was confirmed by querying
+`/auth/v1/settings`, which returned `"google": true` - it is no longer resting on
+anyone's recollection. The publishable key was confirmed working against that
+same endpoint (HTTP 200) with the key in both the `apikey` and
+`Authorization: Bearer` headers, which is the exact request shape issue 02's
+`signInWithIdToken` will use.
+
+**One deviation from this issue as written:** the environment variable is
+`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, not `..._ANON_KEY`. The project's
+dashboard offers the newer publishable/secret scheme alongside the legacy
+`anon`/`service_role` JWTs, and a new app should take the new one. The issue text
+above was amended to match.
+
+**Still unconfirmed, and it outlived this slice:** whether RLS is actually enabled
+on the three movement tables. Prerequisite 3 was optional and remains undone. An
+unauthenticated read of all three returned `[]` with HTTP 200, which proves
+nothing either way - the tables are empty, so that is equally consistent with RLS
+working and with RLS being off. It needs
+`select tablename, rowsecurity from pg_tables where schemaname = 'public';`
+in the SQL editor. This matters more than it did when the issue was written: the
+publishable key now ships in the binary, and the dashboard's own wording makes
+its safety conditional on RLS being enabled.
+
+**Registered for whoever hits a slow first build:** `pod install` downloads ~191
+MB of prebuilt React Native artifacts from Maven Central, which serves this
+machine at ~243 KB/s against ~21 MB/s from npm. Google's mirror serves the
+byte-identical artifact (SHA-1 verified) at ~18 MB/s.
+`ENTERPRISE_REPOSITORY=https://maven-central.storage-download.googleapis.com/maven2`
+redirects it; it is set in the developer's shell profile, not in this repo, since
+it is a property of network location rather than of the project.
 
 ## Blocked by
 

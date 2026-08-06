@@ -67,20 +67,76 @@ test it and adjust only if it misbehaves.
 Stack and there is no second layout to reason about. The screen is named
 `"(auth)/sign-in"`.
 
+## The nonce, and why Skip Nonce Check is on
+
+Google's iOS SDK puts a `nonce` claim in the id_token. Supabase sees a nonce in
+the token, receives none from the app, and rejects the exchange with
+`400 Passed nonce and nonce in id_token should either both exist or not` - it
+cannot verify a match it was only told half of.
+
+**No code fixes this.** The MIT build of `@react-native-google-signin/google-signin`
+exposes no way to supply or read that nonce: `SignInParams` has no `nonce` field,
+and the README lists custom nonce support as a paid feature. The adapter is not
+at fault and neither is the client ID.
+
+So **`Skip Nonce Check` is enabled** on the Google provider in the Supabase
+dashboard. This is Supabase's own documented guidance for native iOS - *"Only
+disable this if your client libraries cannot properly handle nonce
+verification"* - and that precondition is met literally rather than
+conveniently.
+
+**What it costs, stated plainly:** the nonce binds an id_token to the one sign-in
+request that asked for it. Without that binding, anyone holding a valid id_token
+minted for this client ID could present it within its lifetime (~1 hour) and be
+accepted. The token still travels from Google's SDK to Supabase over TLS and
+never passes through a browser redirect, so the exposure is narrow - but it is
+not zero, and it is a deliberate trade, not an oversight.
+
+**The way back:** buying the library's premium tier restores custom nonce
+support, at which point this toggle should be turned off again. Worth revisiting
+if Pulso ever holds more than one person's money.
+
 ## Acceptance criteria
 
-- [ ] Launching the app signed out lands on the sign-in screen, with no tab bar, no header and no back affordance
-- [ ] The tabs are genuinely unreachable while signed out
-- [ ] Tapping the button opens the **native** Google account sheet (not a browser, not a web redirect)
-- [ ] Picking an account signs in and the tabs appear, with no manual navigation code involved
-- [ ] Killing and relaunching the app returns straight to the tabs - no second sign-in
-- [ ] A signed-in cold start never shows a flash of the sign-in screen; the splash holds until the session is known
-- [ ] The Supabase client is constructed in exactly one place
-- [ ] The session store holds only the session, is three-valued, and its only writer is the `onAuthStateChange` listener
-- [ ] The native Google module is imported by exactly one file
-- [ ] The `(auth)` group has no `_layout.tsx`
-- [ ] The consent sheet shows the app's name, not a `supabase.co` project ref
-- [ ] `npm test`, `tsc` and `eslint` are green; the existing ~175 tests still pass
+- [x] Launching the app signed out lands on the sign-in screen, with no tab bar, no header and no back affordance
+- [x] The tabs are genuinely unreachable while signed out
+- [x] Tapping the button opens the **native** Google account sheet (not a browser, not a web redirect)
+- [x] Picking an account signs in and the tabs appear, with no manual navigation code involved
+- [x] Killing and relaunching the app returns straight to the tabs - no second sign-in
+- [x] A signed-in cold start never shows a flash of the sign-in screen; the splash holds until the session is known
+- [x] The Supabase client is constructed in exactly one place
+- [x] The session store holds only the session, is three-valued, and its only writer is the `onAuthStateChange` listener
+- [x] The native Google module is imported by exactly one file
+- [x] The `(auth)` group has no `_layout.tsx`
+- [x] The consent sheet shows the app's name, not a `supabase.co` project ref
+- [x] `npm test`, `tsc` and `eslint` are green; the existing ~175 tests still pass
+
+## Done
+
+**The nonce is the story of this slice.** Everything else went in as written; the
+exchange then failed with `400 Passed nonce and nonce in id_token should either
+both exist or not`, and the fix was a dashboard setting rather than code. See the
+section above for what that cost.
+
+**How the failure presented, which is worth remembering:** "I sign in and stay on
+the same page." Indistinguishable from a broken guard, a null id token, or a
+rejected exchange - three unrelated bugs with three unrelated fixes. The screen
+swallowed the error because this slice deliberately has no error handling, so a
+temporary `console.error` on the `signInWithIdToken` result had to be added
+before anything could be diagnosed. **That log is still in
+`app/(auth)/sign-in.tsx`** and should be replaced by issue 03's error slot, not
+simply deleted - deleting it restores the silence.
+
+**A blank frame during cold start is not the forbidden flash.** What this issue
+rules out is seeing the sign-in *screen* before being moved to the tabs, which
+would mean the guard ran before the session was known. A blank window while the
+dev build pulls its bundle from Metro is a development artifact; a release build
+embeds the bundle.
+
+**Not verified here, and inherited by issue 05:** signing out. The handler in
+`app/(tabs)/settings.tsx` is still the empty function left as a seam, so nothing
+in this slice exercised the guard in the signed-out direction beyond the first
+launch.
 
 ## Blocked by
 
