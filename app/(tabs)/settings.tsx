@@ -20,27 +20,33 @@ import { profileFrom } from "@/utils/profile";
  * A `router.replace` here would be a second, competing answer to "where am I".
  */
 async function signOut() {
-  const { error } = await supabase.auth.signOut({ scope: "local" });
+  // Grab the token before the session goes, because revoking it needs it.
+  const { data } = await supabase.auth.getSession();
+  const jwt = data.session?.access_token;
 
-  // Signing out has to work on a plane, and by itself the call above does not:
-  // auth-js revokes the refresh token *before* it touches local storage and
-  // returns early when that request fails, so with no connection you ask the
-  // server, get nothing, and stay signed in. (Verified in @supabase/auth-js
-  // 2.98.0, `GoTrueClient._signOut`: a dead network is an
-  // `AuthRetryableFetchError` with status 0, which is not among the 401/403/404
-  // it forgives, so `_removeSession()` - the only thing that fires `SIGNED_OUT`
-  // - never runs.)
+  // Leaving must not wait on the network, and calling `signOut()` first would
+  // make it: auth-js POSTs /logout to revoke the refresh token *before* it
+  // touches local storage, with no timeout, and `_removeSession()` - the only
+  // thing that fires `SIGNED_OUT` - runs after that request settles. So a slow
+  // connection buys seconds of a screen where nothing happens, and a dead one
+  // returns early and leaves you signed in. (Verified in @supabase/auth-js
+  // 2.98.0: `GoTrueClient._signOut` and `GoTrueAdminApi.signOut`.)
   //
-  // Dropping the persisted session ourselves and asking again finishes the job:
-  // the second call finds no token to revoke, skips the network entirely, and
-  // removes the session. The refresh token is left unrevoked, which is what
-  // local scope leaves behind anyway - it expires on its own.
-  if (error) {
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-    await supabase.auth.signOut({ scope: "local" });
-  }
+  // Dropping the persisted entry first inverts that. The call below then finds
+  // no token to revoke, skips the network entirely, and fires `SIGNED_OUT` in
+  // milliseconds - on a plane exactly as fast as on wifi.
+  await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+  await supabase.auth.signOut({ scope: "local" });
 
   clearPerfilScopedState();
+
+  // Revoke on the way out, unawaited and unchecked. The human has already left;
+  // whether the server heard about it changes nothing they can see. If this
+  // fails the refresh token simply expires on its own, which is what local
+  // scope leaves behind in any case.
+  if (jwt) {
+    void supabase.auth.admin.signOut(jwt, "local").catch(() => {});
+  }
 }
 
 export default function SettingsScreen() {
