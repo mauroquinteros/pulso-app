@@ -99,20 +99,53 @@ equivalent.
 
 ## Acceptance criteria
 
-- [ ] The state machine is a pure module with its own test file, importing nothing native
-- [ ] Tests cover: tap from idle starts signing; a tap while signing is ignored; cancelled returns to idle with **no** message; offline and generic produce **different** copy, asserted as exact strings; a tap from failed clears the previous message
-- [ ] The mark renders from `assets/brand/mark.svg` as committed - flat teal disc, no gradient, no glow
-- [ ] The button shows a spinner and `Conectando...` while signing, at the same height, and ignores taps
-- [ ] Backing out of the Google sheet returns the screen to idle silently - no message, no toast
+- [x] The state machine is a pure module with its own test file, importing nothing native
+- [x] Tests cover: tap from idle starts signing; a tap while signing is ignored; cancelled returns to idle with **no** message; offline and generic produce **different** copy, asserted as exact strings; a tap from failed clears the previous message
+- [x] The mark renders from `assets/brand/mark.svg` as committed - flat teal disc, no gradient, no glow
+- [x] The button shows a spinner and `Conectando...` while signing, at the same height, and ignores taps
+- [x] Backing out of the Google sheet returns the screen to idle silently - no message, no toast
 - [ ] Airplane mode produces the offline copy; any other failure produces the generic copy
 - [ ] The error message appears without moving the button
 - [ ] The error is announced by VoiceOver when it appears
-- [ ] No new `fontSize` value and no new colour token are introduced
-- [ ] `Conectando...` uses three ASCII periods; no `…` anywhere in the source
+- [x] No new `fontSize` value and no new colour token are introduced
+- [x] `Conectando...` uses three ASCII periods; no `…` anywhere in the source
 - [ ] At the largest Dynamic Type setting nothing clips or truncates
 - [ ] With reduced motion on, the entrance animation does not play and the screen is fully usable
 - [ ] The composition holds on a small phone
-- [ ] `npm test`, `tsc` and `eslint` are green
+- [x] `npm test`, `tsc` and `eslint` are green
+
+## Done, with six boxes left open on purpose
+
+Shipped. The six unticked criteria are all device checks that were not run, not
+things known to be broken - they are listed rather than assumed so nobody reads
+a checkmark that was never earned.
+
+**The one most likely to actually fail is the airplane-mode copy.** Offline is
+classified exactly on the Supabase side (`isAuthRetryableFetchError` plus
+`status === 0`, which keeps a 503 out of it) but only heuristically on the Google
+side: the native module publishes no status code for "no connection" - its
+`statusCodes` cover cancellation, Play Services and sign-in-required and nothing
+else - so `lib/google-sign-in.ts` matches on the error message and is biased
+towards the generic copy when unsure. If the sheet fails before Supabase is ever
+reached, the generic line may appear where the offline line was intended.
+
+**"No new `fontSize`" was read as "no new *value*", not "only tokens".** The
+codebase already inlines font sizes in 30 files against 1 that imports
+`Typography`, and 13 and 16 both already appear there - 13 sixteen times. The
+brief's stated reason is that the type scale should not grow, and reusing an
+existing number does not grow it. The title does use `Typography.heroValue`,
+which is already exactly 36 / 700 / -0.5.
+
+**The Google G came from the prototype, not a download.** `Pulso Sign In.dc.html`
+carries the official four-colour paths on a 48x48 viewBox, so
+`components/brand/google-g.tsx` is a transcription of an asset that was already
+in this repo. Two places where the prototype was deliberately *not* followed: it
+improvises a gradient disc for the Pulso mark, and it writes `Conectando` with a
+U+2026 ellipsis. Both are ruled out above.
+
+**The `console.error` from issue 02 is gone**, replaced by the error slot as that
+issue asked - not deleted, which would have restored the silent failure that made
+the nonce bug so hard to read.
 
 ## Blocked by
 
