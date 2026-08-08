@@ -28,24 +28,30 @@ days without API requests, and sporadic use is exactly the usage pattern of "a
 few friends trying it". Hitting the platform on every run is what keeps the
 project awake.
 
-## The cadence is daily, and that is a reversal
+## The cadence is every ten minutes, and the schedule is deliberately loose
 
-An earlier plan set the refresh at every five minutes during market hours. It is
-now **once a day**. The consequence is not cosmetic: from the opening bell to the
-close, the price on screen is the previous session's, so **Market Value** — which
-the glossary defines as `current share price × shares held` — is not literally
-what it claims during the only hours anyone is watching. Pulso is a long-term
-tracker, not a trading app, and intraday movement is noise against the figure it
-exists to report. That trade is accepted deliberately.
+`*/10 13-21 * * 1-5`. A once-a-day refresh was considered and rejected: it would
+have meant that from the opening bell to the close, the price on screen was the
+previous session's, so **Market Value** — which the glossary defines as
+`current share price × shares held` — would not be literally what it claims
+during the only hours anyone is watching. Worse, the **Stale Price** signal would
+then be lit every weekday from open to close, carrying no information at all, and
+a dead cron would look identical to an ordinary Tuesday. Ten minutes keeps both
+terms honest and the signal rare.
 
-It leaves one thing genuinely unresolved, recorded here so it is not mistaken for
-an oversight: **what the number on screen claims to be**. Either it is relabelled
-as a closing price and stated as a fact, or it keeps claiming to be current and
-the **Stale Price** signal is lit every weekday from open to close — at which
-point the signal carries no information and a dead cron is indistinguishable from
-an ordinary Tuesday. That choice belongs to the first screen that renders a real
-price. Deferring it is cheap only because the cron rewrites every row daily, so
-any column added later fills itself on the next run.
+**The UTC window is wider than the session on purpose.** The regular session is
+09:30–16:00 in New York, but cron schedules are interpreted in UTC and New York
+observes DST, so the same session sits at 13:30–20:00 UTC in summer and
+14:30–21:00 UTC in winter. `13-21` is the union of the two: it contains the whole
+session in both halves of the year and never needs revisiting. The alternative — a
+tight window adjusted twice a year — fails *silently*, quietly ceasing to update
+an hour before the close each November, which is the kind of thing nobody notices
+until a number is wrong. The runs that fall outside the session cost nothing:
+Finnhub returns the same price and the same market moment, and the row is
+rewritten identically.
+
+What the price on screen *claims to be* is now a smaller question than it was, but
+not a settled one. It belongs to the first screen that renders a real price.
 
 ## Consequences
 
@@ -59,16 +65,29 @@ any column added later fills itself on the next run.
 - **An unknown symbol is never written with price `0`.** A zero reads as a real
   price with `priceAvailable: true` and silently drops that holding's Market Value
   to nothing — strictly worse than the absent row, which already has a correct and
-  tested path.
-- **The only timestamp available is `updated_at` — when the cron asked.** Finnhub's
-  quote response carries no market timestamp, so the app cannot know which market
-  moment a price belongs to, only when it fetched it. The **Stale Price** entry in
-  `CONTEXT.md` insists staleness is measured against market activity and never
-  against the clock; honouring that literally would need a market calendar the app
-  does not have.
+  tested path. The provider gives no help here: an unknown symbol comes back
+  **HTTP 200** with every figure zeroed, so the guard must read the payload. A
+  market moment of `0` is the tell — a genuine quote always carries a real one.
+- **Two timestamps, and they mean different things.** The quote carries the market
+  moment the price belongs to — verified as the closing bell to the second — and it
+  is stored alongside the price. `updated_at` records when the cron asked. Only the
+  first can answer the **Stale Price** question, which `CONTEXT.md` insists is
+  measured against market activity and never against the clock: a Friday close read
+  on Sunday is correct, and only the market moment can say so. Confusing the two is
+  a bug, not a simplification. (A third, `lastReadAt`, is client-side and in memory
+  only: when the app last read the table, which decides whether to read it again.)
 - **Two writers, one table.** The daily cron, and the symbol-validation function of
   `0009`, which upserts a Stock the moment it is confirmed real. Both are the same
   upsert, and the client is neither of them.
 - **The client re-reads on app open and on entering a screen that shows prices.**
-  No timers and no realtime subscription: with a daily write, a socket would
-  deliver nothing on almost every session.
+  No timers and no realtime subscription. A subscription would not _replace_ this
+  read, it would sit on top of it: with the app closed there is no socket, so on
+  opening it the client needs the current state anyway — which is a `select`,
+  unconditionally. Realtime earns its place when an event is rare, unpredictable
+  and urgent; a price refresh on a schedule you wrote yourself is none of those.
+- **The refresh paces itself.** The free tier allows 60 calls a minute, and one run
+  makes one call per **Stock** back to back, so an unspaced loop over a growing
+  list is a burst that trips the limit. Requests are spaced roughly a second
+  apart, which in turn bounds how many Stocks a single run can cover before it
+  meets the function's own wall-clock limit — a ceiling worth measuring before the
+  list gets long, not after.

@@ -66,5 +66,20 @@ rather than waiting for the next daily run.
 - **The check is asynchronous and races.** A response must be matched to the symbol
   it was asked about, or editing the field twice can display the wrong verdict; and
   the save must stay blocked while a check is still in flight.
+- **The lookup is restricted to US listings, and that restriction upholds `0002`.**
+  Unfiltered, a search for `AAPL` also returns the Toronto, Mexican, Romanian and
+  Santiago listings of the same company — all quoting in their own currency. One of
+  those entering `stocks` would have Pulso multiply a peso price by a share count
+  and label the result USD, with `priceAvailable: true`. `0002` fixes the whole app
+  to USD with no FX; the exchange filter is what makes that true at the boundary
+  rather than merely assumed. Today this is protected only by accident: the Símbolo
+  field strips non-letters, so `AAPL.MX` cannot be typed — the same reason `BRK.B`
+  cannot. Relaxing that regex without the filter in place would open it silently.
+- **"Confirmed" means an exact symbol match, never a non-empty result.** The
+  provider's symbol search is **fuzzy**: `APPL` returns eleven suggestions — `AAPL`,
+  `AMAT`, `APP` — and not one of them is `APPL`. A "did we get results?" check would
+  therefore wave through the single most likely typo in the app, which is the exact
+  failure this decision exists to prevent. The confirmation is `result.symbol` equal
+  to what the user typed.
 - **The buy PRD is superseded on this point.** Its user stories 6 and 16 and its
   "Símbolo is free text" constraint no longer describe the app.
