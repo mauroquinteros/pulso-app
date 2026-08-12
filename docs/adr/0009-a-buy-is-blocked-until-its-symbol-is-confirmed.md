@@ -30,6 +30,32 @@ Validating at the moment of entry fixes both at once, and the validation call
 construction, and the holding the user is about to create already has a price
 rather than waiting for the next daily run.
 
+## Dividends are deliberately not covered
+
+Considered when the endpoint was built, and rejected. **Dividendo** has a **Símbolo**
+field too, and the first instinct was that one rule should cover both forms.
+
+It should not. A dividend is cash income, not a position: it derives no **Holding**, so
+it needs no price, so it cannot open the hole this decision exists to close. And a
+dividend presupposes a buy — nobody is paid by a company they never held, and that buy
+already confirmed the symbol and put the **Stock** in the table. Validating again asks a
+question that has been answered, and pays for it twice: a provider round trip on every
+dividend, and the refusal of the acquired-company dividend, which is the *realistic*
+case rather than the theoretical one the consequences below accept.
+
+What that leaves standing: **the app does not enforce "buy first."** The dividend form
+has no held-shares gate, deliberately — a dividend does not consume a position, and one
+can land for a ticker since sold. So `APPL` is still typeable there. The damage is
+bounded and different in kind: **Efectivo**, **Net Dividends** and portfolio **Total
+Return** all stay correct, because none of them is scoped by ticker. What breaks is
+attribution — `AAPL`'s **Total Return of a stock** silently under-counts by that
+dividend, and a phantom `APPL` holds it. The movement itself is visible in the list and
+an edit fixes it, which is precisely what the buy case is not.
+
+If that ever needs closing, the check for a dividend is **not** this endpoint. It is
+"is this ticker already in `stocks`" — answered locally, with no provider call, and
+without refusing the delisted company the user genuinely held.
+
 ## Considered Options
 
 - **Warn but let it save.** Preserves the PRD's promise literally and protects the
@@ -63,6 +89,14 @@ rather than waiting for the next daily run.
 - **Abandoned forms leave real rows in `stocks`.** Validation writes before the
   movement is saved, so a user who backs out has registered a genuine, priced
   **Stock** that nobody holds. Harmless, and waiting when someone does buy it.
+- **Confirmation proves existence, never intent.** `MET` is a real company, so a user
+  reaching for Meta gets a confirmed field and a confidently wrong **Holding** — and
+  unlike a typo that lands nowhere, this one never announces itself with a missing
+  price. `GOOG`/`GOOGL` and `VOO`/`VOOG` are the same trap between two real listings.
+  Nothing here can close that gap: the app cannot know which company was meant, and
+  refusing to guess is the honest position. The recourse is the one `0007` already
+  provides — edit the movement. Written down because a reader will otherwise assume
+  this check is stronger than it is.
 - **The check is asynchronous and races.** A response must be matched to the symbol
   it was asked about, or editing the field twice can display the wrong verdict; and
   the save must stay blocked while a check is still in flight.
@@ -82,4 +116,5 @@ rather than waiting for the next daily run.
   failure this decision exists to prevent. The confirmation is `result.symbol` equal
   to what the user typed.
 - **The buy PRD is superseded on this point.** Its user stories 6 and 16 and its
-  "Símbolo is free text" constraint no longer describe the app.
+  "Símbolo is free text" constraint no longer describe the app. The dividend PRD's
+  identical constraint still stands — see above.
