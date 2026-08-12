@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useReducer, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,9 +14,11 @@ import { SaveButton } from "@/components/add-movement/save-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
+import { resolveStock } from "@/lib/resolve-stock";
 import { useMovementsStore } from "@/stores/movements";
 import { formatShares, formatUSD } from "@/utils/format";
-import { sanitizeDecimal } from "@/utils/input";
+import { normalizeTicker, sanitizeDecimal, sanitizeSymbol } from "@/utils/input";
+import { initialSymbolCheckState, shouldCheck, symbolCheckReducer } from "@/utils/symbol-check";
 
 export default function BuyFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
@@ -30,8 +32,18 @@ export default function BuyFormScreen() {
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [touchedPrice, setTouchedPrice] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [symbolCheck, dispatchSymbolCheck] = useReducer(symbolCheckReducer, initialSymbolCheckState);
 
-  const summary = summarizeBuy({ ticker, amount, executionPrice, fee, executionDate }, availableCash);
+  // Ids come from a ref rather than the state so that two checks started in the
+  // same render still get different ones. The reducer uses them to drop an
+  // answer that is no longer the one being waited on.
+  const lastRequestId = useRef(0);
+
+  const summary = summarizeBuy(
+    { ticker, amount, executionPrice, fee, executionDate },
+    availableCash,
+    symbolCheck.status,
+  );
   const canSave = summary.saveEnabled;
   const dateDisplay = format(parseISO(executionDate), "dd/MM/yyyy");
 
@@ -64,6 +76,20 @@ export default function BuyFormScreen() {
 
   const totalColor = summary.insufficientFunds ? Colors.negative : summary.total > 0 ? Colors.textPrimary : "#3E4470";
 
+  // Leaving Símbolo confirms it against the provider while the user moves on to
+  // Monto, so nobody ever waits for the round trip. `shouldCheck` decides whether
+  // this blur is worth a request at all.
+  const onTickerBlur = () => {
+    setTouchedTicker(true);
+
+    const symbol = normalizeTicker(ticker);
+    if (!shouldCheck(symbolCheck, symbol)) return;
+
+    const requestId = ++lastRequestId.current;
+    dispatchSymbolCheck({ type: "checkStarted", ticker: symbol, requestId });
+    resolveStock(symbol).then((answer) => dispatchSymbolCheck({ type: "answered", requestId, answer }));
+  };
+
   const onSave = () => {
     if (!canSave) return;
     const movement = buildBuyMovement({ ticker, amount, executionPrice, fee, executionDate }, defaultMovementDeps());
@@ -95,8 +121,12 @@ export default function BuyFormScreen() {
                   placeholder="Ej. AAPL"
                   placeholderTextColor="#3E4470"
                   value={ticker}
-                  onChangeText={(t) => setTicker(t.toUpperCase().replace(/[^A-Z]/g, ""))}
-                  onBlur={() => setTouchedTicker(true)}
+                  onChangeText={(t) => {
+                    const symbol = sanitizeSymbol(t);
+                    if (symbol !== ticker) dispatchSymbolCheck({ type: "edited" });
+                    setTicker(symbol);
+                  }}
+                  onBlur={onTickerBlur}
                 />
               </View>
             </View>

@@ -1,5 +1,6 @@
 import type { BuyMovement } from "@/types/models";
 import { normalizeTicker, parseAmount, roundShares } from "@/utils/input";
+import type { SymbolCheckState } from "@/utils/symbol-check";
 
 export interface BuyInput {
   ticker: string;
@@ -20,7 +21,7 @@ export interface BuySummary {
   amountPositive: boolean;
   /** Precio > 0 — drives the teal accent on the Precio field. */
   pricePositive: boolean;
-  /** Save-gate: ticker≠"" and amount>0 and price>0 and fee≥0 and total ≤ available Cash. */
+  /** Save-gate: símbolo confirmed and ticker≠"" and amount>0 and price>0 and fee≥0 and total ≤ available Cash. */
   saveEnabled: boolean;
   /** The ticker is empty (after trim/uppercase) — drives the error once touched. */
   tickerInvalid: boolean;
@@ -54,8 +55,20 @@ function deriveShares(amount: number, price: number): number {
  * It previews the engine; it does not re-implement it. With Monto blank/≤0 the total
  * is $0.00. The funds gate is strict: the whole total must fit within the available
  * Cash, which the caller passes in.
+ *
+ * The símbolo's confirmation status arrives the same way, from the state machine in
+ * `utils/symbol-check.ts`. Both are state derived elsewhere and handed in, and they
+ * sit together so that "can this be saved" has exactly one expression rather than a
+ * partial answer here and a correction in the screen. That gate is strict too: a
+ * symbol still being checked does not open it, because accepting a tap and *then*
+ * rejecting the save is a worse moment to learn the symbol is wrong than the field
+ * turning red while the user is still looking at it.
  */
-export function summarizeBuy(input: BuyInput, availableCash: number): BuySummary {
+export function summarizeBuy(
+  input: BuyInput,
+  availableCash: number,
+  symbolStatus: SymbolCheckState["status"],
+): BuySummary {
   const amount = parseAmount(input.amount);
   const price = parseAmount(input.executionPrice);
   const fee = parseAmount(input.fee);
@@ -68,7 +81,8 @@ export function summarizeBuy(input: BuyInput, availableCash: number): BuySummary
   const priceInvalid = input.executionPrice !== "" && price <= 0;
   const insufficientFunds = total > 0 && total > availableCash;
 
-  const saveEnabled = !tickerInvalid && amount > 0 && price > 0 && fee >= 0 && total <= availableCash;
+  const saveEnabled =
+    symbolStatus === "confirmed" && !tickerInvalid && amount > 0 && price > 0 && fee >= 0 && total <= availableCash;
 
   return {
     shares,

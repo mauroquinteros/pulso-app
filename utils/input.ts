@@ -21,6 +21,19 @@ export function sanitizeDecimal(value: string, maxDecimals?: number): string {
   return whole + fraction;
 }
 
+/**
+ * Keep only the letters a ticker can show in the Símbolo field (UI-level input
+ * cleaning, on every keystroke). Anything else the user presses — a digit, a
+ * dot, a space, an accent — is erased as they type, so the field's contents are
+ * always already in the canonical spelling `normalizeTicker` would produce.
+ *
+ * This is why `BRK.B` cannot be typed. The resolve-stock endpoint accepts dots,
+ * so that limitation lives here and nowhere else.
+ */
+export function sanitizeSymbol(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z]/g, "");
+}
+
 /** Parse a decimal string; blank/garbage → 0. */
 export function parseAmount(value: string): number {
   const n = parseFloat(value.replace(/,/g, ""));

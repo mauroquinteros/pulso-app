@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeTicker, parseAmount, sanitizeDecimal } from "./input";
+import { normalizeTicker, parseAmount, sanitizeDecimal, sanitizeSymbol } from "./input";
 
 describe("sanitizeDecimal", () => {
   it("strips non-numeric characters", () => {
@@ -22,6 +22,25 @@ describe("sanitizeDecimal", () => {
   it("drops a comma, which can only group thousands", () => {
     expect(sanitizeDecimal("1,000")).toBe("1000");
     expect(sanitizeDecimal("1,250.50")).toBe("1250.50");
+  });
+});
+
+describe("sanitizeSymbol", () => {
+  it("uppercases as the user types", () => {
+    expect(sanitizeSymbol("aapl")).toBe("AAPL");
+  });
+
+  it("erases anything that is not a letter", () => {
+    expect(sanitizeSymbol("AAPL1")).toBe("AAPL");
+    expect(sanitizeSymbol("BRK.B")).toBe("BRKB"); // the field cannot type a dot
+    expect(sanitizeSymbol("A A P L")).toBe("AAPL");
+    expect(sanitizeSymbol("123")).toBe("");
+  });
+
+  it("leaves the field's contents in the canonical spelling", () => {
+    // Whatever survives this is already what normalizeTicker would return, so
+    // the two can never disagree about what is in the box.
+    expect(normalizeTicker(sanitizeSymbol("  aapl.1 "))).toBe(sanitizeSymbol("  aapl.1 "));
   });
 });
 
