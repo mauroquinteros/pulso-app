@@ -394,6 +394,29 @@ deno_version = 2
 [functions.refresh-stocks]
 verify_jwt = false
 
+# resolve-stock is the opposite case. Its caller is a signed-in user, whose access
+# token IS a JWT, so platform verification applies and stays on. `true` is also the
+# default -- it is written out because the block above sets the opposite, and the
+# contrast between the two is the documentation.
+#
+# What each layer actually does, measured against the deployed function on
+# 2026-08-10, because none of it was obvious from the outside:
+#   - The platform verifies signatures. A forged HS256 token is refused with
+#     `UNAUTHORIZED_LEGACY_JWT`; a request carrying no credential at all with
+#     `UNAUTHORIZED_NO_AUTH_HEADER`. Neither reaches this code.
+#   - It accepts this project's real user tokens, which are signed with the
+#     asymmetric key (see the SUPABASE_JWKS secret), with no apikey header needed.
+#     The worry that it might not understand them was unfounded.
+#   - AND it accepts a valid publishable key in the `apikey` header as sufficient on
+#     its own: a request with NO Authorization header at all reaches the function.
+#     That key ships inside the app bundle.
+# So this gate stops forgeries, and functions/resolve-stock/index.ts is what stops
+# the app's own key -- it answered both of those calls with its own 401. Platform
+# verification alone would have left the endpoint open to anyone who read the
+# publishable key out of the binary.
+[functions.resolve-stock]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
