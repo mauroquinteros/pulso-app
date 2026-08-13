@@ -39,16 +39,39 @@ merges.
 
 ## Acceptance criteria
 
-- [ ] A spinner appears inside **Símbolo**, right-aligned, while a check is running
-- [ ] On confirmation the spinner is replaced in place by a check mark
-- [ ] The check mark uses the accent teal, not the palette's `positive` green
-- [ ] The border is neutral while `unchecked` and `checking`, and teal only when `confirmed`
-- [ ] Typing into an empty field no longer turns the border teal on its own
-- [ ] Neither the spinner nor the check mark shifts the layout of the Símbolo/Fecha row
-- [ ] The field still accepts typing while the spinner is showing
-- [ ] Reviewed on the simulator before merge
-- [ ] `npm test` and `npm run lint` pass
+- [x] A spinner appears inside **Símbolo**, right-aligned, while a check is running
+- [x] On confirmation the spinner is replaced in place by a check mark
+- [x] The check mark uses the accent teal, not the palette's `positive` green
+- [x] The border is neutral while `unchecked` and `checking`, and teal only when `confirmed`
+- [x] Typing into an empty field no longer turns the border teal on its own
+- [x] Neither the spinner nor the check mark shifts the layout of the Símbolo/Fecha row
+- [x] The field still accepts typing while the spinner is showing
+- [x] Reviewed on the simulator before merge
+- [x] `npm test` and `npm run lint` pass
 
 ## Blocked by
 
 - `.scratch/resolve-stock/issues/01-blocked-save-until-symbol-confirms.md`
+
+## Comments
+
+**2026-08-13 - built and reviewed on the simulator. Closed.**
+
+Three changes, all inside the Símbolo field in `app/add-movement/buy.tsx`:
+
+- A 20x20 status slot rendered in **every** state, even when it holds nothing. That is what
+  keeps the layout still: a slot that came and went would resize the input mid-check, so the
+  spinner would announce itself by shoving the ticker sideways. Same slot trick as the sign-in
+  button's glyph, and `smallBox` was already a flex row with `gap: 6`, so nothing in the shared
+  form styles had to change.
+- The spinner is `textSecondary` grey, not accent teal. Teal means *confirmed* here; spending it
+  on *working* would contradict the neutral border this slice specifies for `checking`.
+- The border moved from `ticker !== ""` to `symbolCheck.status === "confirmed"`.
+
+On-device review: the rejected-symbol state was captured directly - `APPL` typed, every other
+gate open (Disponible $267.07 against a $200.15 total), and **Guardar movimiento** still dead.
+That screenshot is the clearest evidence yet that issue 01's gate holds on the symbol alone.
+
+Known and accepted, because it is issue 03's job: a rejected symbol currently looks *identical*
+to an untouched one - empty slot, neutral border, no message. `unknown` and `unavailable` are
+therefore indistinguishable on screen today.

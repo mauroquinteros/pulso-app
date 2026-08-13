@@ -3,7 +3,17 @@ import { format, parseISO } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useReducer, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { buildBuyMovement, summarizeBuy } from "@/components/add-movement/buy-view-model";
@@ -60,7 +70,14 @@ export default function BuyFormScreen() {
     ? "Ingresa un monto mayor a $0."
     : `Solo tienes ${formatUSD(availableCash)} disponible.`;
 
-  const tickerBorderColor = showTickerError ? Colors.negative : ticker !== "" ? "rgba(0,229,204,0.5)" : Colors.border;
+  // Teal reports a fact, not effort. It used to arrive on the first keystroke,
+  // which gave APPL the same encouraging border as AAPL - the colour was
+  // congratulating the user for typing. It now waits for the symbol to be real.
+  const tickerBorderColor = showTickerError
+    ? Colors.negative
+    : symbolCheck.status === "confirmed"
+      ? "rgba(0,229,204,0.5)"
+      : Colors.border;
 
   const amountBorderColor = showAmountError
     ? Colors.negative
@@ -128,6 +145,14 @@ export default function BuyFormScreen() {
                   }}
                   onBlur={onTickerBlur}
                 />
+                {/* Rendered in every state, even when it holds nothing. A slot
+                    that came and went would resize the input mid-check, so the
+                    spinner would announce itself by shoving the ticker sideways.
+                    Same slot trick as the sign-in button's glyph. */}
+                <View style={styles.symbolStatus}>
+                  {symbolCheck.status === "checking" && <ActivityIndicator size="small" color={Colors.textSecondary} />}
+                  {symbolCheck.status === "confirmed" && <Ionicons name="checkmark" size={16} color={Colors.accent} />}
+                </View>
               </View>
             </View>
             <View style={styles.flex}>
@@ -256,6 +281,14 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     letterSpacing: 1,
     padding: 0,
+  },
+  // 20pt matches the sign-in glyph and is what ActivityIndicator "small"
+  // occupies, so the check mark can be smaller without the slot resizing.
+  symbolStatus: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   amountBox: {
     flexDirection: "row",
