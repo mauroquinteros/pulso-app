@@ -28,7 +28,7 @@ import { resolveStock } from "@/lib/resolve-stock";
 import { useMovementsStore } from "@/stores/movements";
 import { formatShares, formatUSD } from "@/utils/format";
 import { normalizeTicker, sanitizeDecimal, sanitizeSymbol } from "@/utils/input";
-import { initialSymbolCheckState, shouldCheck, symbolCheckReducer } from "@/utils/symbol-check";
+import { initialSymbolCheckState, shouldCheck, symbolCheckError, symbolCheckReducer } from "@/utils/symbol-check";
 
 export default function BuyFormScreen() {
   const addMovement = useMovementsStore((s) => s.addMovement);
@@ -70,10 +70,15 @@ export default function BuyFormScreen() {
     ? "Ingresa un monto mayor a $0."
     : `Solo tienes ${formatUSD(availableCash)} disponible.`;
 
+  // The empty-field error and a failed check can never both apply, since a check
+  // only ever runs on a non-empty symbol. Empty wins the slot anyway, which
+  // leaves "Ingresa un símbolo." behaving exactly as it did before this slice.
+  const tickerErrorMsg = showTickerError ? "Ingresa un símbolo." : symbolCheckError(symbolCheck);
+
   // Teal reports a fact, not effort. It used to arrive on the first keystroke,
   // which gave APPL the same encouraging border as AAPL - the colour was
   // congratulating the user for typing. It now waits for the symbol to be real.
-  const tickerBorderColor = showTickerError
+  const tickerBorderColor = tickerErrorMsg
     ? Colors.negative
     : symbolCheck.status === "confirmed"
       ? "rgba(0,229,204,0.5)"
@@ -163,7 +168,7 @@ export default function BuyFormScreen() {
               </Pressable>
             </View>
           </View>
-          {showTickerError && <Text style={styles.errorText}>Ingresa un símbolo.</Text>}
+          {tickerErrorMsg && <Text style={styles.errorText}>{tickerErrorMsg}</Text>}
 
           {/* MONTO COMPRADO */}
           <View style={styles.labelRow}>

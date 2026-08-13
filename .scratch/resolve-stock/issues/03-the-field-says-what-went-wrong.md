@@ -52,18 +52,49 @@ the guard against characters that only look like ASCII.
 
 ## Acceptance criteria
 
-- [ ] `APPL` leaves the field red with "No encontramos ese símbolo." beneath it
-- [ ] A failure to reach the provider leaves the field red with "No pudimos verificar el símbolo. Vuelve a intentar."
-- [ ] The message renders in the form's existing conditional slot, and pushes nothing around when absent
-- [ ] The first keystroke after a failure clears both the border and the message
-- [ ] Blurring again after `unavailable` runs a new check; blurring again after `unknown` does not
-- [ ] An empty, touched field still shows "Ingresa un símbolo." unchanged
-- [ ] The two strings live in an error record beside the states, not inline in the screen
-- [ ] The reducer tests assert both strings word for word, and that the copy holds no characters that merely look like ASCII
-- [ ] `npm test` and `npm run lint` pass
+- [x] `APPL` leaves the field red with "No encontramos ese símbolo." beneath it
+- [x] A failure to reach the provider leaves the field red with "No pudimos verificar el símbolo. Vuelve a intentar."
+- [x] The message renders in the form's existing conditional slot, and pushes nothing around when absent
+- [x] The first keystroke after a failure clears both the border and the message
+- [x] Blurring again after `unavailable` runs a new check; blurring again after `unknown` does not
+- [x] An empty, touched field still shows "Ingresa un símbolo." unchanged
+- [x] The two strings live in an error record beside the states, not inline in the screen
+- [x] The reducer tests assert both strings word for word, and that the copy holds no characters that merely look like ASCII
+- [x] `npm test` and `npm run lint` pass
 
 ## Blocked by
 
 - `.scratch/resolve-stock/issues/01-blocked-save-until-symbol-confirms.md`
 
 Independent of issue 02, but both touch the same render path - do not run them in parallel.
+
+## Comments
+
+**2026-08-13 - built. Closed.**
+
+`SYMBOL_CHECK_ERRORS` sits beside the states in `utils/symbol-check.ts`, the same shape and the
+same voice as `SIGN_IN_ERRORS`, plus `symbolCheckError(state)` returning the message or null.
+Which states count as failures is a rule about the machine, so it lives with the machine for the
+same reason the race and `shouldCheck` do - the screen should not have to remember that
+`unchecked` and `checking` are silent.
+
+The screen collapsed to one string. `tickerErrorMsg` is the empty-field message or the check's,
+and both the border and the slot read it, so red and the sentence can never disagree:
+
+    const tickerErrorMsg = showTickerError ? "Ingresa un símbolo." : symbolCheckError(symbolCheck);
+
+The two can never both apply - a check only runs on a non-empty symbol - but empty wins the
+ternary anyway, which is what keeps the existing behaviour bit-for-bit.
+
+Clearing needed no code. `edited` already returns the machine to `unchecked`, and `unchecked`
+has no message, so the first keystroke drops the border and the sentence together.
+
+Seven new reducer tests, 223 in the suite. The lookalike guard lists its characters as `\uXXXX`
+escapes rather than pasted glyphs, per the ASCII rule in CLAUDE.md - the whole point is that an
+assertion should say out loud which character it means. Two attempts to write that list came out
+as glyphs and were corrected; the file now greps clean for the full lookalike range.
+
+Noted, not touched, because it predates this work: `app/add-movement/buy.tsx` line 240 renders an
+em dash (U+2014) as the empty-shares placeholder, `{sharesDisplay || "-"}`. It is the only
+lookalike left in the file. Plausibly deliberate as a visual placeholder, but it is the kind of
+character the rule exists to catch.

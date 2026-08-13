@@ -36,6 +36,22 @@ export type SymbolCheckEvent =
   | { type: "checkStarted"; ticker: string; requestId: number }
   | { type: "answered"; requestId: number; answer: SymbolAnswer };
 
+/**
+ * Two failures, two sentences, for the same reason `SIGN_IN_ERRORS` splits its
+ * own: they ask the user to do different things. `unknown` means *fix your
+ * typing*; `unavailable` means *your typing is fine, try again*. Telling someone
+ * on one bar of signal that AAPL was not found sends them to delete and retype
+ * the one thing on screen that is already right.
+ *
+ * Only `unavailable` says "vuelve a intentar", because only it is worth
+ * retrying: blurring again re-checks it, while a symbol the provider does not
+ * know will answer the same way every time.
+ */
+export const SYMBOL_CHECK_ERRORS: Record<"unknown" | "unavailable", string> = {
+  unknown: "No encontramos ese símbolo.",
+  unavailable: "No pudimos verificar el símbolo. Vuelve a intentar.",
+};
+
 export const initialSymbolCheckState: SymbolCheckState = { status: "unchecked" };
 
 export function symbolCheckReducer(state: SymbolCheckState, event: SymbolCheckEvent): SymbolCheckState {
@@ -62,6 +78,19 @@ export function symbolCheckReducer(state: SymbolCheckState, event: SymbolCheckEv
         ? { status: event.answer, ticker: state.ticker }
         : state;
   }
+}
+
+/**
+ * What the field should say, or nothing. Which states count as failures is a
+ * rule about this machine, so it lives here for the same reason the race and
+ * `shouldCheck` do - the screen should not have to remember that `unchecked`
+ * and `checking` are silent.
+ *
+ * `unchecked` covers a revoked answer, which is what makes the first keystroke
+ * after a failure clear the message with no separate clearing event.
+ */
+export function symbolCheckError(state: SymbolCheckState): string | null {
+  return state.status === "unknown" || state.status === "unavailable" ? SYMBOL_CHECK_ERRORS[state.status] : null;
 }
 
 /**

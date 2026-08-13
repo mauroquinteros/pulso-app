@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { initialSymbolCheckState, shouldCheck, symbolCheckReducer, type SymbolCheckState } from "./symbol-check";
+import {
+  initialSymbolCheckState,
+  shouldCheck,
+  symbolCheckError,
+  SYMBOL_CHECK_ERRORS,
+  symbolCheckReducer,
+  type SymbolCheckState,
+} from "./symbol-check";
 
 const checking: SymbolCheckState = { status: "checking", ticker: "AAPL", requestId: 1 };
 
@@ -118,5 +125,67 @@ describe("shouldCheck", () => {
   it("never fires on an empty field", () => {
     expect(shouldCheck(initialSymbolCheckState, "")).toBe(false);
     expect(shouldCheck(answered("AAPL", "unavailable"), "")).toBe(false);
+  });
+});
+
+describe("symbolCheckError", () => {
+  it("says the symbol was not found, word for word", () => {
+    expect(symbolCheckError(answered("APPL", "unknown"))).toBe("No encontramos ese símbolo.");
+  });
+
+  it("says the check itself failed, word for word", () => {
+    expect(symbolCheckError(answered("AAPL", "unavailable"))).toBe(
+      "No pudimos verificar el símbolo. Vuelve a intentar.",
+    );
+  });
+
+  it("distinguishes the two failures", () => {
+    // The whole reason both states exist. One means fix your typing; the other
+    // means your typing is fine. Collapsing them sends a user with bad signal
+    // to correct a symbol that was already correct.
+    expect(SYMBOL_CHECK_ERRORS.unknown).not.toBe(SYMBOL_CHECK_ERRORS.unavailable);
+  });
+
+  it("only the retryable failure invites a retry", () => {
+    expect(SYMBOL_CHECK_ERRORS.unavailable).toContain("Vuelve a intentar");
+    expect(SYMBOL_CHECK_ERRORS.unknown).not.toContain("Vuelve a intentar");
+  });
+
+  it("is silent in every state that is not a failure", () => {
+    expect(symbolCheckError(initialSymbolCheckState)).toBeNull();
+    expect(symbolCheckError(checking)).toBeNull();
+    expect(symbolCheckError(answered("AAPL", "confirmed"))).toBeNull();
+  });
+
+  it("a keystroke after a failure clears the message", () => {
+    // Criterion: the first keystroke clears both the border and the message.
+    // It falls out of `edited` rather than needing a clearing event of its own.
+    const failed = answered("APPL", "unknown");
+    expect(symbolCheckError(failed)).not.toBeNull();
+    expect(symbolCheckError(symbolCheckReducer(failed, { type: "edited" }))).toBeNull();
+  });
+
+  it("the copy holds no characters that merely look like ASCII", () => {
+    // Written as escapes rather than pasted glyphs, so each assertion says out
+    // loud which character it means - the lookalikes are indistinguishable from
+    // their ASCII twins in an editor, and a careless find-and-replace swaps one
+    // for the other silently. The accents in "simbolo" are real Spanish and are
+    // deliberately absent from this list.
+    const lookalikes = [
+      "\u2212", // minus sign, not the ASCII hyphen-minus
+      "\u2018", // left single quote
+      "\u2019", // right single quote
+      "\u201C", // left double quote
+      "\u201D", // right double quote
+      "\u2013", // en dash
+      "\u2014", // em dash
+      "\u00A0", // non-breaking space
+    ];
+
+    for (const message of Object.values(SYMBOL_CHECK_ERRORS)) {
+      for (const lookalike of lookalikes) {
+        expect(message).not.toContain(lookalike);
+      }
+    }
   });
 });
