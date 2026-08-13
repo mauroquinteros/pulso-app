@@ -12,7 +12,7 @@ The tracer bullet: the whole confirmation path, end to end, with **no new visual
 thing that changes on screen is whether **Guardar movimiento** is available.
 
 Leaving **Símbolo** fires a check against the already-deployed `resolve-stock` endpoint. Until
-that check comes back confirmed, the save gate is closed. Editing the field withdraws a
+that check comes back confirmed, the save gate is closed. Editing the field revokes a
 previous confirmation and closes the gate again.
 
 Three pieces:
@@ -73,16 +73,16 @@ is a debugging aid; the id covers cases the ticker cannot.
 
 ## Acceptance criteria
 
-- [ ] Leaving **Símbolo** with `AAPL` runs a check, and once Monto and Precio are valid, **Guardar movimiento** is available
+- [x] Leaving **Símbolo** with `AAPL` runs a check, and once Monto and Precio are valid, **Guardar movimiento** is available
 - [x] Leaving **Símbolo** with `APPL` never opens the gate, no matter what else is filled in
 - [x] Editing a confirmed symbol closes the gate on the first keystroke
 - [x] Blurring an already-confirmed, unchanged symbol fires no second request
 - [x] Blurring after an `unavailable` result fires a fresh check
-- [ ] `aapl` confirms as `AAPL`
+- [x] `aapl` confirms as `AAPL`
 - [x] An empty **Símbolo** behaves exactly as it does today, including its existing error
 - [x] The input accepts typing in every state - only the save button is ever gated
 - [x] Saving remains a local operation with no second round trip
-- [x] A reducer test suite exists mirroring `utils/sign-in.test.ts`, covering: an edit withdraws a confirmation, an edit clears a failure, a stale answer is dropped while a newer check is in flight, and an answer arriving with no check in flight is a no-op
+- [x] A reducer test suite exists mirroring `utils/sign-in.test.ts`, covering: an edit revokes a confirmation, an edit clears a failure, a stale answer is dropped while a newer check is in flight, and an answer arriving with no check in flight is a no-op
 - [x] The buy view-model suite gains cases proving the gate is closed for every status except `confirmed`
 - [x] No visual change to the field: no spinner, no icon, no border-colour change
 - [x] `npm test` and `npm run lint` pass
@@ -107,7 +107,7 @@ Written:
 - `components/add-movement/buy-view-model.ts` - `summarizeBuy` takes the status as a required
   third argument. Required rather than defaulted, so no caller can acquire the old, ungated
   behaviour by omission.
-- `app/add-movement/buy.tsx` - blur fires, edit withdraws.
+- `app/add-movement/buy.tsx` - blur fires, edit revokes.
 
 Two criteria stay unticked because both are runtime observations against the live endpoint and
 nothing here exercises a rendered screen (the PRD's Testing Decisions rule out component tests).
@@ -117,3 +117,30 @@ every keystroke, and the endpoint's `aapl` case is verified in PRD Part 1, step 
 Deviation from the issue as written: the Spanish failure copy is **not** in this slice. The
 machine carries `unknown` and `unavailable` as distinct states, but nothing reads a message off
 them yet, so the strings land in issue 03 with the code that renders them.
+
+**2026-08-13 - verified on a device. Closed.**
+
+Confirmed `META` in the running app. The gate opened, and the database shows why:
+
+| ticker | name | price | created_at | updated_at |
+| --- | --- | --- | --- | --- |
+| META | META PLATFORMS INC-CLASS A | 594.97 | 23:20:22.889839+00 | 23:20:22.889839+00 |
+
+`created_at` and `updated_at` are identical to the microsecond, so this was an INSERT — the row
+did not exist before the tap. That is the whole chain in one artifact: signed-in app, platform
+JWT gate, the function's own caller check, both Finnhub calls (the name comes from the profile
+call, the price from the quote), and the upsert. A confirmation costs two provider calls and
+both landed, which the save button alone could not have told us.
+
+Closes the last two criteria. `META` was a stronger test than the `AAPL` the criterion names,
+since `AAPL` already had a row and would have been an update. The `aapl` case is visible in the
+field itself, which uppercases on every keystroke.
+
+Side effect worth carrying forward: confirming a symbol **enrols it in the price refresh**. META
+was written at 23:20, after the day's last cron run at 21:50, so from the next 13:00 UTC window
+it refreshes every ten minutes alongside AAPL and VOO. Confirmation is not only validation - it
+is how a Stock enters the refresh set.
+
+Also renamed here: "withdraws" became "revokes" throughout. **Withdrawal** is a Movement type in
+this domain (`CONTEXT.md`), so the word was ambiguous next to `withdrawal-view-model.ts`. The
+code uses `revoke`; this file now matches it.
