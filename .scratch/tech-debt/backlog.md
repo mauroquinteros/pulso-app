@@ -73,3 +73,39 @@ scale belongs there, which also resolves that unused-tokens finding.
 
 **Scope warning:** cross-cutting, touches nearly every component, layout-
 sensitive. Deliberate task with visual verification, NOT a drive-by edit.
+
+---
+
+## A failed History read is a dead end - no way to sign out
+
+**Type:** UX / recoverability · **Status:** backlog · **Raised:** 2026-08-14
+
+**Problem.** `RequireHistory` renders the failure screen *instead of* `<Tabs>`,
+so a failed read takes the whole tab navigator off screen - including **Ajustes**,
+which holds the only "Cerrar sesión" in the app. The only control left is
+**Reintentar**.
+
+For a transient failure that is correct and enough: airplane mode, tap Reintentar
+once connectivity is back, done (observed working on 2026-08-14). For a
+**persistent** one it is a trap. A revoked or malformed session, a broken RLS
+policy or a project outage all produce a read that keeps failing, and the one
+action that would fix a session problem - signing out and back in - is
+unreachable. The escape is deleting and reinstalling the app.
+
+**Why it is plausible rather than theoretical.** The leading hypothesis for the
+intermittent failure seen on 2026-08-14 is a **401 during the sign-out then
+sign-in transition**. If that is right, the failure mode most likely to recur is
+precisely the one whose only remedy sits behind the screen it hides.
+
+**Approach (when picked up).**
+1. Add a secondary, quiet **Cerrar sesión** action to the failure screen - text
+   button under **Reintentar**, not a second gradient pill competing with it.
+2. It must not import the Ajustes screen: lift `signOut` into a module both can
+   call, or the failure screen pulls a whole tab in behind it.
+3. Consider whether a `401` in `HistoryFailure` should end the session by itself
+   rather than offer the button - decide once the logging from `readHistory`
+   shows whether 401 is actually what happens.
+
+**Raised during:** issue 02 of `history-persistence`, flagged twice before
+proceeding to issue 03. Deliberately not fixed there - it is recoverability, not
+the read path.
