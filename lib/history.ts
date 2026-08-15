@@ -35,12 +35,55 @@ const fault = (message: string, detail: unknown) => {
 };
 
 /**
+ * PostgREST's code for a token dated later than its own clock. It is the one
+ * 401 that means *ask again in a moment* rather than *your session is bad*.
+ *
+ * The `iat` claim is written by the auth server and checked by PostgREST, which
+ * are different machines with different clocks; PostgREST forgives 30 seconds of
+ * disagreement and refuses beyond it. So a token can be rejected for being
+ * newborn rather than for being wrong, and only ever in the first moments of its
+ * life - which is exactly when this app reads, because a Perfil signing in is
+ * what starts the read.
+ *
+ * Retrying is not hope. Either the request lands on a differently-skewed
+ * instance, or by then the token has aged past the disagreement. Both are
+ * self-correcting, and neither is anything the user did.
+ */
+const CLOCK_DISAGREEMENT = "PGRST303";
+
+/**
+ * One retry, not a loop: the fault clears in seconds or it is not this fault,
+ * and a user waiting on a spinner is owed an answer rather than persistence.
+ */
+const RETRY_AFTER_MS = 250;
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
  * The whole of the signed-in Perfil's History, or nothing at all.
  *
- * The three selects are fired together rather than awaited one after another.
- * The History is one thing; there is no order in which its parts are wanted.
+ * A newborn token is retried once, and the *whole* read is repeated rather than
+ * the one select that failed - so the three results still come from a single
+ * attempt and all-or-nothing stays true by construction rather than by argument.
+ *
+ * This also restores in release what development was providing by accident:
+ * React double-invokes effects in dev, so a rejected first read was quietly
+ * replaced by a second one and nobody saw the failure screen. A release build
+ * has no such spare attempt, so the retry has to be deliberate.
  */
 export async function readHistory(): Promise<HistoryAnswer> {
+  const first = await attemptRead();
+
+  if (first.ok || !first.failures.some((f) => f.code === CLOCK_DISAGREEMENT)) return first;
+
+  trace("token dated ahead of the server's clock, reading again:", { after: RETRY_AFTER_MS });
+  await pause(RETRY_AFTER_MS);
+
+  return attemptRead();
+}
+
+/** One pass at the three tables. Every rule about the History lives here. */
+async function attemptRead(): Promise<HistoryAnswer> {
   const [trades, dividends, cash] = await Promise.all([
     supabase.from("movement_trades").select("*"),
     supabase.from("movement_dividends").select("*"),
@@ -124,6 +167,21 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
     return { ok: false, failure };
   }
 
+  const first = await attemptSave(movement);
+
+  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return first;
+
+  trace("token dated ahead of the server's clock, saving again:", { after: RETRY_AFTER_MS });
+  await pause(RETRY_AFTER_MS);
+
+  // Safe to repeat: a token refused at the gate never reached the table, so
+  // there is nothing to undo - and were it ever otherwise, the id is the same
+  // one, so the duplicate branch below answers with the row already stored.
+  return attemptSave(movement);
+}
+
+/** One pass at the insert, and the mapping of whatever came back. */
+async function attemptSave(movement: NewMovement & { type: "deposit" | "withdrawal" }): Promise<SaveAnswer> {
   const { data, error, status } = await supabase
     .from("movement_cash")
     .insert({

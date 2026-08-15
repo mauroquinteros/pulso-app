@@ -32,13 +32,25 @@ const db = vi.hoisted(() => ({
   inserts: [] as { table: string; row: Record<string, unknown> }[],
   inserted: {} as SingleResult,
   readBack: {} as SingleResult,
+  /** Results staged per pass, so a test can make a first attempt fail and a retry succeed. */
+  attempts: [] as Record<string, Result>[],
+  insertAttempts: [] as SingleResult[],
 }));
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
     from: (table: string) => ({
       select: () => {
+        // Which pass at the three tables this is. A retry re-reads all three, so
+        // three selects make one attempt.
+        const attempt = Math.floor(db.selects.length / 3);
         db.selects.push(table);
+        const staged = db.attempts[attempt];
+        if (staged) {
+          return Object.assign(Promise.resolve(staged[table]), {
+            eq: () => ({ single: () => Promise.resolve(db.readBack) }),
+          });
+        }
         // A thenable that also answers `.eq(...).single()`, because the
         // duplicate-id path reads one row back rather than awaiting the select.
         return Object.assign(Promise.resolve(db.results[table]), {
@@ -46,8 +58,9 @@ vi.mock("@/lib/supabase", () => ({
         });
       },
       insert: (row: Record<string, unknown>) => {
+        const staged = db.insertAttempts[db.inserts.length];
         db.inserts.push({ table, row });
-        return { select: () => ({ single: () => Promise.resolve(db.inserted) }) };
+        return { select: () => ({ single: () => Promise.resolve(staged ?? db.inserted) }) };
       },
     }),
   },
@@ -116,9 +129,14 @@ const ROWS: Record<TableName, unknown[]> = {
 const TABLES: TableName[] = ["movement_trades", "movement_dividends", "movement_cash"];
 
 /** Every select answers with its rows, except `broken`, which errors. */
+/** A token PostgREST refused for being dated ahead of its own clock. */
+const clockSkew = { message: "JWT issued at future", code: "PGRST303" };
+
 function given(broken?: TableName) {
   db.selects = [];
   db.inserts = [];
+  db.attempts = [];
+  db.insertAttempts = [];
   db.inserted = { data: storedDepositRow, error: null, status: 201 };
   db.readBack = { data: storedDepositRow, error: null, status: 200 };
   db.results = Object.fromEntries(
@@ -160,6 +178,51 @@ describe("readHistory", () => {
     db.results = Object.fromEntries(TABLES.map((table) => [table, { data: [], error: null, status: 200 }]));
 
     expect(await readHistory()).toEqual({ ok: true, movements: [] });
+  });
+
+  it("reads again when the token is refused for being dated ahead of the server", async () => {
+    // PGRST303 is not "your session is bad", it is "the two servers disagree
+    // about what time it is". It clears on its own within seconds, so the one
+    // honest response is to ask again rather than to put a failure screen in
+    // front of someone who just signed in successfully.
+    db.attempts = [
+      Object.fromEntries(TABLES.map((t) => [t, { data: null, error: clockSkew, status: 401 }])),
+      Object.fromEntries(TABLES.map((t) => [t, { data: ROWS[t], error: null, status: 200 }])),
+    ];
+
+    const answer = await readHistory();
+
+    expect(answer.ok).toBe(true);
+    expect(answer.ok && answer.movements).toHaveLength(3);
+    // Six selects: the whole read repeated, not just the select that failed, so
+    // the three results still come from one attempt.
+    expect(db.selects).toHaveLength(6);
+  });
+
+  it("gives up after one retry rather than looping", async () => {
+    // A user on a spinner is owed an answer. If it is still refused a second
+    // time it is not the transient fault, and Reintentar is the user's own
+    // retry - deliberately theirs to make.
+    db.attempts = [
+      Object.fromEntries(TABLES.map((t) => [t, { data: null, error: clockSkew, status: 401 }])),
+      Object.fromEntries(TABLES.map((t) => [t, { data: null, error: clockSkew, status: 401 }])),
+    ];
+
+    const answer = await readHistory();
+
+    expect(answer.ok).toBe(false);
+    expect(db.selects).toHaveLength(6);
+  });
+
+  it("does not retry a fault that will not clear on its own", async () => {
+    // An RLS refusal means the same thing however many times it is asked. Only
+    // the clock disagreement is worth a second attempt.
+    given("movement_trades");
+
+    const answer = await readHistory();
+
+    expect(answer.ok).toBe(false);
+    expect(db.selects).toHaveLength(3);
   });
 
   it("fires the three selects together rather than one after another", async () => {
@@ -221,6 +284,18 @@ describe("readHistory", () => {
 });
 
 describe("saveMovement", () => {
+  it("saves again when the token is refused for being dated ahead of the server", async () => {
+    // Safe to repeat: a token refused at the gate never reached the table, so
+    // there is nothing to undo - and the id is the same one either way.
+    db.insertAttempts = [{ data: null, error: clockSkew, status: 401 }];
+
+    const answer = await saveMovement(newDeposit);
+
+    expect(answer.ok).toBe(true);
+    expect(db.inserts).toHaveLength(2);
+    expect(db.inserts[0].row.id).toBe(db.inserts[1].row.id);
+  });
+
   it("treats a duplicate id as the save it already made, not as a failure", async () => {
     // The id is minted once per form session, so nothing else can collide with
     // it: a 23505 means this save's own first attempt landed and only its
