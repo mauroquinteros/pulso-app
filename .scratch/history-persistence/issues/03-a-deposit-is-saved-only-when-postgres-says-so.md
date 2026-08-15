@@ -66,6 +66,18 @@ that is a **one-way latch - it never resets**. That is correct today because sav
 dismisses. With a save that can fail and leave the form open, the button would be permanently
 dead. It resets on failure.
 
+**Saving becomes an event on the History's state machine, not a second writer.**
+Issue 02 left `addMovement` writing the `movements` array directly while the reducer owns both
+that array and the status. Two writers to one fact is how they drift. Replace it with a
+`movementSaved` event the reducer handles, so the History has exactly one writer and the rule
+"a movement can only join a History that is in hand" falls out of the reducer rather than being
+remembered at the call site. A `movementSaved` arriving in any status but `ready` is ignored.
+
+**Note on where the form lives.** The add-movement modal is a root `Stack` screen, so it sits
+*outside* `RequireHistory` rather than below it. It is only reachable from tabs that already
+have a ready History, so this is not a bug today - but it does mean the form is not itself
+covered by the guarantee that a History is in hand, and it must not assume otherwise.
+
 ## Acceptance criteria
 
 - [ ] Saving a deposit inserts into `movement_cash` and the form does not dismiss until Postgres
@@ -83,6 +95,8 @@ dead. It resets on failure.
 - [ ] Killing and reopening the app shows the deposit still there, with the same **Efectivo**
 - [ ] The deposit's `transfer_fee` is stored, so **Aportado** stays distinct from **Efectivo**
 - [ ] The deposit view-model's existing tests are updated for the loss of `createdAt`
+- [ ] `movements` has exactly one writer: the reducer. `addMovement` no longer sets it directly
+- [ ] A `movementSaved` event in any status but `ready` leaves the state untouched
 - [ ] `npx tsc --noEmit` and the full test suite pass
 
 ## Blocked by
