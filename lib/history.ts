@@ -14,6 +14,28 @@ import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
  * catch - and, less obviously, `Promise.all` cannot short-circuit on one: all
  * three settle regardless, and the three `error` fields are what the
  * all-or-nothing rule is decided on.
+ */
+
+/**
+ * Both halves of every outcome are traced in development, because this file is
+ * the only place where what the app believes and what Postgres holds can come
+ * apart - and a save that quietly did nothing looks exactly like a save that
+ * worked.
+ *
+ * `trace` for the ordinary path and `fault` for the refusals, so only the second
+ * raises LogBox: a warning that fires on success is a warning nobody reads. Both
+ * are dev-only; neither ships.
+ */
+const trace = (message: string, detail: unknown) => {
+  if (__DEV__) console.log(`[history] ${message}`, detail);
+};
+
+const fault = (message: string, detail: unknown) => {
+  if (__DEV__) console.warn(`[history] ${message}`, detail);
+};
+
+/**
+ * The whole of the signed-in Perfil's History, or nothing at all.
  *
  * The three selects are fired together rather than awaited one after another.
  * The History is one thing; there is no order in which its parts are wanted.
@@ -48,17 +70,29 @@ export async function readHistory(): Promise<HistoryAnswer> {
         : [],
     );
 
-    if (__DEV__) console.warn("[history] read failed:", failures);
+    fault("read failed:", failures);
 
     return { ok: false, failures };
   }
 
   // No sorting and no filtering here: every screen reads the whole History and
   // narrows it in memory, so the three results are simply concatenated.
-  return {
-    ok: true,
-    movements: [...trades.data.map(mapTradeRow), ...dividends.data.map(mapDividendRow), ...cash.data.map(mapCashRow)],
-  };
+  const movements = [
+    ...trades.data.map(mapTradeRow),
+    ...dividends.data.map(mapDividendRow),
+    ...cash.data.map(mapCashRow),
+  ];
+
+  // Per table rather than one total, because that is what tells a Perfil who has
+  // recorded nothing from a read that silently returned nothing: on day one all
+  // three are 0 and the two look identical on screen.
+  trace("read ok:", {
+    trades: trades.data.length,
+    dividends: dividends.data.length,
+    cash: cash.data.length,
+  });
+
+  return { ok: true, movements };
 }
 
 /**
@@ -85,7 +119,7 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
   if (movement.type !== "deposit" && movement.type !== "withdrawal") {
     const failure = { table: "", status: 0, code: "unwritten_type", message: `a ${movement.type} cannot be saved yet` };
 
-    if (__DEV__) console.warn("[history] save refused:", failure);
+    fault("save refused:", failure);
 
     return { ok: false, failure };
   }
@@ -117,14 +151,17 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
   // session, a new id, and a second row that really is a duplicate. The
   // client-generated id exists to make a retry safe (ADR 0010); saying "no"
   // here is what would make the human retry unsafe.
-  if (error?.code === "23505") return readSavedMovement(movement.id);
+  if (error?.code === "23505") {
+    trace("id already stored, reading it back rather than writing again:", movement.id);
+    return readSavedMovement(movement.id);
+  }
 
   if (error) {
     // Every other reason travels with the refusal, exactly as it does for a
     // read: a policy refusal and a dropped packet must not arrive as one value.
     const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
 
-    if (__DEV__) console.warn("[history] save failed:", failure);
+    fault("save failed:", failure);
 
     return { ok: false, failure };
   }
@@ -133,7 +170,14 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
   // Movement comes into existence exactly one way rather than two that can
   // silently disagree - and `createdAt` arrives filled in by the clock that
   // filled it.
-  return { ok: true, movement: mapCashRow(data) };
+  const saved = mapCashRow(data);
+
+  // `createdAt` is worth printing: the form never supplies one, so a value here
+  // is the database's clock answering, which is the whole of ADR 0010 visible in
+  // one line.
+  trace("saved:", { id: saved.id, type: saved.type, createdAt: saved.createdAt });
+
+  return { ok: true, movement: saved };
 }
 
 /**
@@ -148,10 +192,14 @@ async function readSavedMovement(id: string): Promise<SaveAnswer> {
   if (error) {
     const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
 
-    if (__DEV__) console.warn("[history] saved row could not be read back:", failure);
+    fault("saved row could not be read back:", failure);
 
     return { ok: false, failure };
   }
 
-  return { ok: true, movement: mapCashRow(data) };
+  const saved = mapCashRow(data);
+
+  trace("read back the row already stored:", { id: saved.id, createdAt: saved.createdAt });
+
+  return { ok: true, movement: saved };
 }
