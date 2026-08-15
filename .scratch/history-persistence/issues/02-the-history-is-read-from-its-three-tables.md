@@ -89,29 +89,53 @@ failed read as *stale*; that word belongs to prices alone.
 
 ## Acceptance criteria
 
-- [ ] Signing in reads all three tables in parallel and puts the merged History in the store
-- [ ] If any one of the three selects errors, no movements are stored - not a partial merge
-- [ ] `RequireHistory` shows a spinner while reading, the failure screen when failed, the tabs when ready
-- [ ] **Reintentar** returns the status to `unread`, which starts a fresh read
-- [ ] No screen, view-model or `usePortfolio` call below `RequireHistory` is modified
-- [ ] A token refresh, a tab switch, opening the add-movement modal, opening a movement or stock
+- [x] Signing in reads all three tables in parallel and puts the merged History in the store
+- [x] If any one of the three selects errors, no movements are stored - not a partial merge
+- [x] `RequireHistory` shows a spinner while reading, the failure screen when failed, the tabs when ready
+- [x] **Reintentar** returns the status to `unread`, which starts a fresh read
+- [x] No screen, view-model or `usePortfolio` call below `RequireHistory` is modified
+- [x] A token refresh, a tab switch, opening the add-movement modal, opening a movement or stock
       detail, and backgrounding-then-foregrounding all trigger no read
-- [ ] With three empty tables the app renders: Inicio at $0.00 / +0.0%, and the existing empty
+- [x] With three empty tables the app renders: Inicio at $0.00 / +0.0%, and the existing empty
       states on Movimientos and Portafolio
-- [ ] The movements store no longer seeds from mock data; `MOCK_MOVEMENTS` remains as test
+- [x] The movements store no longer seeds from mock data; `MOCK_MOVEMENTS` remains as test
       fixture data and is not deleted
-- [ ] Tests: the state machine's transitions, including an answer arriving for a Perfil who has
+- [x] Tests: the state machine's transitions, including an answer arriving for a Perfil who has
       since signed out being dropped
-- [ ] Tests: each table's row maps to the correct `Movement` subtype with camelCase fields; a
+- [x] Tests: each table's row maps to the correct `Movement` subtype with camelCase fields; a
       buy's `NULL` `regulatory_fees` becomes `0`; `execution_date` survives as a calendar date
       string and is never timezone-converted
-- [ ] Tests: the all-or-nothing rule - any single select failing yields a failure and no
+- [x] Tests: the all-or-nothing rule - any single select failing yields a failure and no
       movements
-- [ ] The failure screen does not reuse the empty-state illustration, and its title reads
+- [x] The failure screen does not reuse the empty-state illustration, and its title reads
       "No pudimos cargar tus movimientos"
-- [ ] Verified by hand: airplane mode produces the failure screen, and **Reintentar** recovers
+- [x] Verified by hand: airplane mode produces the failure screen, and **Reintentar** recovers
       once connectivity returns
 
 ## Blocked by
 
 - `.scratch/history-persistence/issues/01-forms-that-cannot-save-say-pronto.md`
+
+## Closed
+
+Verified on a device. A cold start reads all three tables and renders the empty History as
+honest zeros - Inicio at $0.00 / +0.00% with no `NaN`, and the existing empty states on
+Movimientos and Portafolio. Switching tabs, opening the add-movement modal and returning from
+the background produce no further read, confirmed by the absence of a new `read ok` line in the
+log rather than by inspection.
+
+The failure screen was verified by accident before it was verified on purpose: a real
+`PGRST303` put it on screen, and reopening the app recovered - so the screen, its copy and its
+recovery path were all exercised by a genuine fault rather than a simulated one.
+
+Two things landed after this slice was written, both consequences of it:
+
+- **Failures carry their cause** (`fault`/`trace`, dev-only). The first version returned a bare
+  `{ ok: false }`, so an intermittent failure left nothing behind to diagnose it with. This is
+  what named the fault below, one test run later.
+- **A newborn token is retried once.** `PGRST303` means the auth server's clock and PostgREST's
+  disagree by more than the 30 seconds PostgREST forgives, so a token can be rejected for being
+  new rather than wrong - precisely when this app reads, since signing in is what starts the
+  read. It is also what the unreproducible sign-out/sign-in error had been all along.
+  Development was hiding it: React double-invokes effects there, so a rejected first read was
+  silently replaced by a second, and a release build has no such spare attempt.

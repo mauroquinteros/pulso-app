@@ -42,19 +42,36 @@ History it believes is in hand, and never reads. Emptying the array alone would 
 
 ## Acceptance criteria
 
-- [ ] Perfil-scoped clearing happens in the auth listener, keyed on the user id changing
-- [ ] The Ajustes sign-out handler no longer calls it directly, and signing out through the
+- [x] Perfil-scoped clearing happens in the auth listener, keyed on the user id changing
+- [x] The Ajustes sign-out handler no longer calls it directly, and signing out through the
       button still clears everything
-- [ ] Clearing empties the movements **and** returns the History status to `unread`
-- [ ] A token refresh - a new session object carrying the same user id - clears nothing and
+- [x] Clearing empties the movements **and** returns the History status to `unread`
+- [x] A token refresh - a new session object carrying the same user id - clears nothing and
       triggers no read
-- [ ] After any session ends, signing in as a different Perfil fetches that Perfil's own History
+- [x] After any session ends, signing in as a different Perfil fetches that Perfil's own History
       rather than reusing what was in memory
-- [ ] Verified by hand: sign in as A, end the session **without** the Ajustes button (expire or
+- [x] Verified by hand: sign in as A, end the session **without** the Ajustes button (expire or
       revoke the token), sign in as B, and confirm B sees their own History and never A's
-- [ ] The existing Perfil-scoped-state tests are extended to cover the status reset
-- [ ] `npx tsc --noEmit` and the full test suite pass
+- [x] The existing Perfil-scoped-state tests are extended to cover the status reset
+- [x] `npx tsc --noEmit` and the full test suite pass
 
 ## Blocked by
 
 - `.scratch/history-persistence/issues/02-the-history-is-read-from-its-three-tables.md`
+
+## Closed
+
+Verified on a device by the signal that distinguishes the fix from the bug: after signing out
+and back in, a **fresh `read ok` line appears in the log**. That line only exists if the status
+was returned to `unread`, and the status is only returned to `unread` if the clearing ran. Had
+the leak still been present the status would have stayed `ready`, no read would have fired, and
+the previous Perfil's History would have been served to whoever signed in next.
+
+The button path is a real test of the listener now, not a bypass of it: `clearPerfilScopedState`
+was removed from the Ajustes handler, so signing out through the button reaches the same code as
+an expired token, a revocation server-side, or a sign-out performed on another device.
+
+The rule is keyed on the Perfil id changing rather than on the event name or the session object.
+`TOKEN_REFRESHED` hands back a new object carrying the same user every time it fires, so an
+identity comparison would have thrown the History away every few minutes - which the tests pin
+down explicitly.

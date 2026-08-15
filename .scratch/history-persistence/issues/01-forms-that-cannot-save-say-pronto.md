@@ -29,13 +29,22 @@ Each later slice flips its own row back as that form starts persisting.
 
 ## Acceptance criteria
 
-- [ ] Compra, Venta, Dividendo and Retiro appear greyed, carry the **Pronto** tag, and cannot be
+- [x] Compra, Venta, Dividendo and Retiro appear greyed, carry the **Pronto** tag, and cannot be
       opened from the picker
-- [ ] Depósito is unchanged - still pressable, still opens its form
-- [ ] The picker's section headings and layout are otherwise untouched
-- [ ] No route is deleted and no form screen is modified; only reachability changes
-- [ ] `npx tsc --noEmit` and the existing test suite pass
+- [x] Depósito is unchanged - still pressable, still opens its form
+- [x] The picker's section headings and layout are otherwise untouched
+- [x] No route is deleted and no form screen is modified; only reachability changes
+- [x] `npx tsc --noEmit` and the existing test suite pass
 
 ## Blocked by
 
 None - can start immediately.
+
+## Closed
+
+Verified in the picker on a device: Compra, Venta, Dividendo and Retiro render greyed with the
+**Pronto** tag and cannot be opened; **Depósito** is unchanged and still opens its form.
+
+The ordering guarantee held. The store became authoritative in issue 02 and no form was ever
+able to put a Movement into it that Postgres had not stored, so the window this slice exists to
+close never opened.

@@ -80,25 +80,48 @@ covered by the guarantee that a History is in hand, and it must not assume other
 
 ## Acceptance criteria
 
-- [ ] Saving a deposit inserts into `movement_cash` and the form does not dismiss until Postgres
+- [x] Saving a deposit inserts into `movement_cash` and the form does not dismiss until Postgres
       acknowledges it
-- [ ] The button shows a pending state while the insert is in flight and cannot be tapped twice
-- [ ] On failure the form stays open, states that the save failed, and preserves the amount,
+- [x] The button shows a pending state while the insert is in flight and cannot be tapped twice
+- [x] On failure the form stays open, states that the save failed, and preserves the amount,
       transfer fee and date the user typed
-- [ ] After a failure the button is tappable again
-- [ ] Tapping **Guardar** again after a failure records the deposit **once**, never twice
-- [ ] The movement added to the store is built from the row Postgres returned, through the same
+- [x] After a failure the button is tappable again
+- [x] Tapping **Guardar** again after a failure records the deposit **once**, never twice
+- [x] The movement added to the store is built from the row Postgres returned, through the same
       mapper the read path uses
-- [ ] `created_at` is not sent on insert; the stored value comes from the database
-- [ ] Ids are UUIDs from `expo-crypto`, minted once per form session
-- [ ] A saved deposit appears immediately in Movimientos and changes **Efectivo** on Inicio
-- [ ] Killing and reopening the app shows the deposit still there, with the same **Efectivo**
-- [ ] The deposit's `transfer_fee` is stored, so **Aportado** stays distinct from **Efectivo**
-- [ ] The deposit view-model's existing tests are updated for the loss of `createdAt`
-- [ ] `movements` has exactly one writer: the reducer. `addMovement` no longer sets it directly
-- [ ] A `movementSaved` event in any status but `ready` leaves the state untouched
-- [ ] `npx tsc --noEmit` and the full test suite pass
+- [x] `created_at` is not sent on insert; the stored value comes from the database
+- [x] Ids are UUIDs from `expo-crypto`, minted once per form session
+- [x] A saved deposit appears immediately in Movimientos and changes **Efectivo** on Inicio
+- [x] Killing and reopening the app shows the deposit still there, with the same **Efectivo**
+- [x] The deposit's `transfer_fee` is stored, so **Aportado** stays distinct from **Efectivo**
+- [x] The deposit view-model's existing tests are updated for the loss of `createdAt`
+- [x] `movements` has exactly one writer: the reducer. `addMovement` no longer sets it directly
+- [x] A `movementSaved` event in any status but `ready` leaves the state untouched
+- [x] `npx tsc --noEmit` and the full test suite pass
 
 ## Blocked by
 
 - `.scratch/history-persistence/issues/02-the-history-is-read-from-its-three-tables.md`
+
+## Closed
+
+Verified on a device and against the live table. A recorded deposit produced exactly one row:
+`amount 1000`, `transfer_fee 6.5`, `execution_date 2026-08-12` unshifted, `created_at` from the
+server's clock, and `user_id` filled by the column default rather than sent by the client - so
+ADR 0010 and CONTEXT.md's "a Movement carries no owner" both hold at the boundary. The deposit
+and the Efectivo it created survive a kill and reopen.
+
+Double-tapping Guardar records one deposit. The failure path keeps every typed value and leaves
+the button usable, which is the one-way latch fixed here.
+
+One change to what this issue specified: **a duplicate id is answered with the row it already
+wrote, not with a refusal.** The id is minted once per form session, so a `23505` can only be
+this save's own first attempt landing after its response was lost. Reporting that as a failure
+is how a *real* duplicate gets made - told it did not save, the natural thing to do is type the
+deposit again, minting a new id and writing a second row. The client-generated id made the
+mechanical retry safe; this is what makes the human one safe.
+
+One criterion was written wrong and could not be met as stated: *"a buy's NULL regulatory_fees
+becomes 0"*. `BuyMovement` has no such field and ADR 0006 says only a sell has one, so there was
+nowhere for the 0 to land. Implemented as: a buy maps with the key absent, and the `?? 0` guard
+sits on the sell branch, the only place the column is read. Both readings are tested.
