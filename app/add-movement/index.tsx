@@ -21,19 +21,19 @@ const OPERACIONES: RowSpec[] = [
   {
     type: "buy",
     subtitle: "Adquirir acciones o ETF",
-    disabled: false,
+    disabled: true,
     onPress: () => router.push("/add-movement/buy"),
   },
   {
     type: "sell",
     subtitle: "Vender una posición",
-    disabled: false,
+    disabled: true,
     onPress: () => router.push("/add-movement/sell"),
   },
   {
     type: "dividend",
     subtitle: "Ingreso por dividendos",
-    disabled: false,
+    disabled: true,
     onPress: () => router.push("/add-movement/dividend"),
   },
 ];
@@ -48,7 +48,7 @@ const EFECTIVO: RowSpec[] = [
   {
     type: "withdrawal",
     subtitle: "Retirar efectivo de tu cuenta",
-    disabled: false,
+    disabled: true,
     onPress: () => router.push("/add-movement/withdrawal"),
   },
 ];
