@@ -13,11 +13,12 @@ import { useMovementsStore } from "@/stores/movements";
  * One function rather than a call per store at each call site, so the next
  * Perfil-scoped store has an obvious place to be added.
  *
- * Empty, not back to `MOCK_MOVEMENTS`: the seed only happens when the store is
- * created, so signing out and back in walks into the first-run wall - no
- * movements and no Cash. That is the real behaviour arriving early, not a
- * regression, and fixing it is a different piece of work.
+ * Emptying the movements is not enough on its own: the History's status has to
+ * go back to `unread` with them. The only rule that starts a read is "if the
+ * History is `unread`, read it", so a store left on `ready` would land the next
+ * Perfil on an empty portfolio that no read ever fires for - their own History
+ * sitting in Postgres, unasked for.
  */
 export function clearPerfilScopedState() {
-  useMovementsStore.setState({ movements: [] });
+  useMovementsStore.getState().forgetHistory();
 }
