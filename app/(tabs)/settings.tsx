@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
 import { AUTH_STORAGE_KEY, supabase } from "@/lib/supabase";
-import { clearPerfilScopedState } from "@/stores/perfil-scoped-state";
 import { useSessionStore } from "@/stores/session";
 import { profileFrom } from "@/utils/profile";
 
@@ -18,6 +17,11 @@ import { profileFrom } from "@/utils/profile";
  * mirror in `useSessionStore` goes null, the guard in `app/_layout.tsx` inverts,
  * and Expo Router takes `(tabs)` out of the tree and clears the history itself.
  * A `router.replace` here would be a second, competing answer to "where am I".
+ *
+ * No clearing of the Perfil's data here either, for the same reason: dropping
+ * the session is what empties the stores, in the auth listener in
+ * `stores/session.ts`. Doing it from this button would only cover the sessions
+ * that end by being tapped away.
  */
 async function signOut() {
   // Grab the token before the session goes, because revoking it needs it.
@@ -37,8 +41,6 @@ async function signOut() {
   // milliseconds - on a plane exactly as fast as on wifi.
   await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
   await supabase.auth.signOut({ scope: "local" });
-
-  clearPerfilScopedState();
 
   // Revoke on the way out, unawaited and unchecked. The human has already left;
   // whether the server heard about it changes nothing they can see. If this

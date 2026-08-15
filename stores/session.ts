@@ -2,6 +2,8 @@ import type { Session } from "@supabase/supabase-js";
 import { create } from "zustand";
 
 import { supabase } from "@/lib/supabase";
+import { clearPerfilScopedState } from "@/stores/perfil-scoped-state";
+import { perfilChanged, perfilIdOf } from "@/utils/perfil-change";
 
 interface SessionState {
   /**
@@ -33,10 +35,30 @@ export const useSessionStore = create<SessionState>(() => ({
   session: undefined,
 }));
 
+/**
+ * Which Perfil the last event was for. Module scope, beside the only code that
+ * reads or writes it: it is not app state - nothing renders from it, and it must
+ * survive the screens that come and go - so putting it in the store would give
+ * the store a second writer for a fact no screen wants.
+ */
+let signedInPerfilId: string | null = null;
+
 // The store's only writer. `onAuthStateChange` fires `INITIAL_SESSION` once the
 // client has finished reading storage - with the session or with `null` - which
 // is what moves `session` off `undefined` on cold start. Sign-in, sign-out and
 // token refresh all arrive through this same callback.
 supabase.auth.onAuthStateChange((_event, session) => {
+  // Which is why the Perfil's data is emptied here rather than in the "Cerrar
+  // sesion" handler that used to do it. That handler cleared a *button press*;
+  // this clears the *fact*, so an expired refresh token, a revocation
+  // server-side and a sign-out on another device empty the stores too, and no
+  // sign-out path added later can forget to. See `utils/perfil-change.ts` for
+  // why the id is what is compared.
+  //
+  // Before the mirror is updated, so that the guard in `app/_layout.tsx` never
+  // swaps the tree while the previous Perfil's Movements are still in memory.
+  if (perfilChanged(signedInPerfilId, session)) clearPerfilScopedState();
+  signedInPerfilId = perfilIdOf(session);
+
   useSessionStore.setState({ session });
 });
