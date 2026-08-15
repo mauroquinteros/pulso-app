@@ -49,9 +49,9 @@ saved only when Postgres hands the row back.**
 
 On entering the tabs, the app reads the signed-in Perfil's whole **History**: three selects
 against `movement_trades`, `movement_dividends` and `movement_cash`, fired in parallel and
-accepted **all-or-nothing**. A single gate inside the tabs layout absorbs the outcome. While
+accepted **all-or-nothing**. A single component, `RequireHistory`, wraps the tabs and absorbs the outcome. While
 the reads are in flight it shows a spinner; if any of the three fails it shows an error with
-**Reintentar**; only when all three succeed does it mount the tabs. Below that gate nothing
+**Reintentar**; only when all three succeed does it render the tabs. Below it nothing
 changes — every screen, view-model and `usePortfolio` call goes on receiving a definite
 `Movement[]`, exactly as they do from the mock seed today.
 
@@ -142,7 +142,7 @@ different screens. CONTEXT.md's new **History** entry states the distinction in 
 
 ### The read is triggered by state, never by lifecycle
 
-The gate's rule is one sentence: **if the History is `unread`, read it.** Cold start,
+`RequireHistory`'s rule is one sentence: **if the History is `unread`, read it.** Cold start,
 fresh sign-in, sign-in after someone else signed out, and **Reintentar** all funnel through
 that single condition — sign-out and retry simply set the status back to `unread`. Nothing
 else can start a read.
@@ -153,23 +153,23 @@ detail, and would need a second mechanism for retry) and over keying on the sess
 user). Under the state rule, a token refresh cannot start a read because the status never
 leaves `ready`.
 
-### One gate, inside the tabs
+### One component in front of the tabs: `RequireHistory`
 
-A single gate in the tabs layout observes the outcome and renders one of three things: a
+`RequireHistory` wraps the tabs, observes the outcome and renders one of three things: a
 spinner while `reading`, an error with **Reintentar** when `failed`, the tabs when `ready`.
 It mirrors the precedent in the root layout, which holds the splash until the session is known
 so that no screen below ever branches on "not yet known".
 
-Below the gate **nothing changes**: `usePortfolio` keeps returning a plain `Portfolio`, and no
+Below it **nothing changes**: `usePortfolio` keeps returning a plain `Portfolio`, and no
 existing screen or view-model is touched. The all-or-nothing unit gets exactly one observer,
 rather than three screens each re-deciding the same three states.
 
-**The gate waits for the History and nothing else.** When prices arrive from `stocks` in a
-later slice, that read runs alongside and must never block the gate: a **Stock** is shared,
+**`RequireHistory` waits for the History and nothing else.** When prices arrive from `stocks` in a
+later slice, that read runs alongside and must never block `RequireHistory`: a **Stock** is shared,
 not owned, and CONTEXT.md is explicit that "a missing Stock costs a **Market Value**, not a
 wrong one". The engine already implements that degradation — unpriced holdings return
 `priceAvailable: false` and are excluded from **Total Portfolio Value** while `Efectivo` and
-**Cost Basis** stay correct. Putting prices behind the gate would make that tested machinery
+**Cost Basis** stay correct. Putting prices behind `RequireHistory` would make that tested machinery
 unreachable and turn a partial-data condition into a dead app.
 
 ### The History is read once per launch
@@ -177,7 +177,7 @@ unreachable and turn a partial-data condition into a dead app.
 Nothing re-reads it after a successful read. A deposit recorded in the Supabase dashboard, or
 on a second device, will not appear until the app is killed and reopened. Accepted
 deliberately: the History only changes when this app changes it, and the awaited write keeps
-the store exact for changes made here. A pull-to-refresh could not reuse the gate anyway —
+the store exact for changes made here. A pull-to-refresh could not reuse `RequireHistory` anyway —
 returning to `unread` would blank the whole app behind a spinner to reload data already on
 screen — so it would need its own path that leaves `ready` standing. Out of scope.
 
@@ -252,7 +252,8 @@ pending appearance while the insert is in flight.
 | Movements store | modified | Holds the History and its status |
 | Session store | modified | Auth listener clears Perfil-scoped state on user-id change |
 | Perfil-scoped state | modified | Also resets status to `unread` |
-| Tabs layout | modified | The gate |
+| `RequireHistory` | new, UI | Wraps the tabs; renders the spinner, the failure screen, or the app |
+| Tabs layout | modified | Wrapped in `RequireHistory` |
 | Movement deps | modified | Narrows to `{ id }`, sourced from `expo-crypto` |
 | Deposit view-model | modified | Produces insert fields rather than a Movement |
 | Deposit form | modified | Async save, pending state, error surface, stable per-session id |
@@ -330,7 +331,7 @@ state machine, `components/add-movement/deposit-view-model.test.ts` for a view-m
 **Not new coverage, but required:** `deposit-view-model.test.ts` will break when
 `buildDepositMovement` stops emitting `createdAt`, and moves with the change.
 
-**Not tested:** the gate component. The repo has no component-render setup, and adding one for
+**Not tested:** `RequireHistory` itself. The repo has no component-render setup, and adding one for
 a single conditional is disproportionate. Verified by hand — airplane mode for the error path,
 a fresh sign-in for the read, a second Perfil for the clearing.
 
