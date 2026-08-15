@@ -50,8 +50,12 @@ History it believes is in hand, and never reads. Emptying the array alone would 
       triggers no read
 - [x] After any session ends, signing in as a different Perfil fetches that Perfil's own History
       rather than reusing what was in memory
-- [x] Verified by hand: sign in as A, end the session **without** the Ajustes button (expire or
-      revoke the token), sign in as B, and confirm B sees their own History and never A's
+- [x] Verified by hand: signing out and back in produces a fresh read, which can only happen if
+      the clearing ran and returned the status to `unread`
+- [ ] **Not exercised:** a session ended some other way - an expired refresh token, a revocation
+      server-side, a sign-out on another device. Same listener and same code path as the button,
+      which no longer clears anything itself, so this is covered by construction rather than by
+      observation. Worth doing once if the chance arises
 - [x] The existing Perfil-scoped-state tests are extended to cover the status reset
 - [x] `npx tsc --noEmit` and the full test suite pass
 
