@@ -20,7 +20,7 @@ import { sanitizeDecimal } from "@/utils/input";
 import { maxSellableAsOf } from "@/utils/portfolio/reducer";
 
 export default function SellFormScreen() {
-  const addMovement = useMovementsStore((s) => s.addMovement);
+  const movementSaved = useMovementsStore((s) => s.movementSaved);
   const movements = useMovementsStore((s) => s.movements);
   const holdings = usePortfolio().holdings;
   const [ticker, setTicker] = useState("");
@@ -96,9 +96,12 @@ export default function SellFormScreen() {
     if (!canSave) return;
     const movement = buildSellMovement(
       { ticker, shares, executionPrice, fee, regulatoryFees, executionDate },
-      defaultMovementDeps(),
+      // Unreachable: Venta is "Pronto" in the picker. Its createdAt still comes
+      // from the device clock until its own slice hands the write to Postgres,
+      // which is why `now` is supplied on top of the deps (ADR 0010).
+      { ...defaultMovementDeps(), now: () => new Date().toISOString() },
     );
-    addMovement(movement);
+    movementSaved(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };

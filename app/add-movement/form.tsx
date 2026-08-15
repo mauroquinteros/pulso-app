@@ -13,17 +13,25 @@ import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
+import { saveMovement } from "@/lib/history";
 import { useMovementsStore } from "@/stores/movements";
 import { formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
 
 export default function DepositFormScreen() {
-  const addMovement = useMovementsStore((s) => s.addMovement);
+  const movementSaved = useMovementsStore((s) => s.movementSaved);
+  // Held in state, so the id is minted once per form session rather than once
+  // per tap. If the insert lands but its response does not, the second tap
+  // carries the id the first one used and Postgres refuses the duplicate -
+  // instead of recording the deposit twice and doubling Aportado (ADR 0010).
+  const [deps] = useState(defaultMovementDeps);
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
   const [executionDate, setExecutionDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const summary = summarizeDeposit({ amount, transferFee: fee, executionDate });
   const canSave = summary.saveEnabled;
@@ -40,10 +48,31 @@ export default function DepositFormScreen() {
 
   const summaryColor = summary.amountPositive ? Colors.accent : "#3E4470";
 
-  const onSave = () => {
-    if (!canSave) return;
-    const movement = buildDepositMovement({ amount, transferFee: fee, executionDate }, defaultMovementDeps());
-    addMovement(movement);
+  // The save waits for Postgres. Nothing is written optimistically: the store is
+  // the sole input to the engine, so a deposit it never received would not be a
+  // pending write but a Cash figure that is wrong with nothing on screen saying
+  // so - and the Compra form's funds gate trusts that figure (ADR 0010).
+  const onSave = async () => {
+    if (!canSave || saving) return;
+
+    setSaving(true);
+    setSaveFailed(false);
+
+    const answer = await saveMovement(buildDepositMovement({ amount, transferFee: fee, executionDate }, deps));
+
+    if (!answer.ok) {
+      // The form stays exactly as the user left it - Monto, Comisión and Fecha
+      // all still typed - and says the save failed. There is nothing to roll
+      // back, because nothing was written.
+      setSaving(false);
+      setSaveFailed(true);
+      return;
+    }
+
+    // The Movement built from the row Postgres stored, never the one built
+    // here. `saving` is deliberately left standing: the form is dismissing, and
+    // the button stays inert on the way out.
+    movementSaved(answer.movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };
@@ -129,7 +158,8 @@ export default function DepositFormScreen() {
             <Text style={styles.summaryLabel}>APORTARÁS</Text>
             <Text style={[styles.summaryValue, { color: summaryColor }]}>{formatUSD(summary.aportado)}</Text>
           </View>
-          <SaveButton canSave={canSave} onPress={onSave} />
+          {saveFailed && <Text style={styles.saveError}>No pudimos guardar tu depósito. Inténtalo de nuevo.</Text>}
+          <SaveButton canSave={canSave} pending={saving} onPress={onSave} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -196,5 +226,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginTop: 3,
     fontVariant: ["tabular-nums"],
+  },
+  // Above the button rather than beside a field: the failure is the save's, not
+  // any one input's, and it has to be readable without scrolling back up.
+  saveError: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: Colors.negative,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });

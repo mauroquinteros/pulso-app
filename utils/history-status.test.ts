@@ -12,6 +12,16 @@ const deposit: DepositMovement = {
   createdAt: "2026-06-25T14:02:11.482Z",
 };
 
+/** A second deposit, the one a save hands back from Postgres. */
+const savedDeposit: DepositMovement = {
+  id: "a3f1c0d2-0000-4000-8000-000000000002",
+  type: "deposit",
+  amount: 300,
+  transferFee: 0,
+  executionDate: "2026-06-26",
+  createdAt: "2026-06-26T09:31:44.107Z",
+};
+
 /** The state while the three selects for the first read are in flight. */
 const reading = historyReducer(initialHistoryState, { type: "readStarted" });
 
@@ -48,6 +58,29 @@ describe("historyReducer", () => {
 
   it("a failed answer lands in failed, with no movements", () => {
     expect(failed()).toEqual({ status: "failed", readId: 1, movements: [] });
+  });
+
+  it("a Movement Postgres stored joins the History in hand", () => {
+    const ready = read();
+
+    const joined = historyReducer(ready, { type: "movementSaved", movement: savedDeposit });
+
+    expect(joined).toEqual({ status: "ready", readId: 1, movements: [deposit, savedDeposit] });
+    // Immutably: the array the engine already derived a Portfolio from is not
+    // rewritten underneath it.
+    expect(joined.movements).not.toBe(ready.movements);
+    expect(ready.movements).toEqual([deposit]);
+  });
+
+  it("drops a saved Movement in any status but ready", () => {
+    // `movements` has exactly one writer, which is what puts this rule here
+    // rather than at the call site: outside `ready` there is no History for a
+    // Movement to join, and appending would invent one out of a single row -
+    // `unread` and `failed` hold nothing, and an append during `reading` would
+    // be overwritten by the answer already in flight.
+    for (const state of [initialHistoryState, reading, failed()]) {
+      expect(historyReducer(state, { type: "movementSaved", movement: savedDeposit })).toBe(state);
+    }
   });
 
   it("Reintentar returns to unread, which is what starts a fresh read", () => {
@@ -104,13 +137,15 @@ describe("historyReducer", () => {
     const signedOut = historyReducer(reading, { type: "forgotten" });
     const fresh = historyReducer(signedOut, { type: "readStarted" });
 
-    expect(historyReducer(fresh, { type: "answered", readId: reading.readId, answer: { ok: false, failures: [] } })).toBe(fresh);
+    expect(
+      historyReducer(fresh, { type: "answered", readId: reading.readId, answer: { ok: false, failures: [] } }),
+    ).toBe(fresh);
   });
 
   it("ignores an answer that arrives with no read in flight", () => {
-    expect(historyReducer(initialHistoryState, { type: "answered", readId: 1, answer: { ok: false, failures: [] } })).toBe(
-      initialHistoryState,
-    );
+    expect(
+      historyReducer(initialHistoryState, { type: "answered", readId: 1, answer: { ok: false, failures: [] } }),
+    ).toBe(initialHistoryState);
 
     const ready = read();
     expect(historyReducer(ready, { type: "answered", readId: 1, answer: { ok: true, movements: [] } })).toBe(ready);
@@ -124,8 +159,8 @@ describe("historyReducer", () => {
     const ready = read();
 
     expect(ready.status).toBe("ready");
-    expect(historyReducer(ready, { type: "answered", readId: ready.readId, answer: { ok: false, failures: [] } }).status).toBe(
-      "ready",
-    );
+    expect(
+      historyReducer(ready, { type: "answered", readId: ready.readId, answer: { ok: false, failures: [] } }).status,
+    ).toBe("ready");
   });
 });

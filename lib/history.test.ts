@@ -1,26 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { readHistory } from "./history";
+import type { DepositMovement, NewMovement } from "@/types/models";
+import { readHistory, saveMovement } from "./history";
 import type { CashRow, DividendRow, TradeRow } from "./movement-rows";
 
 type TableName = "movement_trades" | "movement_dividends" | "movement_cash";
-type Result = { data: unknown[] | null; error: { message: string; code: string } | null; status: number };
+type Failure = { message: string; code: string } | null;
+type Result = { data: unknown[] | null; error: Failure; status: number };
+/** What `.insert(...).select().single()` resolves to: one row, not a list. */
+type SingleResult = { data: unknown; error: Failure; status: number };
 
 /**
  * The one place in the suite that fakes the database. It costs more than a pure
- * unit, and it is worth it exactly once: an untested all-or-nothing rule is the
+ * unit, and it is worth it exactly twice: an untested all-or-nothing rule is the
  * rule most likely to quietly stop holding, and it is the one ADR 0006 exists
- * to protect.
+ * to protect - and the save's whole point is which object comes back out of it.
  *
- * The fake reproduces the property that makes the rule easy to get wrong -
+ * The fake reproduces the property that makes the read rule easy to get wrong -
  * `supabase-js` reports a failed select as an `error` on a *resolved* promise,
  * so `Promise.all` never rejects and never short-circuits. A reader that only
  * catches rejections would pass every happy test and merge a partial History in
  * production.
+ *
+ * It records what was inserted as well as what was asked for, because two of
+ * ADR 0010's rules are about the request rather than the response: `created_at`
+ * must not be sent, and a type with no branch yet must not reach a table.
  */
 const db = vi.hoisted(() => ({
   selects: [] as string[],
   results: {} as Record<string, Result>,
+  inserts: [] as { table: string; row: Record<string, unknown> }[],
+  inserted: {} as SingleResult,
+  readBack: {} as SingleResult,
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -28,7 +39,15 @@ vi.mock("@/lib/supabase", () => ({
     from: (table: string) => ({
       select: () => {
         db.selects.push(table);
-        return Promise.resolve(db.results[table]);
+        // A thenable that also answers `.eq(...).single()`, because the
+        // duplicate-id path reads one row back rather than awaiting the select.
+        return Object.assign(Promise.resolve(db.results[table]), {
+          eq: () => ({ single: () => Promise.resolve(db.readBack) }),
+        });
+      },
+      insert: (row: Record<string, unknown>) => {
+        db.inserts.push({ table, row });
+        return { select: () => ({ single: () => Promise.resolve(db.inserted) }) };
       },
     }),
   },
@@ -64,6 +83,30 @@ const depositRow: CashRow = {
   created_at: "2026-01-02T22:00:00.000Z",
 };
 
+/** What the Depósito form produces: every field of a deposit but `createdAt`. */
+const newDeposit: NewMovement<DepositMovement> = {
+  id: "7c1e0b40-0000-4000-8000-000000000004",
+  type: "deposit",
+  executionDate: "2026-05-04",
+  amount: 500,
+  transferFee: 2.5,
+};
+
+/**
+ * What Postgres hands back. Its `created_at` is the point: the caller supplied
+ * no such field and could not have guessed this value, so a `saveMovement` that
+ * echoed its argument back instead of mapping the returned row cannot produce
+ * it (ADR 0010).
+ */
+const storedDepositRow: CashRow = {
+  id: newDeposit.id,
+  type: "deposit",
+  execution_date: "2026-05-04",
+  amount: 500,
+  transfer_fee: 2.5,
+  created_at: "2026-05-04T17:08:52.913Z",
+};
+
 const ROWS: Record<TableName, unknown[]> = {
   movement_trades: [buyRow],
   movement_dividends: [dividendRow],
@@ -75,6 +118,9 @@ const TABLES: TableName[] = ["movement_trades", "movement_dividends", "movement_
 /** Every select answers with its rows, except `broken`, which errors. */
 function given(broken?: TableName) {
   db.selects = [];
+  db.inserts = [];
+  db.inserted = { data: storedDepositRow, error: null, status: 201 };
+  db.readBack = { data: storedDepositRow, error: null, status: 200 };
   db.results = Object.fromEntries(
     TABLES.map((table) => [
       table,
@@ -171,5 +217,131 @@ describe("readHistory", () => {
     await readHistory();
 
     expect(db.selects).toEqual(TABLES);
+  });
+});
+
+describe("saveMovement", () => {
+  it("treats a duplicate id as the save it already made, not as a failure", async () => {
+    // The id is minted once per form session, so nothing else can collide with
+    // it: a 23505 means this save's own first attempt landed and only its
+    // response was lost. Reporting that as a failure is how a *real* duplicate
+    // gets created - told it did not save, the user types the deposit again,
+    // which mints a new id and writes a second row (ADR 0010).
+    db.inserted = {
+      data: null,
+      error: { message: 'duplicate key value violates unique constraint "movement_cash_pkey"', code: "23505" },
+      status: 409,
+    };
+
+    const answer = await saveMovement(newDeposit);
+
+    expect(answer.ok).toBe(true);
+    // Read back, not echoed: `createdAt` is the instant the *first* attempt
+    // stored, which the caller never had.
+    expect(answer.ok && answer.movement.createdAt).toBe("2026-05-04T17:08:52.913Z");
+    expect(answer.ok && answer.movement.id).toBe(newDeposit.id);
+  });
+
+  it("reports a fault when the row it just proved exists cannot be read back", async () => {
+    db.inserted = {
+      data: null,
+      error: { message: "duplicate key value violates unique constraint", code: "23505" },
+      status: 409,
+    };
+    db.readBack = { data: null, error: { message: "network request failed", code: "" }, status: 0 };
+
+    const answer = await saveMovement(newDeposit);
+
+    expect(answer.ok).toBe(false);
+    expect(!answer.ok && answer.failure.status).toBe(0);
+  });
+
+  it("hands back the Movement built from the row Postgres stored", async () => {
+    const answer = await saveMovement(newDeposit);
+
+    // `createdAt` is the proof. The caller passed no such field, so this value
+    // can only have come back through the mapper from the returned row - a save
+    // that echoed its argument would have nothing to put here. A Movement comes
+    // into existence exactly one way, so a saved one and a read one cannot
+    // silently disagree.
+    expect(answer).toEqual({
+      ok: true,
+      movement: {
+        id: "7c1e0b40-0000-4000-8000-000000000004",
+        type: "deposit",
+        executionDate: "2026-05-04",
+        createdAt: "2026-05-04T17:08:52.913Z",
+        amount: 500,
+        transferFee: 2.5,
+      },
+    });
+  });
+
+  it("writes the deposit to movement_cash, in the columns' own spelling", async () => {
+    await saveMovement(newDeposit);
+
+    expect(db.inserts).toEqual([
+      {
+        table: "movement_cash",
+        row: {
+          id: "7c1e0b40-0000-4000-8000-000000000004",
+          type: "deposit",
+          execution_date: "2026-05-04",
+          amount: 500,
+          transfer_fee: 2.5,
+        },
+      },
+    ]);
+  });
+
+  it("does not send created_at, so the stored instant is the database's", async () => {
+    // The tiebreaker between two movements sharing an executionDate. Sending
+    // the device's clock would let two phones a few seconds apart order the
+    // same pair differently, and Average Cost and Realized P&L move with them.
+    await saveMovement(newDeposit);
+
+    expect(db.inserts[0].row).not.toHaveProperty("created_at");
+  });
+
+  it("returns the cause when the insert is refused, and no Movement", async () => {
+    // A policy refusal, not a duplicate id: 23505 is this save's own first
+    // attempt and is answered with the row it wrote, so it cannot stand in for
+    // a refusal here. The cause travels so that this can be told apart from a
+    // dropped packet - one means the session is wrong, the other means try
+    // again - even though the screen says the same sentence for both.
+    db.inserted = {
+      data: null,
+      error: { message: "new row violates row-level security policy", code: "42501" },
+      status: 403,
+    };
+
+    const answer = await saveMovement(newDeposit);
+
+    expect(answer.ok).toBe(false);
+    expect(answer).not.toHaveProperty("movement");
+    expect(!answer.ok && answer.failure).toEqual({
+      table: "movement_cash",
+      status: 403,
+      code: "42501",
+      message: "new row violates row-level security policy",
+    });
+  });
+
+  it("refuses a type it has no branch for rather than writing it somewhere", async () => {
+    // Compra, Venta and Dividendo are "Pronto" in the picker, so nothing can
+    // reach this. It refuses as a value rather than throwing, because nothing
+    // throws out of that module - and it touches no table on the way out.
+    const answer = await saveMovement({
+      id: "7c1e0b40-0000-4000-8000-000000000005",
+      type: "buy",
+      executionDate: "2026-05-04",
+      ticker: "AAPL",
+      shares: 3,
+      executionPrice: 190,
+      fee: 0.35,
+    });
+
+    expect(answer.ok).toBe(false);
+    expect(db.inserts).toEqual([]);
   });
 });

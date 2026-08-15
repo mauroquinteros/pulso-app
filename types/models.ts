@@ -55,6 +55,21 @@ export interface WithdrawalMovement extends BaseMovement {
 
 export type Movement = BuyMovement | SellMovement | DividendMovement | DepositMovement | WithdrawalMovement;
 
+/**
+ * A Movement that does not exist yet: everything a form produces, which is
+ * every field but the one only the database can supply. `createdAt` is read
+ * from the database's clock, so a form produces the *fields* for a Movement
+ * rather than a Movement (ADR 0010).
+ *
+ * The conditional is load-bearing, not decoration. A plain
+ * `Omit<Movement, "createdAt">` distributes over nothing: it collapses the five
+ * variants into one wide object where every field is optional and the
+ * discriminated union stops discriminating, so `type` no longer narrows and a
+ * deposit would typecheck as a buy. Written over a naked type parameter it
+ * distributes, and the result is the union of the five Omits.
+ */
+export type NewMovement<M = Movement> = M extends Movement ? Omit<M, "createdAt"> : never;
+
 export const isBuyMovement = (m: Movement): m is BuyMovement => m.type === "buy";
 export const isSellMovement = (m: Movement): m is SellMovement => m.type === "sell";
 export const isDividendMovement = (m: Movement): m is DividendMovement => m.type === "dividend";

@@ -38,7 +38,7 @@ describe("clearPerfilScopedState", () => {
 
   it("empties movements added since the History was read", () => {
     signedInWithHistory();
-    useMovementsStore.getState().addMovement({ ...sampleDeposit, id: "test-deposit-2" });
+    useMovementsStore.getState().movementSaved({ ...sampleDeposit, id: "test-deposit-2" });
 
     clearPerfilScopedState();
 

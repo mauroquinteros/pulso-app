@@ -1,9 +1,10 @@
 import { mapCashRow, mapDividendRow, mapTradeRow } from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
-import type { HistoryAnswer } from "@/utils/history-status";
+import type { NewMovement } from "@/types/models";
+import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
 
 /**
- * The only file that reads the movement tables. It hides the database
+ * The only file that reads and writes the movement tables. It hides the database
  * completely, which is what lets the state machine above it import nothing
  * async - the same seam `lib/resolve-stock.ts` puts in front of the network,
  * and for the same reason.
@@ -58,4 +59,99 @@ export async function readHistory(): Promise<HistoryAnswer> {
     ok: true,
     movements: [...trades.data.map(mapTradeRow), ...dividends.data.map(mapDividendRow), ...cash.data.map(mapCashRow)],
   };
+}
+
+/**
+ * Records one Movement, and hands back the Movement the database stored.
+ *
+ * One function for all five types rather than one per type, so the interface
+ * does not grow when the app learns to save a new one. The read side already
+ * shows the shape: nobody wanted `readTrades`/`readDividends`/`readCash`,
+ * because the caller does not want three things, it wants a History. The
+ * type -> table decision therefore lives in here, beside the mappers that
+ * already encode it - ADR 0006 is explicit that the three-table split is a
+ * storage fact the domain does not follow.
+ *
+ * Nothing is optimistic. The caller awaits this, and only what comes back joins
+ * the store, because the store is the sole input to the engine: a Movement
+ * Postgres never received is not a pending write, it is a History that lies,
+ * and it lies in the one way nothing downstream can detect (ADR 0010).
+ */
+export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
+  // This slice wires up `movement_cash` only. Compra, Venta and Dividendo are
+  // "Pronto" in the picker and cannot be opened, so nothing can reach the
+  // branches their own slices will add here. A refusal rather than a throw,
+  // because nothing throws out of this file.
+  if (movement.type !== "deposit" && movement.type !== "withdrawal") {
+    const failure = { table: "", status: 0, code: "unwritten_type", message: `a ${movement.type} cannot be saved yet` };
+
+    if (__DEV__) console.warn("[history] save refused:", failure);
+
+    return { ok: false, failure };
+  }
+
+  const { data, error, status } = await supabase
+    .from("movement_cash")
+    .insert({
+      // `created_at` is deliberately absent, so the column default fires. It is
+      // the chronological tiebreaker between two movements sharing an
+      // executionDate, so it orders Average Cost and Realized P&L - and a
+      // tiebreaker taken from whichever phone happened to record the movement
+      // does not reliably break ties. One clock, the database's (ADR 0010).
+      id: movement.id,
+      type: movement.type,
+      execution_date: movement.executionDate,
+      amount: movement.amount,
+      transfer_fee: movement.transferFee,
+    })
+    .select()
+    .single();
+
+  // A duplicate id is not a failure - it is this save's own first attempt,
+  // already stored. The id is minted once per form session, so nothing else can
+  // collide with it: `23505` on it means the insert whose response was lost
+  // landed after all, and the honest answer is the row it wrote.
+  //
+  // Reporting it as a failure would be worse than confusing. Told the deposit
+  // was not saved, the natural thing to do is type it again - a new form
+  // session, a new id, and a second row that really is a duplicate. The
+  // client-generated id exists to make a retry safe (ADR 0010); saying "no"
+  // here is what would make the human retry unsafe.
+  if (error?.code === "23505") return readSavedMovement(movement.id);
+
+  if (error) {
+    // Every other reason travels with the refusal, exactly as it does for a
+    // read: a policy refusal and a dropped packet must not arrive as one value.
+    const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
+
+    if (__DEV__) console.warn("[history] save failed:", failure);
+
+    return { ok: false, failure };
+  }
+
+  // The row Postgres stored, through the *same* mapper the read path uses. So a
+  // Movement comes into existence exactly one way rather than two that can
+  // silently disagree - and `createdAt` arrives filled in by the clock that
+  // filled it.
+  return { ok: true, movement: mapCashRow(data) };
+}
+
+/**
+ * Reads back the row an insert already wrote. Only reachable from the duplicate
+ * id above, so a miss here is not "the movement is not there" - it is the row
+ * being unreadable a moment after proving it exists, which is a genuine fault
+ * and reported as one.
+ */
+async function readSavedMovement(id: string): Promise<SaveAnswer> {
+  const { data, error, status } = await supabase.from("movement_cash").select().eq("id", id).single();
+
+  if (error) {
+    const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
+
+    if (__DEV__) console.warn("[history] saved row could not be read back:", failure);
+
+    return { ok: false, failure };
+  }
+
+  return { ok: true, movement: mapCashRow(data) };
 }

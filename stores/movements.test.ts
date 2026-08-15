@@ -27,16 +27,27 @@ describe("useMovementsStore", () => {
     expect(useMovementsStore.getState().status).toBe("unread");
   });
 
-  it("addMovement appends immutably without mutating the previous array", () => {
+  it("movementSaved appends immutably without mutating the previous array", () => {
+    const readId = useMovementsStore.getState().startRead();
+    useMovementsStore.getState().answerRead(readId, { ok: true, movements: [] });
     const before = useMovementsStore.getState().movements;
 
-    useMovementsStore.getState().addMovement(sampleDeposit);
+    useMovementsStore.getState().movementSaved(sampleDeposit);
 
     const after = useMovementsStore.getState().movements;
     expect(after).not.toBe(before);
     expect(before).toHaveLength(0);
     expect(after).toHaveLength(before.length + 1);
     expect(after[after.length - 1]).toBe(sampleDeposit);
+  });
+
+  it("ignores a saved Movement while no History is in hand", () => {
+    // The reducer is the only writer to `movements`, so there is no path that
+    // appends to a History nobody has read - not even from this store.
+    useMovementsStore.getState().movementSaved(sampleDeposit);
+
+    expect(useMovementsStore.getState().movements).toEqual([]);
+    expect(useMovementsStore.getState().status).toBe("unread");
   });
 
   it("a read hands back an id, and a different one for the read after it", () => {

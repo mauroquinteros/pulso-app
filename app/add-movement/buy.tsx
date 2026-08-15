@@ -31,7 +31,7 @@ import { normalizeTicker, sanitizeDecimal, sanitizeSymbol } from "@/utils/input"
 import { initialSymbolCheckState, shouldCheck, symbolCheckError, symbolCheckReducer } from "@/utils/symbol-check";
 
 export default function BuyFormScreen() {
-  const addMovement = useMovementsStore((s) => s.addMovement);
+  const movementSaved = useMovementsStore((s) => s.movementSaved);
   const availableCash = usePortfolio().cash;
   const [ticker, setTicker] = useState("");
   const [amount, setAmount] = useState("");
@@ -114,8 +114,14 @@ export default function BuyFormScreen() {
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildBuyMovement({ ticker, amount, executionPrice, fee, executionDate }, defaultMovementDeps());
-    addMovement(movement);
+    const movement = buildBuyMovement(
+      { ticker, amount, executionPrice, fee, executionDate },
+      // Unreachable: Compra is "Pronto" in the picker. Its createdAt still comes
+      // from the device clock until its own slice hands the write to Postgres,
+      // which is why `now` is supplied on top of the deps (ADR 0010).
+      { ...defaultMovementDeps(), now: () => new Date().toISOString() },
+    );
+    movementSaved(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };

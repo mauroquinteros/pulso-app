@@ -19,7 +19,7 @@ import { formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
 
 export default function WithdrawalFormScreen() {
-  const addMovement = useMovementsStore((s) => s.addMovement);
+  const movementSaved = useMovementsStore((s) => s.movementSaved);
   const availableCash = usePortfolio().cash;
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState("");
@@ -55,8 +55,14 @@ export default function WithdrawalFormScreen() {
 
   const onSave = () => {
     if (!canSave) return;
-    const movement = buildWithdrawalMovement({ amount, transferFee: fee, executionDate }, defaultMovementDeps());
-    addMovement(movement);
+    const movement = buildWithdrawalMovement(
+      { amount, transferFee: fee, executionDate },
+      // Unreachable: Retiro is "Pronto" in the picker. Its createdAt still comes
+      // from the device clock until its own slice hands the write to Postgres,
+      // which is why `now` is supplied on top of the deps (ADR 0010).
+      { ...defaultMovementDeps(), now: () => new Date().toISOString() },
+    );
+    movementSaved(movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };

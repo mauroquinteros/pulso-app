@@ -4,7 +4,11 @@ import type { Movement } from "@/types/models";
 import { historyReducer, initialHistoryState, type HistoryAnswer, type HistoryState } from "@/utils/history-status";
 
 interface MovementsState extends HistoryState {
-  addMovement: (movement: Movement) => void;
+  /**
+   * A Movement Postgres has stored joins the History. Ignored in any status but
+   * `ready`, since there is no History for it to join until one is in hand.
+   */
+  movementSaved: (movement: Movement) => void;
   /** Marks a read as begun and hands back its id, to be quoted in the answer. */
   startRead: () => number;
   answerRead: (readId: number, answer: HistoryAnswer) => void;
@@ -28,7 +32,7 @@ interface MovementsState extends HistoryState {
  */
 export const useMovementsStore = create<MovementsState>((set, get) => ({
   ...initialHistoryState,
-  addMovement: (movement) => set((state) => ({ movements: [...state.movements, movement] })),
+  movementSaved: (movement) => set((state) => historyReducer(state, { type: "movementSaved", movement })),
   startRead: () => {
     const next = historyReducer(get(), { type: "readStarted" });
     set(next);

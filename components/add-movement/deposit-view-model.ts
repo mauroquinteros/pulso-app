@@ -1,4 +1,4 @@
-import type { DepositMovement } from "@/types/models";
+import type { DepositMovement, NewMovement } from "@/types/models";
 import { parseAmount } from "@/utils/input";
 
 export interface DepositInput {
@@ -20,7 +20,6 @@ export interface DepositSummary {
 
 export interface DepositDeps {
   id: () => string;
-  now: () => string; // ISO timestamp for createdAt
 }
 
 /**
@@ -47,17 +46,18 @@ export function summarizeDeposit(input: DepositInput): DepositSummary {
 }
 
 /**
- * Maps validated form input to a typed DepositMovement. System fields
- * (id, createdAt) come from injected generators so the result is
- * deterministic and unit-testable; an empty Comisión defaults to 0.
+ * Maps validated form input to the *fields* of a DepositMovement, not to a
+ * DepositMovement: `createdAt` is absent on purpose, because it is read from
+ * the database's clock when the row is stored (ADR 0010). The id comes from an
+ * injected generator, so the result stays deterministic and unit-testable; an
+ * empty Comisión defaults to 0.
  */
-export function buildDepositMovement(input: DepositInput, deps: DepositDeps): DepositMovement {
+export function buildDepositMovement(input: DepositInput, deps: DepositDeps): NewMovement<DepositMovement> {
   return {
     id: deps.id(),
     type: "deposit",
     amount: parseAmount(input.amount),
     transferFee: input.transferFee === "" ? 0 : parseAmount(input.transferFee),
     executionDate: input.executionDate,
-    createdAt: deps.now(),
   };
 }

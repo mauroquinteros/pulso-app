@@ -33,17 +33,17 @@ export type HistoryStatus =
   | "failed"; // a fault; error + Reintentar
 
 /**
- * Why one of the three selects did not arrive. Carried so that a fault can be
- * told apart from another fault: a 401 is a session that has gone bad and a 0
- * is a request that never left the phone, and "Revisa tu conexion" is honest
- * advice for exactly one of them.
+ * Why one of the three selects did not arrive, or why an insert did not land.
+ * Carried so that a fault can be told apart from another fault: a 401 is a
+ * session that has gone bad and a 0 is a request that never left the phone, and
+ * "Revisa tu conexion" is honest advice for exactly one of them.
  *
  * The screen shows none of this - it says the same sentence either way. It
  * exists because ADR 0006 calls a failed read a *fault*, and a fault nobody can
  * name is a fault nobody can fix.
  */
 export interface HistoryFailure {
-  /** Which of the three selects failed, so a per-table RLS problem is visible. */
+  /** Which table refused, so a per-table RLS problem is visible. */
   table: string;
   status: number;
   code: string | null;
@@ -57,6 +57,14 @@ export interface HistoryFailure {
  * the three selects onto one of these.
  */
 export type HistoryAnswer = { ok: true; movements: Movement[] } | { ok: false; failures: HistoryFailure[] };
+
+/**
+ * What a save can come back as. The success carries a `Movement` rather than
+ * nothing, because the Movement that joins the History is the one built from
+ * the row Postgres stored - never the object the form handed in (ADR 0010).
+ * One failure rather than a list, since a save touches one table.
+ */
+export type SaveAnswer = { ok: true; movement: Movement } | { ok: false; failure: HistoryFailure };
 
 export interface HistoryState {
   status: HistoryStatus;
@@ -75,6 +83,7 @@ export interface HistoryState {
 export type HistoryEvent =
   | { type: "readStarted" }
   | { type: "answered"; readId: number; answer: HistoryAnswer }
+  | { type: "movementSaved"; movement: Movement }
   | { type: "forgotten" };
 
 export const initialHistoryState: HistoryState = { status: "unread", readId: 0, movements: [] };
@@ -95,6 +104,17 @@ export function historyReducer(state: HistoryState, event: HistoryEvent): Histor
       return event.answer.ok
         ? { status: "ready", readId: state.readId, movements: event.answer.movements }
         : { status: "failed", readId: state.readId, movements: [] };
+
+    case "movementSaved":
+      // A Movement can only join a History that is in hand, and the rule lives
+      // here so that it cannot be forgotten at a call site: `movements` and
+      // `status` are one fact, so this reducer is the array's only writer.
+      // Outside `ready` there is no History to join - `unread` and `failed`
+      // hold nothing, and an append during `reading` would be overwritten by
+      // the answer already in flight - so the event is dropped.
+      if (state.status !== "ready") return state;
+
+      return { ...state, movements: [...state.movements, event.movement] };
 
     case "forgotten":
       // One event for two callers, because they ask for the same thing: throw
