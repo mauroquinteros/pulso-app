@@ -17,7 +17,6 @@ const voo: Stock = {
 
 /** A read that has already answered, so the Stocks are in hand. */
 function stocksInHand(stocks: Record<string, Stock>) {
-  useStocksStore.getState().startRead();
   useStocksStore.getState().answerRead({ ok: true, stocks });
 }
 
@@ -36,39 +35,19 @@ describe("useStocksStore", () => {
     expect(useStocksStore.getState().status).toBe("unread");
   });
 
-  it("a read in flight, then the Stocks in hand", () => {
-    useStocksStore.getState().startRead();
-    expect(useStocksStore.getState().reading).toBe(true);
-    // A read starting is not an outcome: `status` still says nothing has landed.
-    expect(useStocksStore.getState().status).toBe("unread");
-
+  it("an answered read puts the Stocks in hand", () => {
     useStocksStore.getState().answerRead({ ok: true, stocks: { AAPL: apple } });
 
-    expect(useStocksStore.getState().reading).toBe(false);
     expect(useStocksStore.getState().status).toBe("ready");
     expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple });
   });
 
-  it("a re-read in flight does not unsay the failure before it", () => {
-    // The anti-flicker guarantee, and it belongs here rather than in the screen:
-    // "a read is running" and "the last one failed" are independent facts, so a
-    // refresh cannot blank the banner announcing the fault for the length of its
-    // select - announcing it, silently unannouncing it, then announcing it again
-    // (ADR 0011).
-    stocksInHand({ AAPL: apple });
-    useStocksStore
-      .getState()
-      .answerRead({ ok: false, failure: { status: 500, code: null, message: "internal error" } });
+  // There is no test that a read in flight leaves the previous failure standing,
+  // because there is no way to express one: nothing runs when a read starts, so
+  // only an answer moves the status. The banner announcing a fault cannot blink
+  // off while the next select runs, by construction rather than by assertion.
 
-    useStocksStore.getState().startRead();
-
-    expect(useStocksStore.getState().reading).toBe(true);
-    expect(useStocksStore.getState().status).toBe("failed");
-  });
-
-  it("a read in flight, then a failure, with nothing previously held", () => {
-    useStocksStore.getState().startRead();
-
+  it("a failure with nothing previously held", () => {
     useStocksStore
       .getState()
       .answerRead({ ok: false, failure: { status: 0, code: null, message: "Network request failed" } });
@@ -82,9 +61,6 @@ describe("useStocksStore", () => {
     // (ADR 0011): the app holds Quotes and could not learn whether newer ones
     // exist. Dropping them would report a fault as an absence.
     stocksInHand({ AAPL: apple, VOO: voo });
-
-    useStocksStore.getState().startRead();
-    expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
 
     useStocksStore
       .getState()

@@ -32,15 +32,13 @@ import { useStocksStore } from "@/stores/stocks";
  * It waits on nothing, so this read and the History's go out together.
  */
 export function useReadStocks() {
-  const startRead = useStocksStore((s) => s.startRead);
   const answerRead = useStocksStore((s) => s.answerRead);
 
   useEffect(() => {
-    startRead();
     readStocks().then(answerRead);
-    // Mount only. The two actions are the store's own and never change
-    // identity, so listing them here does not make this fire again.
-  }, [startRead, answerRead]);
+    // Mount only. The action is the store's own and never changes identity, so
+    // listing it here does not make this fire again.
+  }, [answerRead]);
 
   /**
    * Whether the app has actually been away since the last time this fired. It is
@@ -70,15 +68,12 @@ export function useReadStocks() {
 
       wasBackgrounded.current = false;
 
-      // Fired without asking whether a read is already in flight. Guarding on
-      // `status === "reading"` would save a duplicate select in a window
-      // milliseconds wide - the user would have to background the app mid-read -
-      // and would cost the one case that matters: a read that hangs rather than
-      // fails leaves the status at `reading` indefinitely, and that is precisely
-      // when a returning user needs a fresh attempt. Overlap is safe here by
-      // design, since the store keeps no readId guard: the worst race is a
-      // slightly staler map winning, which costs nothing (ADR 0011).
-      startRead();
+      // Fired without asking whether a read is already in flight - the store
+      // does not track that, deliberately, and nothing here needs to. Two reads
+      // overlapping is safe by ADR 0011's own terms, since there is no readId
+      // guard and the worst race is a slightly staler map winning. A guard would
+      // in any case cost the one case that matters: a read that hangs rather
+      // than fails is precisely when a returning user needs a fresh attempt.
       readStocks().then(answerRead);
     });
 
@@ -86,5 +81,5 @@ export function useReadStocks() {
     // every session would leave a listener behind, still reading Stocks for a
     // Perfil who has gone.
     return () => subscription.remove();
-  }, [startRead, answerRead]);
+  }, [answerRead]);
 }
