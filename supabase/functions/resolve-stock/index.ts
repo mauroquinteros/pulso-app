@@ -103,8 +103,42 @@ async function lookupListing(ticker: string): Promise<Lookup> {
 }
 
 /**
- * A quote, or null when Finnhub does not really know the symbol or could not be
- * asked.
+ * One retry, not a loop, and after a pause rather than instantly: the fault clears
+ * in moments or it is not this fault, and if the provider was rate-limiting us then
+ * an immediate second call makes it worse. The same 250ms `lib/history.ts` waits
+ * before re-reading a clock-refused token, for the same reasoning.
+ */
+const RETRY_AFTER_MS = 250;
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * A quote, or null after asking twice.
+ *
+ * The retry is here and NOT on the search: the search's answer IS the verdict
+ * (ADR 0009), and its two failures are already answers -- "unknown" is a fact about
+ * the symbol with nothing to re-ask, and "unreachable" is returned as a 502 the
+ * client retries by asking the user to try again. The quote has no such voice; a
+ * blip here silently mints an unpriced Stock, and the brand-new Holding reads "sin
+ * precio" until the next cron pass -- Monday, if it happened on a Saturday.
+ *
+ * Both causes of null are retried, including a 200 with `t === 0`, which is Finnhub
+ * stating it does not know the symbol rather than a transport failure. Telling them
+ * apart is deferred in ADR 0011 -- it needs a column and a migration to be worth
+ * anything -- and the conflation is cheap here: the symbol has already passed the
+ * exact-match search, so `t === 0` is the two endpoints disagreeing, not the common
+ * typo, and it costs one wasted call on a path that ends in a write either way.
+ */
+async function fetchQuote(ticker: string): Promise<Quote | null> {
+  const quote = await attemptQuote(ticker);
+  if (quote) return quote;
+
+  await pause(RETRY_AFTER_MS);
+  return attemptQuote(ticker);
+}
+
+/**
+ * One ask.
  *
  * Same payload guard as refresh-stocks, and kept as its own copy on purpose: the
  * two functions deploy independently, and sharing eight lines would couple their
@@ -113,7 +147,7 @@ async function lookupListing(ticker: string): Promise<Lookup> {
  * moment. A stored 0 reads as a real price and silently drops that holding's Market
  * Value to nothing.
  */
-async function fetchQuote(ticker: string): Promise<Quote | null> {
+async function attemptQuote(ticker: string): Promise<Quote | null> {
   const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${FINNHUB_KEY}`;
 
   try {
