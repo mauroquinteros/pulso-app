@@ -27,7 +27,7 @@ export default function HomeScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HomeHeader />
         {refreshFailed && <RefreshFailedBanner />}
-        <WorthCard worth={view.worth} />
+        <WorthCard worth={view.worth} note={view.priceNote} />
         <ReturnCard return={view.return} />
         <AssetsCard assets={view.assets} onPressHolding={(ticker) => router.push(`/stock/${ticker}`)} />
       </ScrollView>

@@ -1,8 +1,8 @@
 import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
-import type { BuyMovement, DepositMovement, Movement, Stock } from "@/types/models";
+import type { BuyMovement, DepositMovement, Movement, Stock, WithdrawalMovement } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
-import { buildHomeView, showsRefreshFailed } from "./view-model";
+import { buildHomeView, NO_FIGURE, showsRefreshFailed } from "./view-model";
 
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
@@ -12,6 +12,14 @@ const deposit = (amount: number, transferFee = 0): DepositMovement => ({
   transferFee,
   executionDate: "2025-01-01",
   createdAt: "2025-01-01T00:00:00Z",
+});
+const withdrawal = (amount: number, transferFee = 0): WithdrawalMovement => ({
+  id: `wit${seq++}`,
+  type: "withdrawal",
+  amount,
+  transferFee,
+  executionDate: "2025-03-01",
+  createdAt: "2025-03-01T00:00:00Z",
 });
 const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
@@ -129,6 +137,27 @@ describe("buildHomeView", () => {
 
     // Per-holding Net P&L rows sum to aggregate Net P&L.
     expect(240.18 + 35.5).toBeCloseTo(275.68, 8);
+
+    // Every Holding is priced, so there is nothing to say about the prices.
+    expect(view.priceNote).toBeNull();
+  });
+
+  it("keeps every figure and says nothing when a portfolio holds only cash", () => {
+    // No Movements at all: an empty portfolio is not an unpriceable one, so
+    // nothing is refused and no line about prices appears.
+    const empty = buildHomeView(assemblePortfolio([], {}));
+    expect(empty.worth.total).toBe("$0.00");
+    expect(empty.worth.invested).not.toBeNull();
+    expect(empty.worth.cash.pct).toBe("0.0%");
+    expect(empty.return.total).toBe("+$0.00");
+    expect(empty.return.valeHoy).toBe("$0.00");
+    expect(empty.assets.netPnl).toBe("+$0.00 · +0.00%");
+    expect(empty.priceNote).toBeNull();
+
+    // Same for a Perfil who has deposited but bought nothing.
+    const deposited = buildHomeView(assemblePortfolio([deposit(1000)], {}));
+    expect(deposited.worth.total).toBe("$1,000.00");
+    expect(deposited.priceNote).toBeNull();
   });
 
   it("leaves value/pnl null for a holding without a current price", () => {
@@ -151,8 +180,12 @@ describe("buildHomeView", () => {
     const view = buildHomeView(portfolio);
 
     expect(view.worth.total).toBe("$1,000.00");
-    expect(view.worth.invested.amount).toBe("$0.00");
-    expect(view.worth.invested.pct).toBe("0.0%");
+    expect(view.worth.invested).toEqual({
+      label: "En activos",
+      pct: "0.0%",
+      amount: "$0.00",
+      flex: 0.0001,
+    });
     expect(view.worth.cash.amount).toBe("$1,000.00");
     expect(view.worth.cash.pct).toBe("100.0%");
     expect(view.assets.holdings).toHaveLength(0);
@@ -165,10 +198,125 @@ describe("buildHomeView", () => {
     const view = buildHomeView(portfolio);
 
     expect(view.return.tone).toBe("negative");
-    expect(view.return.total.startsWith("-")).toBe(true);
+    expect(view.return.total?.startsWith("-")).toBe(true);
     expect(view.return.total).not.toContain("\u2212"); // ASCII hyphen, never U+2212
     expect(view.assets.netPnlTone).toBe("negative");
     expect(view.assets.netPnl).toContain("-");
+  });
+
+  it("keeps printing every figure with some holdings unpriced, and says what was left out", () => {
+    // AAPL priced at 120, MSFT not. Total Portfolio Value is the sum over the
+    // priced holdings plus Cash (CONTEXT.md), so it is a real number with a
+    // caveat - not a refusal.
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), buy("MSFT", 50, 2)];
+    const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 120) });
+    const view = buildHomeView(portfolio);
+
+    // Cash 1000 - 501 - 100 = 399; Market Value 5 x 120 = 600 (AAPL only).
+    expect(view.worth.total).toBe("$999.00");
+    expect(view.worth.invested).toEqual({
+      label: "En activos",
+      pct: "60.1%",
+      amount: "$600.00",
+      flex: 600,
+    });
+    expect(view.worth.cash).toEqual({
+      label: "Efectivo",
+      pct: "39.9%",
+      amount: "$399.00",
+      flex: 399,
+    });
+
+    expect(view.return.total).toBe("+$99.00"); // 100 unrealized - 1 fee
+    expect(view.return.percent).toBe("+9.90%");
+    expect(view.return.aportado).toBe("$1,000.00");
+    expect(view.return.valeHoy).toBe("$999.00");
+    expect(view.return.components.map((c) => c.value)).toEqual(["+$100.00", "+$0.00", "+$0.00", "-$1.00"]);
+    expect(view.return.components.every((c) => c.fill !== null)).toBe(true);
+    expect(view.assets.netPnl).toBe("+$100.00 · +16.67%"); // over the priced Cost Basis
+
+    expect(view.priceNote).toBe("1 activo sin precio, excluido de los totales");
+  });
+
+  it("counts the unpriced holdings in the note, in the plural", () => {
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), buy("MSFT", 50, 2), buy("NVDA", 10, 1)];
+    const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 120) });
+
+    expect(buildHomeView(portfolio).priceNote).toBe("2 activos sin precio, excluidos de los totales");
+  });
+
+  it("withholds every price-dependent figure when no holding is priced", () => {
+    // Aportado $1,000 with nothing priced would otherwise print Vale hoy
+    // $499.00 and a Total Return near -50%: a dropped read drawn as a loss.
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
+    const view = buildHomeView(assemblePortfolio(movements, {}));
+
+    // Withheld: everything a current price is needed to state.
+    expect(view.worth.total).toBeNull();
+    expect(view.worth.invested).toBeNull(); // the bar goes with it
+    expect(view.worth.cash.pct).toBeNull(); // it divides by Total Portfolio Value
+    expect(view.return.total).toBeNull();
+    expect(view.return.percent).toBeNull();
+    expect(view.return.valeHoy).toBeNull();
+    expect(view.return.components[0]).toMatchObject({ label: "No realizado", value: null });
+    expect(view.assets.netPnl).toBeNull();
+    // Every fill goes at once: rescaling to the three known components would
+    // draw the largest of *those* full, stating a share of a refused total.
+    expect(view.return.components.map((c) => c.fill)).toEqual([null, null, null, null]);
+
+    // Printed: everything the History alone decides, unchanged.
+    expect(view.worth.cash.amount).toBe("$499.00");
+    expect(view.worth.cash.label).toBe("Efectivo");
+    expect(view.return.aportado).toBe("$1,000.00");
+    expect(view.return.components.slice(1).map((c) => [c.label, c.value])).toEqual([
+      ["Realizado", "+$0.00"],
+      ["Dividendos netos", "+$0.00"],
+      ["Comisiones", "-$1.00"],
+    ]);
+    // The holding still lists, flagged one by one as it always was.
+    expect(view.assets.holdings).toEqual([
+      {
+        ticker: "AAPL",
+        shares: "5 acc",
+        priceAvailable: false,
+        value: null,
+        pnl: null,
+        pnlTone: "positive",
+      },
+    ]);
+
+    expect(view.priceNote).toBe(
+      "Ningún activo tiene precio ahora mismo, así que no calculamos tu valor total ni tu rendimiento.",
+    );
+    // A third sentence about a third situation: not the History's "No pudimos
+    // cargar tus movimientos", not the banner's "No pudimos actualizar los
+    // precios". Both can be on screen in other states.
+    expect(view.priceNote).not.toContain("No pudimos");
+  });
+
+  it("drops the percentage tooltip along with the percentage it explains", () => {
+    // Peak Contributions (1000) exceeds Net Contributions (600), which is the
+    // one case that earns a tooltip - and there is no percentage to explain.
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), withdrawal(400)];
+    const view = buildHomeView(assemblePortfolio(movements, {}));
+
+    expect(view.return.percent).toBeNull();
+    expect(view.return.percentTooltip).toBeNull();
+
+    // The same history with a price keeps both.
+    const priced = buildHomeView(assemblePortfolio(movements, { AAPL: stock("AAPL", 120) }));
+    expect(priced.return.percent).not.toBeNull();
+    expect(priced.return.percentTooltip).toContain("$1,000.00");
+  });
+
+  it("names a refused figure with a plain-ASCII Spanish placeholder", () => {
+    // The cards print NO_FIGURE wherever the view-model says null, so the word
+    // is agreed here rather than three times in JSX.
+    expect(NO_FIGURE).toBe("Sin dato");
+    // Written as escapes so the assertion says which character it means: no em
+    // dash and no minus-sign lookalike, the two the ASCII rule keeps catching.
+    expect(NO_FIGURE).not.toContain("\u2014");
+    expect(NO_FIGURE).not.toContain("\u2212");
   });
 });
 

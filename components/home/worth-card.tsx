@@ -1,37 +1,50 @@
 import { Colors, Gradients } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
+import { NO_FIGURE } from "./view-model";
 import type { HomeView } from "./view-model";
 
 type Props = {
   worth: HomeView["worth"];
+  /** The line about the prices behind the figures, shown right under the
+   * headline it qualifies. null when every Holding is priced. */
+  note: string | null;
 };
 
-export function WorthCard({ worth }: Props) {
+export function WorthCard({ worth, note }: Props) {
   return (
     <LinearGradient colors={Gradients.card} start={{ x: 0.37, y: 0.02 }} end={{ x: 0.63, y: 0.98 }} style={styles.card}>
       <Text style={styles.label}>Valor total</Text>
-      <Text style={styles.value}>{worth.total}</Text>
+      <Text style={[styles.value, worth.total === null && styles.valueWithheld, note !== null && styles.valueTight]}>
+        {worth.total ?? NO_FIGURE}
+      </Text>
+      {note !== null && <Text style={styles.note}>{note}</Text>}
 
-      <View style={styles.bar}>
-        <View style={[styles.barSeg, { flex: worth.invested.flex, backgroundColor: Colors.investedBar }]} />
-        <View style={[styles.barSeg, { flex: worth.cash.flex, backgroundColor: Colors.accent }]} />
-      </View>
+      {/* No Market Value means no composition: a bar drawn from Efectivo alone
+          would read as an all-cash portfolio. Efectivo's own row stays. */}
+      {worth.invested !== null && (
+        <>
+          <View style={styles.bar}>
+            <View style={[styles.barSeg, { flex: worth.invested.flex, backgroundColor: Colors.investedBar }]} />
+            <View style={[styles.barSeg, { flex: worth.cash.flex, backgroundColor: Colors.accent }]} />
+          </View>
 
-      <View style={[styles.row, styles.rowGap]}>
-        <View style={styles.legend}>
-          <View style={[styles.swatch, { backgroundColor: Colors.investedBar }]} />
-          <Text style={styles.legendLabel}>{worth.invested.label}</Text>
-          <Text style={styles.legendPct}>{worth.invested.pct}</Text>
-        </View>
-        <Text style={[styles.amount, { color: Colors.textBright }]}>{worth.invested.amount}</Text>
-      </View>
+          <View style={[styles.row, styles.rowGap]}>
+            <View style={styles.legend}>
+              <View style={[styles.swatch, { backgroundColor: Colors.investedBar }]} />
+              <Text style={styles.legendLabel}>{worth.invested.label}</Text>
+              <Text style={styles.legendPct}>{worth.invested.pct}</Text>
+            </View>
+            <Text style={[styles.amount, { color: Colors.textBright }]}>{worth.invested.amount}</Text>
+          </View>
+        </>
+      )}
 
       <View style={styles.row}>
         <View style={styles.legend}>
           <View style={[styles.swatch, { backgroundColor: Colors.accent }]} />
           <Text style={styles.legendLabel}>{worth.cash.label}</Text>
-          <Text style={styles.legendPct}>{worth.cash.pct}</Text>
+          {worth.cash.pct !== null && <Text style={styles.legendPct}>{worth.cash.pct}</Text>}
         </View>
         <Text style={[styles.amount, { color: Colors.accent }]}>{worth.cash.amount}</Text>
       </View>
@@ -63,6 +76,21 @@ const styles = StyleSheet.create({
     marginTop: 3,
     marginBottom: 18,
     fontVariant: ["tabular-nums"],
+  },
+  valueWithheld: {
+    fontSize: 24,
+    color: Colors.textSecondary,
+    letterSpacing: -0.4,
+    lineHeight: 30,
+  },
+  valueTight: {
+    marginBottom: 6,
+  },
+  note: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    lineHeight: 15,
+    marginBottom: 14,
   },
   bar: {
     flexDirection: "row",

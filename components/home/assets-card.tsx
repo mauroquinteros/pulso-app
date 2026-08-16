@@ -1,5 +1,6 @@
 import { Colors, HoldingBadge } from "@/constants/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { NO_FIGURE } from "./view-model";
 import type { HomeView, Tone } from "./view-model";
 
 type Props = {
@@ -15,7 +16,17 @@ export function AssetsCard({ assets, onPressHolding }: Props) {
       <View style={styles.header}>
         <Text style={styles.title}>Activos</Text>
         <Text style={styles.headerStat}>
-          Net P&L <Text style={[styles.headerStatValue, { color: toneColor(assets.netPnlTone) }]}>{assets.netPnl}</Text>
+          Net P&L{" "}
+          <Text
+            style={[
+              styles.headerStatValue,
+              // A withheld aggregate carries no tone: the rows it sums are
+              // unpriced, so there is no gain or loss to color.
+              { color: assets.netPnl === null ? Colors.textSecondary : toneColor(assets.netPnlTone) },
+            ]}
+          >
+            {assets.netPnl ?? NO_FIGURE}
+          </Text>
         </Text>
       </View>
       {assets.holdings.map((h) => (

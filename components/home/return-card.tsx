@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { NO_FIGURE } from "./view-model";
 import type { HomeView, Tone } from "./view-model";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -56,7 +57,8 @@ export function ReturnCard({ return: ret }: Props) {
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
 
-  const totalColor = toneColor(ret.tone);
+  // A withheld figure carries no tone: there is no gain or loss to color.
+  const totalColor = ret.total === null ? Colors.textSecondary : toneColor(ret.tone);
 
   return (
     <View style={styles.card}>
@@ -67,22 +69,25 @@ export function ReturnCard({ return: ret }: Props) {
             <Text style={styles.title}>Rendimiento total</Text>
           </View>
           <View style={styles.valueRow}>
-            <Text style={[styles.total, { color: totalColor }]}>{ret.total}</Text>
-            {ret.percentTooltip ? (
-              <Pressable
-                ref={anchorRef}
-                onPress={openTip}
-                hitSlop={14}
-                accessibilityRole="button"
-                accessibilityLabel="Cómo se calcula el porcentaje"
-                style={styles.pctTip}
-              >
+            <Text style={[styles.total, ret.total === null && styles.totalWithheld, { color: totalColor }]}>
+              {ret.total ?? NO_FIGURE}
+            </Text>
+            {ret.percent !== null &&
+              (ret.percentTooltip ? (
+                <Pressable
+                  ref={anchorRef}
+                  onPress={openTip}
+                  hitSlop={14}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cómo se calcula el porcentaje"
+                  style={styles.pctTip}
+                >
+                  <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
+                  <Ionicons name="information-circle-outline" size={16} color={totalColor} />
+                </Pressable>
+              ) : (
                 <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
-                <Ionicons name="information-circle-outline" size={16} color={totalColor} />
-              </Pressable>
-            ) : (
-              <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
-            )}
+              ))}
           </View>
         </View>
         <View style={styles.toggle}>
@@ -101,14 +106,14 @@ export function ReturnCard({ return: ret }: Props) {
         <Text style={styles.bridgeArrow}>→</Text>
         <View style={[styles.bridgeSide, styles.bridgeSideRight]}>
           <Text style={styles.bridgeLabel}>Vale hoy</Text>
-          <Text style={styles.bridgeValue}>{ret.valeHoy}</Text>
+          <Text style={[styles.bridgeValue, ret.valeHoy === null && styles.withheld]}>{ret.valeHoy ?? NO_FIGURE}</Text>
         </View>
       </View>
 
       {open && (
         <View style={styles.breakdown}>
           {ret.components.map((c) => {
-            const color = toneColor(c.tone);
+            const color = c.value === null ? Colors.textSecondary : toneColor(c.tone);
             return (
               <View key={c.label}>
                 <View style={styles.compRow}>
@@ -116,18 +121,22 @@ export function ReturnCard({ return: ret }: Props) {
                     {c.label}
                     {c.sub ? <Text style={styles.compSub}> {c.sub}</Text> : null}
                   </Text>
-                  <Text style={[styles.compValue, { color }]}>{c.value}</Text>
+                  <Text style={[styles.compValue, { color }]}>{c.value ?? NO_FIGURE}</Text>
                 </View>
-                <View style={styles.track}>
-                  <View
-                    style={{
-                      flex: c.fill,
-                      backgroundColor: color,
-                      opacity: c.tone === "negative" ? 0.8 : 0.85,
-                    }}
-                  />
-                  <View style={{ flex: Math.max(1 - c.fill, 0) }} />
-                </View>
+                {/* No track when the fills are withheld: a bar is a proportion,
+                    and the total it would be a proportion of is refused. */}
+                {c.fill !== null && (
+                  <View style={styles.track}>
+                    <View
+                      style={{
+                        flex: c.fill,
+                        backgroundColor: color,
+                        opacity: c.tone === "negative" ? 0.8 : 0.85,
+                      }}
+                    />
+                    <View style={{ flex: Math.max(1 - c.fill, 0) }} />
+                  </View>
+                )}
               </View>
             );
           })}
@@ -191,6 +200,10 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.6,
     fontVariant: ["tabular-nums"],
+  },
+  totalWithheld: {
+    fontSize: 20,
+    letterSpacing: -0.3,
   },
   totalPct: {
     fontSize: 14,
@@ -271,6 +284,10 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginTop: 1,
     fontVariant: ["tabular-nums"],
+  },
+  /** A figure Inicio declines to print: muted, never a gain/loss color. */
+  withheld: {
+    color: Colors.textSecondary,
   },
   bridgeArrow: {
     color: Colors.positive,
