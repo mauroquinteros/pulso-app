@@ -6,7 +6,7 @@ import type {
   SellMovement,
   WithdrawalMovement,
 } from "@/types/models";
-import { assemblePortfolio, type PriceMap } from "@/utils/portfolio/valuation";
+import { assemblePortfolio, type StockMap } from "@/utils/portfolio/valuation";
 
 // ---------------------------------------------------------------------------
 // MOCK_MOVEMENTS
@@ -159,24 +159,25 @@ export const MOCK_MOVEMENTS: Movement[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// MOCK_PRICES
-// Hardcoded current prices for the mock-data phase. MSFT is absent — it was
-// fully sold, so it holds no shares to value.
+// MOCK_STOCKS
+// Authored Stocks, read by nothing in the running app - the app reads the
+// `stocks` table (ADR 0011). They are kept because MOCK_PORTFOLIO_SUMMARY is
+// derived from them, and that summary is what makes the reconciliation
+// invariants provable. MSFT is absent - it was fully sold, so it holds no
+// shares to value.
 // ---------------------------------------------------------------------------
 
-export const MOCK_PRICES: PriceMap = {
-  AAPL: 198.4,
-  VOO: 458.6,
+export const MOCK_STOCKS: StockMap = {
+  AAPL: { ticker: "AAPL", name: "Apple Inc.", quote: { price: 198.4, quotedAt: "2026-02-13T21:00:00Z" } },
+  VOO: { ticker: "VOO", name: "Vanguard S&P 500 ETF", quote: { price: 458.6, quotedAt: "2026-02-13T21:00:00Z" } },
 };
 
 // ---------------------------------------------------------------------------
-// MOCK_PORTFOLIO_SUMMARY / MOCK_HOLDINGS
-// Derived end-to-end by the portfolio engine from MOCK_MOVEMENTS + MOCK_PRICES.
+// MOCK_PORTFOLIO_SUMMARY
+// Derived end-to-end by the portfolio engine from MOCK_MOVEMENTS + MOCK_STOCKS.
 // No hand-computed values: holdings (AAPL, VOO) and every portfolio figure come
 // from assemblePortfolio. MSFT is fully exited, so its realized P&L flows into
 // Total Return without listing as a holding.
 // ---------------------------------------------------------------------------
 
-export const MOCK_PORTFOLIO_SUMMARY = assemblePortfolio(MOCK_MOVEMENTS, MOCK_PRICES);
-
-export const MOCK_HOLDINGS = MOCK_PORTFOLIO_SUMMARY.holdings;
+export const MOCK_PORTFOLIO_SUMMARY = assemblePortfolio(MOCK_MOVEMENTS, MOCK_STOCKS);

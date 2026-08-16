@@ -1,4 +1,5 @@
 import { useMovementsStore } from "@/stores/movements";
+import { useStocksStore } from "@/stores/stocks";
 
 /**
  * Empties every store whose contents belong to a Perfil.
@@ -21,4 +22,18 @@ import { useMovementsStore } from "@/stores/movements";
  */
 export function clearPerfilScopedState() {
   useMovementsStore.getState().forgetHistory();
+
+  // The Stocks go too - for freshness, not for privacy, and the distinction has
+  // to be said out loud or the next reader concludes a Quote is Perfil-scoped
+  // and one day adds an owner filter to a shared table. A Stock is shared and
+  // owned by nobody: the next Perfil learning that AAPL trades at $198 learns
+  // nothing whatever about the previous one, so nothing leaks by keeping them.
+  //
+  // They are dropped anyway because of what a *kept* Quote would mean in a
+  // session whose own read fails: it would be valued as current with nothing
+  // able to say otherwise, collapsing "could not be obtained" into "here is your
+  // Market Value" at the one moment the difference matters (ADR 0011). So this
+  // function no longer means "clear the stores" - it means "clear the
+  // Perfil-scoped stores, and the Stocks besides".
+  useStocksStore.getState().forgetStocks();
 }

@@ -4,6 +4,7 @@ import type {
   DividendMovement,
   Movement,
   SellMovement,
+  Stock,
   WithdrawalMovement,
 } from "@/types/models";
 import { describe, expect, it } from "vitest";
@@ -56,6 +57,13 @@ const withdrawal = (amount: number, transferFee = 0, executionDate = "2025-05-01
   executionDate,
   createdAt: `${executionDate}T00:00:00Z`,
 });
+/** A Stock carrying a Quote, which is how the engine takes a price. The name and
+ * the market moment are along for the ride: nothing here reads either. */
+const stock = (ticker: string, price: number): Stock => ({
+  ticker,
+  name: ticker,
+  quote: { price, quotedAt: "2025-06-01T20:00:00Z" },
+});
 
 // A single-ticker portfolio with known hand-computed expectations.
 //   deposit 1000
@@ -73,7 +81,7 @@ const knownPortfolio: Movement[] = [
 
 describe("assemblePortfolio", () => {
   it("computes per-holding and portfolio figures for a known portfolio", () => {
-    const p = assemblePortfolio(knownPortfolio, { AAPL: 140 });
+    const p = assemblePortfolio(knownPortfolio, { AAPL: stock("AAPL", 140) });
 
     // Movement facts
     expect(p.cash).toBe(-538);
@@ -108,7 +116,7 @@ describe("assemblePortfolio", () => {
     // Multi-ticker, including a fully-exited ticker (MSFT) whose realized P&L
     // must still count even though it lists no holding.
     const movements: Movement[] = [...knownPortfolio, buy("MSFT", 200, 2, 1), sell("MSFT", 250, 2, 1)];
-    const p = assemblePortfolio(movements, { AAPL: 140 });
+    const p = assemblePortfolio(movements, { AAPL: stock("AAPL", 140) });
 
     // MSFT is fully exited — not a holding, but its realized P&L is counted.
     expect(p.holdings.map((h) => h.ticker)).toEqual(["AAPL"]);

@@ -1,17 +1,22 @@
 import { useMemo } from "react";
 
-import { MOCK_PRICES } from "@/lib/mock-data";
 import { useMovementsStore } from "@/stores/movements";
+import { useStocksStore } from "@/stores/stocks";
 import type { Portfolio } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 
 /**
- * Single source of the derived Portfolio for the UI. Derives from the raw
- * movements in the store (recomputed whenever they change), keeping prices on
- * the mock map for now. This stays the single swap-point for a Supabase-backed
- * source later without touching any screen.
+ * Single source of the derived Portfolio for the UI: the Perfil's Movements and
+ * the Stocks in hand, run through the engine and recomputed whenever either
+ * changes.
+ *
+ * The two come from separate stores filled by separate reads, and this is where
+ * they meet. Neither waits on the other, so a portfolio is derived from whatever
+ * is in hand at the time - with no Stocks that means holdings excluded and
+ * flagged, which is the policy the engine has always applied.
  */
 export function usePortfolio(): Portfolio {
   const movements = useMovementsStore((s) => s.movements);
-  return useMemo(() => assemblePortfolio(movements, MOCK_PRICES), [movements]);
+  const stocks = useStocksStore((s) => s.stocks);
+  return useMemo(() => assemblePortfolio(movements, stocks), [movements, stocks]);
 }

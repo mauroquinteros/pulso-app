@@ -76,6 +76,38 @@ export const isDividendMovement = (m: Movement): m is DividendMovement => m.type
 export const isDepositMovement = (m: Movement): m is DepositMovement => m.type === "deposit";
 export const isWithdrawalMovement = (m: Movement): m is WithdrawalMovement => m.type === "withdrawal";
 
+/**
+ * A Stock's share price together with the market moment that price belongs to.
+ * The two are one thing and never travel apart (CONTEXT.md): a price with no
+ * moment cannot be judged Stale, and a moment with no price says nothing at all.
+ * The schema says the same in a constraint - `price_and_quote_time_travel_together`.
+ *
+ * `quotedAt` is carried even though nothing reads it yet. Lighting the Stale
+ * signal later has to be a pure function over data already in hand rather than a
+ * re-read, so the moment is kept from the first day the price is (ADR 0011).
+ */
+export interface Quote {
+  price: number;
+  quotedAt: string;
+}
+
+/**
+ * The traded thing a Holding is a holding of: a company or fund, identified by
+ * its ticker and carrying a name and a Quote (CONTEXT.md). Shared, never owned -
+ * `AAPL` is the same Stock for every Perfil, so nothing here says whose it is.
+ *
+ * The Quote is not optional. The read filters on `price is not null`, so a Stock
+ * the app holds always has one and an unpriced Stock is simply absent from the
+ * map - falling through the same missing-price path `valueHolding` has always
+ * had. The guarantee lives in the query, so no branch has to keep it true
+ * (ADR 0011).
+ */
+export interface Stock {
+  ticker: string;
+  name: string;
+  quote: Quote;
+}
+
 export interface Holding {
   ticker: string;
   shares: number;

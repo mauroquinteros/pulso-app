@@ -1,5 +1,5 @@
 import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
-import type { BuyMovement, DepositMovement, Movement } from "@/types/models";
+import type { BuyMovement, DepositMovement, Movement, Stock } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
 import { buildHomeView } from "./view-model";
@@ -22,6 +22,12 @@ const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): B
   fee,
   executionDate: "2025-02-01",
   createdAt: "2025-02-01T00:00:00Z",
+});
+/** A Stock carrying a Quote - the shape the engine takes a price in. */
+const stock = (ticker: string, price: number): Stock => ({
+  ticker,
+  name: ticker,
+  quote: { price, quotedAt: "2025-06-01T20:00:00Z" },
 });
 
 describe("buildHomeView", () => {
@@ -155,7 +161,7 @@ describe("buildHomeView", () => {
   it("uses a negative tone and an ASCII-signed string for a negative Total Return", () => {
     // Bought high, priced low: every figure on the loss side.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
-    const portfolio = assemblePortfolio(movements, { AAPL: 60 });
+    const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 60) });
     const view = buildHomeView(portfolio);
 
     expect(view.return.tone).toBe("negative");

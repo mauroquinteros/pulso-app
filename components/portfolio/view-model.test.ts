@@ -1,5 +1,5 @@
 import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
-import type { BuyMovement, DepositMovement, Movement } from "@/types/models";
+import type { BuyMovement, DepositMovement, Movement, Stock } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
 import { buildPortfolioView, segmentColor } from "./view-model";
@@ -22,6 +22,12 @@ const buy = (ticker: string, executionPrice: number, shares: number, fee = 0): B
   fee,
   executionDate: "2025-02-01",
   createdAt: "2025-02-01T00:00:00Z",
+});
+/** A Stock carrying a Quote - the shape the engine takes a price in. */
+const stock = (ticker: string, price: number): Stock => ({
+  ticker,
+  name: ticker,
+  quote: { price, quotedAt: "2025-06-01T20:00:00Z" },
 });
 
 const fractionSum = (view: ReturnType<typeof buildPortfolioView>) =>
@@ -96,8 +102,8 @@ describe("buildPortfolioView", () => {
   it.each([5, 6, 7, 9])("gives every drawn segment its own colour with %i priced holdings", (n) => {
     const tickers = Array.from({ length: n }, (_, i) => `T${i}`);
     const movements: Movement[] = [deposit(100_000), ...tickers.map((t, i) => buy(t, 100, 100 - i))];
-    const prices = Object.fromEntries(tickers.map((t) => [t, 100]));
-    const view = buildPortfolioView(assemblePortfolio(movements, prices));
+    const stocks = Object.fromEntries(tickers.map((t) => [t, stock(t, 100)]));
+    const view = buildPortfolioView(assemblePortfolio(movements, stocks));
 
     const colors = view.distribution.segments.map((s) => segmentColor(s.colorIndex));
     expect(new Set(colors).size).toBe(colors.length);
@@ -115,16 +121,16 @@ describe("buildPortfolioView", () => {
       buy("FFF", 100, 10), // 1000
       buy("GGG", 100, 10), // 1000
     ];
-    const prices = {
-      AAA: 100,
-      BBB: 100,
-      CCC: 100,
-      DDD: 100,
-      EEE: 100,
-      FFF: 100,
-      GGG: 100,
+    const stocks = {
+      AAA: stock("AAA", 100),
+      BBB: stock("BBB", 100),
+      CCC: stock("CCC", 100),
+      DDD: stock("DDD", 100),
+      EEE: stock("EEE", 100),
+      FFF: stock("FFF", 100),
+      GGG: stock("GGG", 100),
     };
-    const view = buildPortfolioView(assemblePortfolio(movements, prices));
+    const view = buildPortfolioView(assemblePortfolio(movements, stocks));
 
     // cash == 0 → no Efectivo segment: exactly 6 segments (top 5 + Otros).
     expect(view.distribution.segments.map((s) => s.key)).toEqual(["AAA", "BBB", "CCC", "DDD", "EEE", "others"]);
@@ -146,7 +152,7 @@ describe("buildPortfolioView", () => {
       buy("AAPL", 100, 10), // priced
       buy("XYZ", 100, 5), // no price
     ];
-    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: 120 }));
+    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: stock("AAPL", 120) }));
 
     expect(view.distribution.missingPriceCount).toBe(1);
     // Only AAPL and Efectivo appear in the donut/legend — never XYZ.
@@ -195,7 +201,7 @@ describe("buildPortfolioView", () => {
       deposit(1000),
       buy("AAPL", 100, 15), // 1500 spent on 1000 cash → cash = -500
     ];
-    const portfolio = assemblePortfolio(movements, { AAPL: 100 });
+    const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 100) });
     expect(portfolio.cash).toBeLessThan(0);
 
     const view = buildPortfolioView(portfolio);
@@ -213,7 +219,7 @@ describe("buildPortfolioView", () => {
 
   it("formats a loss with an ASCII-signed percent and a negative tone", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5)];
-    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: 60 }));
+    const view = buildPortfolioView(assemblePortfolio(movements, { AAPL: stock("AAPL", 60) }));
 
     const aapl = view.holdings[0];
     expect(aapl.pnlTone).toBe("negative");

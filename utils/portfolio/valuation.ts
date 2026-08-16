@@ -1,11 +1,13 @@
-import type { Holding, Movement, Portfolio, TotalReturn, ValuedHolding } from "@/types/models";
+import type { Holding, Movement, Portfolio, Stock, TotalReturn, ValuedHolding } from "@/types/models";
 import { isDepositMovement, isWithdrawalMovement } from "@/types/models";
 import { computeNetDividends, computeTotalFees } from "@/utils/calculations";
 import { computeCash } from "./cash";
 import { compareChronological, deriveHoldingFacts } from "./reducer";
 
-/** Current price per ticker. A held ticker absent from the map has no price. */
-export type PriceMap = Record<string, number>;
+/** The Stocks in hand, keyed by ticker. A held ticker absent from the map has no
+ * price - and this file neither knows nor asks which of the three causes it is
+ * (ADR 0011). A Stock present always carries a Quote. */
+export type StockMap = Record<string, Stock>;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -14,9 +16,9 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * price, the price-applied figures are reported as null and priceAvailable is
  * false — never fabricated (missing-price policy "exclude + flag").
  */
-export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding {
-  const price = prices[holding.ticker];
-  if (price === undefined) {
+export function valueHolding(holding: Holding, stocks: StockMap): ValuedHolding {
+  const stock = stocks[holding.ticker];
+  if (stock === undefined) {
     return {
       ...holding,
       priceAvailable: false,
@@ -25,7 +27,7 @@ export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding 
       netPnlPercent: null,
     };
   }
-  const marketValue = round2(price * holding.shares);
+  const marketValue = round2(stock.quote.price * holding.shares);
   const netPnl = round2(marketValue - holding.costBasis);
   const netPnlPercent = holding.costBasis !== 0 ? round2((netPnl / holding.costBasis) * 100) : 0;
   return {
@@ -47,7 +49,7 @@ export function valueHolding(holding: Holding, prices: PriceMap): ValuedHolding 
  * Reconciliation invariant (holds when every held ticker is priced):
  *   Cash + Market Value == net contributions + Total Return.
  */
-export function assemblePortfolio(movements: Movement[], prices: PriceMap): Portfolio {
+export function assemblePortfolio(movements: Movement[], stocks: StockMap): Portfolio {
   const cash = computeCash(movements);
   const totalFees = computeTotalFees(movements);
   const totalDividends = computeNetDividends(movements);
@@ -65,7 +67,7 @@ export function assemblePortfolio(movements: Movement[], prices: PriceMap): Port
     realizedPnl += facts.realizedPnl;
     if (facts.shares > 0) {
       costBasis += facts.costBasis;
-      holdings.push(valueHolding({ ticker, ...facts }, prices));
+      holdings.push(valueHolding({ ticker, ...facts }, stocks));
     }
   }
   realizedPnl = round2(realizedPnl);

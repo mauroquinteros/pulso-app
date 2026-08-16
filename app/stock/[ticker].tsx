@@ -8,18 +8,22 @@ import { NotFound, PositionCard, StockIdentity } from "@/components/stock-detail
 import { buildStockDetailView } from "@/components/stock-detail/view-model";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
-import { MOCK_PRICES } from "@/lib/mock-data";
 import { useMovementsStore } from "@/stores/movements";
+import { useStocksStore } from "@/stores/stocks";
 import { usePortfolio } from "@/hooks/use-portfolio";
 
 /** Read-only detail of one open position: how the position stands today, plus
  * the ticker's movement history. Pure consumer — everything is derived by the
- * view-model from the portfolio, the price map, and the movements. */
+ * view-model from the portfolio, the Stock's Quote, and the movements. */
 export default function StockDetailScreen() {
   const { ticker } = useLocalSearchParams<{ ticker: string }>();
   const { holdings } = usePortfolio();
   const movements = useMovementsStore((s) => s.movements);
-  const view = buildStockDetailView(ticker, holdings, MOCK_PRICES[ticker], movements);
+  // Nothing is read on the way in: pushing this screen fires no request, so the
+  // Quote is whichever one the tabs already hold (ADR 0011). A ticker absent
+  // from the store has no price, and the view-model collapses to "Sin precio".
+  const stock = useStocksStore((s) => s.stocks[ticker]);
+  const view = buildStockDetailView(ticker, holdings, stock?.quote.price, movements);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
