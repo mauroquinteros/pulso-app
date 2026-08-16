@@ -65,6 +65,20 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
+## 5. Never Install Anything Without Asking
+
+**Changes to the machine need a yes first. Changes to the repo do not.**
+
+Installing, upgrading or removing anything outside this repo — Homebrew packages, global `npm`/`pip` installs, language runtimes, CLIs, shell or system config — requires explicit authorization **before** it happens. Say what you want to install, why the task needs it, what it costs, and what the alternative is if the answer is no. Then wait for an answer.
+
+This applies to subagents too. An agent you spawn inherits this rule, and you may not authorize an install on the user's behalf inside its prompt.
+
+**Not covered:** anything that lives in the repo. A dependency added to `package.json`, or an `npm install` of something already declared there, is an ordinary code change — it shows up in the diff and gets reviewed like everything else.
+
+Why the split: a `brew install` appears in no diff, passes through no review, and is not undone by `git checkout`. The repo can be inspected at any time; the machine cannot. So the cost of a wrong call is borne by the user, silently, long after the task is finished.
+
+A legitimate need is still not authorization. `deno` was once installed to type-check the Edge Functions, which `tsc` genuinely cannot do (see the `exclude` note in `tsconfig.json`). The reasoning was sound and the tool was the only option — and it was still the user's call to make, not the agent's.
+
 ## Code conventions
 
 ### Naming
