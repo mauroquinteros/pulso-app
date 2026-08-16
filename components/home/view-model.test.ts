@@ -2,7 +2,7 @@ import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
 import type { BuyMovement, DepositMovement, Movement, Stock } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
-import { buildHomeView } from "./view-model";
+import { buildHomeView, showsRefreshFailed } from "./view-model";
 
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
@@ -170,4 +170,40 @@ describe("buildHomeView", () => {
     expect(view.assets.netPnlTone).toBe("negative");
     expect(view.assets.netPnl).toContain("-");
   });
+});
+
+describe("showsRefreshFailed", () => {
+  /** One Holding and one Quote in hand - the only case the banner is about. */
+  const held = { quotedCount: 1, holdingCount: 1 };
+
+  it("says nothing while the Stocks are in hand and current", () => {
+    expect(showsRefreshFailed({ ...held, status: "ready" })).toBe(false);
+  });
+
+  it("speaks when a refresh fails with Stocks already in hand", () => {
+    expect(showsRefreshFailed({ ...held, status: "failed" })).toBe(true);
+  });
+
+  it("says nothing when the first read fails, since there is nothing to refresh", () => {
+    // Issue 02's behaviour, unchanged: no Quote in hand means the holdings are
+    // excluded and flagged, and no sentence about a refresh is true.
+    expect(showsRefreshFailed({ quotedCount: 0, holdingCount: 1, status: "failed" })).toBe(false);
+  });
+
+  it("says nothing to a user holding nothing", () => {
+    expect(showsRefreshFailed({ quotedCount: 3, holdingCount: 0, status: "failed" })).toBe(false);
+  });
+
+  it("says nothing before anything has been read", () => {
+    expect(showsRefreshFailed({ ...held, status: "unread" })).toBe(false);
+  });
+
+  it("falls quiet again once a refresh succeeds", () => {
+    expect(showsRefreshFailed({ ...held, status: "ready" })).toBe(false);
+  });
+
+  // It cannot blink off mid-refresh, and that is not this function's doing: a
+  // read in flight moves the store's `reading`, never its `status`, so the facts
+  // this reads do not change while one runs. The guarantee is asserted where it
+  // now lives, in stores/stocks.test.ts.
 });

@@ -1,3 +1,4 @@
+import type { StocksStatus } from "@/stores/stocks";
 import type { Portfolio } from "@/types/models";
 import { formatSharesLabel, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
@@ -126,4 +127,37 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
   };
 
   return { worth, return: returnView, assets };
+}
+
+export interface RefreshFailedInput {
+  /** How the last read that landed came out. A read in flight does not enter this. */
+  status: StocksStatus;
+  /** Stocks in hand right now - the size of the store's map. */
+  quotedCount: number;
+  /** Currently-held tickers. Zero means there is no price on screen to be about. */
+  holdingCount: number;
+}
+
+/**
+ * Whether Inicio says the prices could not be updated.
+ *
+ * This decides the fourth situation and only the fourth: the app *has* Quotes
+ * and could not find out whether newer ones exist (ADR 0011, CONTEXT.md). It is
+ * derived rather than stored, and it needs no memory of what it last answered -
+ * the store keeps whether a read is in flight apart from how the last one ended,
+ * so a refresh in progress cannot overwrite the fault the banner is about.
+ *
+ * Two silences are deliberate:
+ *
+ * - `quotedCount === 0` says nothing. A failed *first* read has no Quote it is
+ *   failing to refresh, so it stays exactly what it already was: holdings
+ *   excluded and flagged. This also covers the rarer case of a re-read that had
+ *   only ever been answered with an empty map, which these facts cannot tell
+ *   from a first read - and where the sentence would be just as untrue.
+ * - `holdingCount === 0` says nothing. A user holding nothing has no price on
+ *   screen for a failed refresh to be news about.
+ */
+export function showsRefreshFailed({ status, quotedCount, holdingCount }: RefreshFailedInput): boolean {
+  if (holdingCount === 0 || quotedCount === 0) return false;
+  return status === "failed";
 }

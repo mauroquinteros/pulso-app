@@ -21,14 +21,27 @@ import type { Stock } from "@/types/models";
  * race here is a slightly staler map winning, which costs nothing.
  */
 
+/**
+ * How the last read that finished came out - never whether one is running now.
+ * `reading` is deliberately not a member: a read being in flight and the last
+ * one having failed are independent facts, and collapsing them loses the second
+ * every time the first begins.
+ *
+ * That mattered the moment anything read this. A refresh that fails leaves
+ * Quotes on screen and a banner saying they could not be updated (ADR 0011), and
+ * the next refresh would blank that banner for as long as its select took -
+ * announcing a fault, then silently unannouncing it, then announcing it again.
+ * Kept apart, the sentence stays true until a read actually succeeds.
+ */
 export type StocksStatus =
   | "unread" // nobody has tried to read them yet
-  | "reading" // the select is in flight
   | "ready" // whatever the database could price is in hand
   | "failed"; // a fault; whatever was already in hand stays
 
 interface StocksData {
   status: StocksStatus;
+  /** Whether a select is in flight. Orthogonal to `status`, which is about the last one that landed. */
+  reading: boolean;
   /** Keyed by ticker. A ticker absent from it has no Quote, for one of the three causes. */
   stocks: Record<string, Stock>;
 }
@@ -43,24 +56,26 @@ interface StocksState extends StocksData {
   forgetStocks: () => void;
 }
 
-export const initialStocksState: StocksData = { status: "unread", stocks: {} };
+export const initialStocksState: StocksData = { status: "unread", reading: false, stocks: {} };
 
 export const useStocksStore = create<StocksState>((set) => ({
   ...initialStocksState,
 
-  // The Stocks already in hand survive a read starting, unlike the History,
-  // which is emptied the moment one does. A History is one thing and a partial
-  // one is wrong, so it is thrown away before it is re-read; a map of Quotes is
-  // simply a map of Quotes, and blanking it would take good prices off the
-  // screen for as long as the select is in flight (ADR 0011).
-  startRead: () => set({ status: "reading" }),
+  // Neither the Stocks nor the last outcome move here - only the fact that a
+  // select is in flight. The Stocks survive a read starting, unlike the History,
+  // which is emptied the moment one does: a History is one thing and a partial
+  // one is wrong, so it is thrown away before it is re-read, while a map of
+  // Quotes is simply a map of Quotes and blanking it would take good prices off
+  // the screen for as long as the select took (ADR 0011).
+  startRead: () => set({ reading: true }),
 
-  // A failed read keeps them too, and that is the whole of "a failed refresh is
-  // not an absence": the app holds Quotes and could not find out whether newer
-  // ones exist. Hiding them would report a fault as an absence. Saying nothing
-  // would present them as current, which is why the status says `failed` and the
-  // screens do the talking.
-  answerRead: (answer) => set(answer.ok ? { status: "ready", stocks: answer.stocks } : { status: "failed" }),
+  // A failed read keeps the Stocks too, and that is the whole of "a failed
+  // refresh is not an absence": the app holds Quotes and could not find out
+  // whether newer ones exist. Hiding them would report a fault as an absence.
+  // Saying nothing would present them as current, which is why the status says
+  // `failed` and the screens do the talking.
+  answerRead: (answer) =>
+    set(answer.ok ? { status: "ready", reading: false, stocks: answer.stocks } : { status: "failed", reading: false }),
 
   forgetStocks: () => set(initialStocksState),
 }));
