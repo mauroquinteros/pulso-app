@@ -74,12 +74,27 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function readHistory(): Promise<HistoryAnswer> {
   const first = await attemptRead();
 
-  if (first.ok || !first.failures.some((f) => f.code === CLOCK_DISAGREEMENT)) return first;
+  if (first.ok || !first.failures.some((f) => f.code === CLOCK_DISAGREEMENT)) return settled(first);
 
   trace("token dated ahead of the server's clock, reading again:", { after: RETRY_AFTER_MS });
   await pause(RETRY_AFTER_MS);
 
-  return attemptRead();
+  return settled(await attemptRead());
+}
+
+/**
+ * Warns about the answer the caller actually receives, and only that one.
+ *
+ * A `PGRST303` on a first attempt is the ordinary case, not a defect: the two
+ * servers disagree about the clock for a moment and the retry settles it. Warning
+ * there fired LogBox on every launch and every sign-in for something already
+ * handled, which is how a warning stops being read - and the next real failure
+ * would have looked exactly like the noise. The attempt is still traced; what
+ * moves is when the app raises its voice.
+ */
+function settled(answer: HistoryAnswer): HistoryAnswer {
+  if (!answer.ok) fault("read failed:", answer.failures);
+  return answer;
 }
 
 /** One pass at the three tables. Every rule about the History lives here. */
@@ -113,7 +128,11 @@ async function attemptRead(): Promise<HistoryAnswer> {
         : [],
     );
 
-    fault("read failed:", failures);
+    // Traced, not faulted: this is one attempt, and the caller above may retry
+    // it into a success. The detail is kept either way - a recovered fault is
+    // still a fault that happened, and the line below is the only record that
+    // it did - but it does not raise LogBox until the answer is final.
+    trace("read attempt failed:", failures);
 
     return { ok: false, failures };
   }
@@ -169,7 +188,7 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
 
   const first = await attemptSave(movement);
 
-  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return first;
+  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return settledSave(first);
 
   trace("token dated ahead of the server's clock, saving again:", { after: RETRY_AFTER_MS });
   await pause(RETRY_AFTER_MS);
@@ -177,7 +196,13 @@ export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
   // Safe to repeat: a token refused at the gate never reached the table, so
   // there is nothing to undo - and were it ever otherwise, the id is the same
   // one, so the duplicate branch below answers with the row already stored.
-  return attemptSave(movement);
+  return settledSave(await attemptSave(movement));
+}
+
+/** The save's half of `settled`, for the same reason. */
+function settledSave(answer: SaveAnswer): SaveAnswer {
+  if (!answer.ok) fault("save failed:", answer.failure);
+  return answer;
 }
 
 /** One pass at the insert, and the mapping of whatever came back. */
@@ -219,7 +244,9 @@ async function attemptSave(movement: NewMovement & { type: "deposit" | "withdraw
     // read: a policy refusal and a dropped packet must not arrive as one value.
     const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
 
-    fault("save failed:", failure);
+    // Traced rather than faulted, as with a read attempt: the caller decides
+    // whether this was the final answer.
+    trace("save attempt failed:", failure);
 
     return { ok: false, failure };
   }

@@ -95,12 +95,23 @@ export type StocksAnswer = { ok: true; stocks: Record<string, Stock> } | { ok: f
 export async function readStocks(): Promise<StocksAnswer> {
   const first = await attemptRead();
 
-  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return first;
+  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return settled(first);
 
   trace("token dated ahead of the server's clock, reading again:", { after: RETRY_AFTER_MS });
   await pause(RETRY_AFTER_MS);
 
-  return attemptRead();
+  return settled(await attemptRead());
+}
+
+/**
+ * Warns about the answer the caller actually receives, and only that one. A
+ * `PGRST303` on a first attempt is the ordinary case - the read fires the moment
+ * the tabs mount, which is the moment a token is newborn - and warning there
+ * raised LogBox on every launch for something the retry had already handled.
+ */
+function settled(answer: StocksAnswer): StocksAnswer {
+  if (!answer.ok) fault("read failed:", answer.failure);
+  return answer;
 }
 
 /** One pass at the table. */
@@ -113,7 +124,10 @@ async function attemptRead(): Promise<StocksAnswer> {
   if (error) {
     const failure = { status, code: error.code ?? null, message: error.message };
 
-    fault("read failed:", failure);
+    // Traced, not faulted: one attempt, which the caller above may retry into a
+    // success. The detail is kept either way; it just does not raise LogBox
+    // until the answer is final.
+    trace("read attempt failed:", failure);
 
     return { ok: false, failure };
   }
