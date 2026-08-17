@@ -57,3 +57,15 @@ so the banner should not appear for them. A failed refresh with an empty portfol
 ## Blocked by
 
 - `.scratch/real-quotes/issues/03-prices-are-asked-for-again-when-the-app-comes-back.md`
+
+## Closed
+
+The store half is covered: a failed read leaves the Stocks already in hand
+untouched, asserted directly. The banner's decision is a pure function and is
+tested across every combination that matters.
+
+**The banner itself has never been rendered.** It needs a Holding on screen and a
+failed refresh, so it waits with the rest for the Compra form. Note the anti-flicker
+guarantee moved into the store afterwards - only an answer moves the status, so a
+refresh in flight cannot blank the banner - which removed the `useRef` this issue
+originally shipped.

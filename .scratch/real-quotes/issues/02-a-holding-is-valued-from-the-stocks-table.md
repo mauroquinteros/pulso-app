@@ -81,3 +81,15 @@ real Quote.
 ## Blocked by
 
 None - can start immediately.
+
+## Closed
+
+Verified on a device, partially: the Stocks read fires on cold start and again on
+sign-out then sign-in, alongside the History read and without waiting on it. The
+app renders normally throughout, and a Perfil with no Holdings sees no new UI.
+
+**The criterion about a Holding's Market Value is NOT checked, deliberately.** It
+asks for a buy row inserted by SQL; the user chose to verify the whole price path
+in one pass once the Compra form persists, rather than through hand-inserted rows.
+So this ships proven by `tsc` and the suite, not by eyes on a valued Holding. That
+is a deferral, not an oversight, and it is the same gap issues 03, 04 and 05 carry.

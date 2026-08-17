@@ -65,3 +65,19 @@ case.
 ## Blocked by
 
 - `.scratch/real-quotes/issues/02-a-holding-is-valued-from-the-stocks-table.md`
+
+## Closed
+
+The visual treatment was agreed before implementation, as the first criterion
+required: refuse only price-dependent figures, keep every figure the History alone
+decides. Refusing at card level was rejected for hiding four correct ones.
+
+Two changes to what was originally built, both after review. The placeholder is two
+words rather than one - "Sin dato" before a read has answered, "No se pudo calcular"
+once one has, because a figure withheld during a load in progress is not a failure
+and saying so was a claim the app had no grounds for. And the explanatory sentence
+was dropped entirely: the placeholder says what happened and Mis Activos lists every
+holding with "Sin precio" against it.
+
+**Not verified on a device** - it needs Holdings, priced and unpriced, so it waits
+for the Compra form with the rest.

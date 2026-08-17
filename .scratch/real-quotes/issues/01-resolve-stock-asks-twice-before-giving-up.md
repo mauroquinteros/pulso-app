@@ -50,3 +50,19 @@ is mechanically incompatible with writing the Stock at all.
 
 None - can start immediately. It shares no code with the rest of this PRD and can ship before or
 after any of it.
+
+## Closed
+
+Type-checked with `deno check` - the first time this file has been checked by
+anything, since `tsc` cannot read the `Deno` global and the app's config excludes
+the directory. Clean, as is `refresh-stocks`, so the retry introduced nothing.
+
+The retry itself is proven by a harness that drove the real extracted functions
+against a stubbed `fetch`: exactly two attempts and never a third, ~250ms apart,
+one attempt when the first succeeds, `null` after two failures so the write-anyway
+branch still fires, and the write still omitting `price` rather than nulling it.
+
+Deployed and confirmed live as the current build. **The live happy path is not
+verified**: the endpoint requires a real signed-in user's token, sign-in is Google
+OAuth only, and no token is obtainable headlessly. It is also unreachable from the
+UI while Compra is "Pronto" - a `curl` with a session token is the only route.

@@ -50,3 +50,15 @@ broken.
 ## Blocked by
 
 - `.scratch/real-quotes/issues/02-a-holding-is-valued-from-the-stocks-table.md`
+
+## Closed
+
+**Not verified on a device.** The foreground re-read, and the distinction it turns
+on - a true background return re-reads, a notification shade or Control Centre pull
+does not - are exactly what a device test would exercise and nothing else can. This
+repo has no React renderer (`environment: "node"`, `**/*.test.ts` only), so the hook
+is covered by neither test nor device.
+
+The `[stocks] read ok:` trace makes it a one-glance check whenever the app is next
+run: background it fully and return, expect a new line; pull down the shade and
+dismiss, expect none.
