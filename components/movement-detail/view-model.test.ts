@@ -1,5 +1,5 @@
 import { buildMovementsView } from "@/components/movements/view-model";
-import { MOCK_MOVEMENTS } from "@/lib/mock-data";
+import { MOCK_MOVEMENTS } from "@/fixtures/portfolio";
 import type { BuyMovement, DepositMovement, DividendMovement, SellMovement, WithdrawalMovement } from "@/types/models";
 import { cashImpact } from "@/utils/portfolio/cash";
 import { describe, expect, it } from "vitest";

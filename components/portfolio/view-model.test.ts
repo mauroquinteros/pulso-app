@@ -1,4 +1,4 @@
-import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
+import { MOCK_PORTFOLIO_SUMMARY } from "@/fixtures/portfolio";
 import type { BuyMovement, DepositMovement, Movement, Stock } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";

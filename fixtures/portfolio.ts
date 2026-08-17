@@ -1,3 +1,26 @@
+/**
+ * The reconciliation corpus: one hand-authored History, the Stocks that price
+ * it, and the Portfolio the engine derives from the two. Read by tests only -
+ * nothing here ships, which is why it sits outside every directory that does.
+ *
+ * It is a fixture and not a mock: nothing is stubbed or faked, these are real
+ * Movements run through the real engine. It existed to seed the app before the
+ * History was persisted; the store has no seed now, and what it is kept for is
+ * narrower and worth stating, because it looks like data nobody needs.
+ *
+ * Three invariants can only be proved over a History that holds every kind of
+ * Movement at once, and this is the only one that does - thirteen of them across
+ * all five types, with a partial sell and a full exit: that the running sum of
+ * every Movement's Cash Impact equals Cash, that Inicio's figures reconcile with
+ * each other, and that Allocations sum to 100%. Narrow fixtures built per test
+ * cannot show any of them, because each one is a claim about the whole.
+ *
+ * So it is deliberately not trimmed to what a passing test needs. MSFT is bought
+ * and then wholly sold so a fully-exited position keeps contributing Realized
+ * P&L while listing as no Holding, and it carries no price for exactly that
+ * reason - a Stock with no shares has nothing to value.
+ */
+
 import type {
   BuyMovement,
   DepositMovement,
@@ -167,7 +190,7 @@ export const MOCK_MOVEMENTS: Movement[] = [
 // shares to value.
 // ---------------------------------------------------------------------------
 
-export const MOCK_STOCKS: StockMap = {
+const MOCK_STOCKS: StockMap = {
   AAPL: { ticker: "AAPL", name: "Apple Inc.", quote: { price: 198.4, quotedAt: "2026-02-13T21:00:00Z" } },
   VOO: { ticker: "VOO", name: "Vanguard S&P 500 ETF", quote: { price: 458.6, quotedAt: "2026-02-13T21:00:00Z" } },
 };

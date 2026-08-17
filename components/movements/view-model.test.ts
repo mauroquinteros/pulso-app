@@ -1,4 +1,4 @@
-import { MOCK_MOVEMENTS } from "@/lib/mock-data";
+import { MOCK_MOVEMENTS } from "@/fixtures/portfolio";
 import type {
   BuyMovement,
   DepositMovement,
