@@ -1,16 +1,17 @@
 import { Colors, HoldingBadge } from "@/constants/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { NO_FIGURE } from "./view-model";
 import type { HomeView, Tone } from "./view-model";
 
 type Props = {
   assets: HomeView["assets"];
   onPressHolding?: (ticker: string) => void;
+  /** What to print where a price-dependent figure would have gone. */
+  withheldLabel: string;
 };
 
 const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
-export function AssetsCard({ assets, onPressHolding }: Props) {
+export function AssetsCard({ assets, onPressHolding, withheldLabel }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -25,7 +26,7 @@ export function AssetsCard({ assets, onPressHolding }: Props) {
               { color: assets.netPnl === null ? Colors.textSecondary : toneColor(assets.netPnlTone) },
             ]}
           >
-            {assets.netPnl ?? NO_FIGURE}
+            {assets.netPnl ?? withheldLabel}
           </Text>
         </Text>
       </View>

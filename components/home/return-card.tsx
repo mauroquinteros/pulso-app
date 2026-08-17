@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { NO_FIGURE } from "./view-model";
 import type { HomeView, Tone } from "./view-model";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -22,11 +21,13 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 
 type Props = {
   return: HomeView["return"];
+  /** What to print where a price-dependent figure would have gone. */
+  withheldLabel: string;
 };
 
 const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
-export function ReturnCard({ return: ret }: Props) {
+export function ReturnCard({ return: ret, withheldLabel }: Props) {
   const [open, setOpen] = useState(false);
   const [tip, setTip] = useState<{
     top: number;
@@ -70,7 +71,7 @@ export function ReturnCard({ return: ret }: Props) {
           </View>
           <View style={styles.valueRow}>
             <Text style={[styles.total, ret.total === null && styles.totalWithheld, { color: totalColor }]}>
-              {ret.total ?? NO_FIGURE}
+              {ret.total ?? withheldLabel}
             </Text>
             {ret.percent !== null &&
               (ret.percentTooltip ? (
@@ -106,7 +107,9 @@ export function ReturnCard({ return: ret }: Props) {
         <Text style={styles.bridgeArrow}>→</Text>
         <View style={[styles.bridgeSide, styles.bridgeSideRight]}>
           <Text style={styles.bridgeLabel}>Vale hoy</Text>
-          <Text style={[styles.bridgeValue, ret.valeHoy === null && styles.withheld]}>{ret.valeHoy ?? NO_FIGURE}</Text>
+          <Text style={[styles.bridgeValue, ret.valeHoy === null && styles.withheld]}>
+            {ret.valeHoy ?? withheldLabel}
+          </Text>
         </View>
       </View>
 
@@ -121,7 +124,7 @@ export function ReturnCard({ return: ret }: Props) {
                     {c.label}
                     {c.sub ? <Text style={styles.compSub}> {c.sub}</Text> : null}
                   </Text>
-                  <Text style={[styles.compValue, { color }]}>{c.value ?? NO_FIGURE}</Text>
+                  <Text style={[styles.compValue, { color }]}>{c.value ?? withheldLabel}</Text>
                 </View>
                 {/* No track when the fills are withheld: a bar is a proportion,
                     and the total it would be a proportion of is refused. */}

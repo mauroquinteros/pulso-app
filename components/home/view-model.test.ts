@@ -2,7 +2,7 @@ import { MOCK_PORTFOLIO_SUMMARY } from "@/lib/mock-data";
 import type { BuyMovement, DepositMovement, Movement, Stock, WithdrawalMovement } from "@/types/models";
 import { assemblePortfolio } from "@/utils/portfolio/valuation";
 import { describe, expect, it } from "vitest";
-import { buildHomeView, NO_FIGURE, showsRefreshFailed } from "./view-model";
+import { buildHomeView, showsRefreshFailed } from "./view-model";
 
 let seq = 0;
 const deposit = (amount: number, transferFee = 0): DepositMovement => ({
@@ -40,7 +40,7 @@ const stock = (ticker: string, price: number): Stock => ({
 
 describe("buildHomeView", () => {
   it("renders MOCK_PORTFOLIO_SUMMARY with every figure matching and reconciling", () => {
-    const view = buildHomeView(MOCK_PORTFOLIO_SUMMARY);
+    const view = buildHomeView(MOCK_PORTFOLIO_SUMMARY, "ready");
 
     // Worth — Total Portfolio Value headline + composition.
     expect(view.worth.total).toBe("$4,863.38");
@@ -145,7 +145,7 @@ describe("buildHomeView", () => {
   it("keeps every figure and says nothing when a portfolio holds only cash", () => {
     // No Movements at all: an empty portfolio is not an unpriceable one, so
     // nothing is refused and no line about prices appears.
-    const empty = buildHomeView(assemblePortfolio([], {}));
+    const empty = buildHomeView(assemblePortfolio([], {}), "ready");
     expect(empty.worth.total).toBe("$0.00");
     expect(empty.worth.invested).not.toBeNull();
     expect(empty.worth.cash.pct).toBe("0.0%");
@@ -155,7 +155,7 @@ describe("buildHomeView", () => {
     expect(empty.priceNote).toBeNull();
 
     // Same for a Perfil who has deposited but bought nothing.
-    const deposited = buildHomeView(assemblePortfolio([deposit(1000)], {}));
+    const deposited = buildHomeView(assemblePortfolio([deposit(1000)], {}), "ready");
     expect(deposited.worth.total).toBe("$1,000.00");
     expect(deposited.priceNote).toBeNull();
   });
@@ -163,7 +163,7 @@ describe("buildHomeView", () => {
   it("leaves value/pnl null for a holding without a current price", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 10, 1)];
     const portfolio = assemblePortfolio(movements, {}); // no price for AAPL
-    const view = buildHomeView(portfolio);
+    const view = buildHomeView(portfolio, "ready");
 
     expect(view.assets.holdings).toHaveLength(1);
     const aapl = view.assets.holdings[0];
@@ -177,7 +177,7 @@ describe("buildHomeView", () => {
 
   it("shows Market Value 0 and all-cash composition for a deposits-only portfolio", () => {
     const portfolio = assemblePortfolio([deposit(1000)], {});
-    const view = buildHomeView(portfolio);
+    const view = buildHomeView(portfolio, "ready");
 
     expect(view.worth.total).toBe("$1,000.00");
     expect(view.worth.invested).toEqual({
@@ -195,7 +195,7 @@ describe("buildHomeView", () => {
     // Bought high, priced low: every figure on the loss side.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
     const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 60) });
-    const view = buildHomeView(portfolio);
+    const view = buildHomeView(portfolio, "ready");
 
     expect(view.return.tone).toBe("negative");
     expect(view.return.total?.startsWith("-")).toBe(true);
@@ -210,7 +210,7 @@ describe("buildHomeView", () => {
     // caveat - not a refusal.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), buy("MSFT", 50, 2)];
     const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 120) });
-    const view = buildHomeView(portfolio);
+    const view = buildHomeView(portfolio, "ready");
 
     // Cash 1000 - 501 - 100 = 399; Market Value 5 x 120 = 600 (AAPL only).
     expect(view.worth.total).toBe("$999.00");
@@ -242,14 +242,14 @@ describe("buildHomeView", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), buy("MSFT", 50, 2), buy("NVDA", 10, 1)];
     const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 120) });
 
-    expect(buildHomeView(portfolio).priceNote).toBe("2 activos sin precio, excluidos de los totales");
+    expect(buildHomeView(portfolio, "ready").priceNote).toBe("2 activos sin precio, excluidos de los totales");
   });
 
   it("withholds every price-dependent figure when no holding is priced", () => {
     // Aportado $1,000 with nothing priced would otherwise print Vale hoy
     // $499.00 and a Total Return near -50%: a dropped read drawn as a loss.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
-    const view = buildHomeView(assemblePortfolio(movements, {}));
+    const view = buildHomeView(assemblePortfolio(movements, {}), "ready");
 
     // Withheld: everything a current price is needed to state.
     expect(view.worth.total).toBeNull();
@@ -285,38 +285,68 @@ describe("buildHomeView", () => {
       },
     ]);
 
-    expect(view.priceNote).toBe(
-      "Ningún activo tiene precio ahora mismo, así que no calculamos tu valor total ni tu rendimiento.",
-    );
-    // A third sentence about a third situation: not the History's "No pudimos
-    // cargar tus movimientos", not the banner's "No pudimos actualizar los
-    // precios". Both can be on screen in other states.
-    expect(view.priceNote).not.toContain("No pudimos");
+    // No sentence: "No se pudo calcular" stands where each figure would have
+    // been, and the holding above already reads "Sin precio", so a paragraph
+    // would restate what the screen shows twice. It also keeps this clear of the
+    // History's "No pudimos cargar tus movimientos" and the banner's "No pudimos
+    // actualizar los precios" without having to word a third sentence around them.
+    expect(view.priceNote).toBeNull();
+    expect(view.withheldLabel).toBe("No se pudo calcular");
   });
 
   it("drops the percentage tooltip along with the percentage it explains", () => {
     // Peak Contributions (1000) exceeds Net Contributions (600), which is the
     // one case that earns a tooltip - and there is no percentage to explain.
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), withdrawal(400)];
-    const view = buildHomeView(assemblePortfolio(movements, {}));
+    const view = buildHomeView(assemblePortfolio(movements, {}), "ready");
 
     expect(view.return.percent).toBeNull();
     expect(view.return.percentTooltip).toBeNull();
 
     // The same history with a price keeps both.
-    const priced = buildHomeView(assemblePortfolio(movements, { AAPL: stock("AAPL", 120) }));
+    const priced = buildHomeView(assemblePortfolio(movements, { AAPL: stock("AAPL", 120) }), "ready");
     expect(priced.return.percent).not.toBeNull();
     expect(priced.return.percentTooltip).toContain("$1,000.00");
   });
 
-  it("names a refused figure with a plain-ASCII Spanish placeholder", () => {
-    // The cards print NO_FIGURE wherever the view-model says null, so the word
-    // is agreed here rather than three times in JSX.
-    expect(NO_FIGURE).toBe("Sin dato");
+  it("says nothing about prices before a read has answered", () => {
+    // The race this exists for: the tabs are held until the Movements arrive, so
+    // if the Stocks read is the slower of the two the screen renders with none
+    // in hand. It has not failed - it has not finished - and claiming a figure
+    // could not be worked out would be a fault the app has no grounds to report.
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
+    const view = buildHomeView(assemblePortfolio(movements, {}), "unread");
+
+    expect(view.withheldLabel).toBe("Sin dato");
+    // The figures are withheld either way - only the reason differs.
+    expect(view.worth.total).toBeNull();
+    expect(view.return.total).toBeNull();
+    // And nothing is claimed about why.
+    expect(view.priceNote).toBeNull();
+  });
+
+  it("says a figure could not be worked out once a read has answered", () => {
+    const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1)];
+    const portfolio = assemblePortfolio(movements, {});
+
+    for (const status of ["ready", "failed"] as const) {
+      const view = buildHomeView(portfolio, status);
+      expect(view.withheldLabel).toBe("No se pudo calcular");
+      // No sentence beneath it: the placeholder says what happened, and Mis
+      // Activos lists every holding with "Sin precio" against it, which is why.
+      expect(view.priceNote).toBeNull();
+    }
+  });
+
+  it("keeps both placeholders free of punctuation lookalikes", () => {
     // Written as escapes so the assertion says which character it means: no em
     // dash and no minus-sign lookalike, the two the ASCII rule keeps catching.
-    expect(NO_FIGURE).not.toContain("\u2014");
-    expect(NO_FIGURE).not.toContain("\u2212");
+    const portfolio = assemblePortfolio([deposit(1000), buy("AAPL", 100, 5, 1)], {});
+    for (const status of ["unread", "ready"] as const) {
+      const { withheldLabel } = buildHomeView(portfolio, status);
+      expect(withheldLabel).not.toContain("\u2014");
+      expect(withheldLabel).not.toContain("\u2212");
+    }
   });
 });
 

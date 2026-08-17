@@ -5,14 +5,23 @@ import { formatSharesLabel, formatSignedPercent, formatSignedUSD, formatUSD } fr
 export type Tone = "positive" | "negative";
 
 /**
- * What a card prints where a price-dependent figure would have gone.
+ * What a card prints where a price-dependent figure would have gone. Two words,
+ * because there are two reasons the figure is missing and only one of them is a
+ * failure.
  *
- * A short Spanish phrase rather than a dash: the app already says "Sin precio"
- * in an unpriced holding's row, so this reads as the app declining rather than
- * as a rendering glitch, and it needs no U+2014 - which the ASCII-only rule
- * would force into an escape whose meaning a reader then has to decode.
+ * Before any read has answered the app does not yet know whether prices exist,
+ * so it states the absence and claims nothing about it. Once one has answered
+ * and left nothing priced, the figure genuinely could not be worked out, and
+ * saying so is what stops an empty slot reading as a rendering glitch. Getting
+ * this backwards is the whole point of the distinction: "no se pudo" during a
+ * load in progress is a failure the app has no grounds to report yet.
+ *
+ * Short Spanish phrases rather than a dash - the app already says "Sin precio"
+ * in an unpriced holding's row, so these read as the app declining, and neither
+ * needs a U+2014 that the ASCII-only rule would force into an escape.
  */
-export const NO_FIGURE = "Sin dato";
+const NOT_YET_KNOWN = "Sin dato";
+const COULD_NOT_COMPUTE = "No se pudo calcular";
 
 /**
  * Every field a current price is needed to state is `| null`, so a card cannot
@@ -67,10 +76,13 @@ export interface HomeView {
       pnlTone: Tone;
     }[];
   };
-  /** The one line explaining the prices behind the figures: which holdings were
-   * left out, or why the price-dependent ones are absent entirely. null when
-   * every Holding is priced and there is nothing to say. */
+  /** The one line naming holdings left out of figures that still printed. null
+   * when every Holding is priced, and null when none is - a total miss explains
+   * itself through `withheldLabel` and the per-holding rows. */
   priceNote: string | null;
+  /** What a card prints wherever this view-model says null: what the app does
+   * not know yet, or what it could not work out. */
+  withheldLabel: string;
 }
 
 /** A signed figure is negative only past the ±0.005 rounding threshold. */
@@ -81,23 +93,25 @@ const compositionPct = (part: number, total: number): string =>
   `${total !== 0 ? ((part / total) * 100).toFixed(1) : "0.0"}%`;
 
 /**
- * The line under the headline about the prices behind it. Two situations, two
- * sentences, and neither may be confusable with the History's "No pudimos
- * cargar tus movimientos" (a read that failed) or the refresh banner's "No
- * pudimos actualizar los precios" (a re-read that failed) - all three can be on
- * screen, in different states, and this is the only one about what the figures
- * were computed *over*.
+ * The line under the headline about the prices behind it, and it exists for one
+ * situation only: a *partial* miss, where the figures still print and something
+ * was left out of them. It is the distribution card's caption almost verbatim,
+ * since it says the same thing about the same holdings; only what they are
+ * excluded from differs.
  *
- * The partial line is the distribution card's caption almost verbatim, since it
- * says the same thing about the same holdings; only what they are excluded from
- * differs. The refusal names the state and its consequence and stops there: why
- * no price is in hand has three causes (ADR 0011) that nothing here can tell
- * apart, so it claims none of them.
+ * There is deliberately no line for the total miss. The withheld figures already
+ * say "No se pudo calcular" and Mis Activos names every unpriced holding, so a
+ * sentence there restated what the screen showed twice over - and it had to be
+ * kept clear of the History's "No pudimos cargar tus movimientos" and the
+ * refresh banner's "No pudimos actualizar los precios" while saying much the
+ * same kind of thing. Not writing it is the cheaper way to keep them apart.
  */
 function priceNote(missingPrice: number, unpriceable: boolean): string | null {
-  if (unpriceable) {
-    return "Ningún activo tiene precio ahora mismo, así que no calculamos tu valor total ni tu rendimiento.";
-  }
+  // Nothing priced needs no sentence: the withheld figures already read "No se
+  // pudo calcular", and Mis Activos lists every holding with "Sin precio"
+  // against it, which is the reason. A paragraph repeating that was three lines
+  // saying what two words and a list already say.
+  if (unpriceable) return null;
   if (missingPrice === 0) return null;
   return missingPrice === 1
     ? "1 activo sin precio, excluido de los totales"
@@ -122,7 +136,7 @@ function priceNote(missingPrice: number, unpriceable: boolean): string | null {
  * the figure is equally unsayable; naming the cause is the refresh banner's job
  * (`showsRefreshFailed`), and only for the one cause it can actually identify.
  */
-export function buildHomeView(portfolio: Portfolio): HomeView {
+export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeView {
   const { totalReturn, holdings } = portfolio;
 
   // Holdings, none of them priced. An empty portfolio is not an unpriceable
@@ -212,6 +226,10 @@ export function buildHomeView(portfolio: Portfolio): HomeView {
     return: returnView,
     assets,
     priceNote: priceNote(portfolio.holdingsMissingPrice, unpriceable),
+    // `unread` is the one state where nothing has come back yet, so the app
+    // cannot say a figure could not be worked out - it has not tried and
+    // finished. Every other state has an answer behind it (ADR 0011).
+    withheldLabel: status === "unread" ? NOT_YET_KNOWN : COULD_NOT_COMPUTE,
   };
 }
 

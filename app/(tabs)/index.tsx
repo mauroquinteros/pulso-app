@@ -13,13 +13,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const portfolio = usePortfolio();
-  const view = buildHomeView(portfolio);
   const status = useStocksStore((s) => s.status);
   const quotedCount = useStocksStore((s) => Object.keys(s.stocks).length);
 
-  // No memory of the previous render is needed: `status` is how the last read
-  // *landed*, and a refresh in flight moves `reading` instead - so a re-read
-  // cannot blank the banner for the length of its select.
+  // The status goes in because a withheld figure means two different things
+  // before and after a read has answered, and only this knows which (ADR 0011).
+  const view = buildHomeView(portfolio, status);
+
+  // No memory of the previous render is needed: only an answer moves `status`,
+  // so a refresh in flight cannot blank the banner for the length of its select.
   const refreshFailed = showsRefreshFailed({ status, quotedCount, holdingCount: portfolio.holdings.length });
 
   return (
@@ -27,9 +29,13 @@ export default function HomeScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HomeHeader />
         {refreshFailed && <RefreshFailedBanner />}
-        <WorthCard worth={view.worth} note={view.priceNote} />
-        <ReturnCard return={view.return} />
-        <AssetsCard assets={view.assets} onPressHolding={(ticker) => router.push(`/stock/${ticker}`)} />
+        <WorthCard worth={view.worth} note={view.priceNote} withheldLabel={view.withheldLabel} />
+        <ReturnCard return={view.return} withheldLabel={view.withheldLabel} />
+        <AssetsCard
+          assets={view.assets}
+          onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
+          withheldLabel={view.withheldLabel}
+        />
       </ScrollView>
     </SafeAreaView>
   );

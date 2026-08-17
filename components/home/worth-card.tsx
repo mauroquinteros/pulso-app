@@ -1,7 +1,6 @@
 import { Colors, Gradients } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
-import { NO_FIGURE } from "./view-model";
 import type { HomeView } from "./view-model";
 
 type Props = {
@@ -9,14 +8,16 @@ type Props = {
   /** The line about the prices behind the figures, shown right under the
    * headline it qualifies. null when every Holding is priced. */
   note: string | null;
+  /** What to print where a price-dependent figure would have gone. */
+  withheldLabel: string;
 };
 
-export function WorthCard({ worth, note }: Props) {
+export function WorthCard({ worth, note, withheldLabel }: Props) {
   return (
     <LinearGradient colors={Gradients.card} start={{ x: 0.37, y: 0.02 }} end={{ x: 0.63, y: 0.98 }} style={styles.card}>
       <Text style={styles.label}>Valor total</Text>
       <Text style={[styles.value, worth.total === null && styles.valueWithheld, note !== null && styles.valueTight]}>
-        {worth.total ?? NO_FIGURE}
+        {worth.total ?? withheldLabel}
       </Text>
       {note !== null && <Text style={styles.note}>{note}</Text>}
 
