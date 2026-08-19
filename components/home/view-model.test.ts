@@ -368,6 +368,22 @@ describe("showsRefreshFailed", () => {
     expect(showsRefreshFailed({ quotedCount: 0, holdingCount: 1, status: "failed" })).toBe(false);
   });
 
+  it("speaks after a confirmed Stock fills a map a failed read left empty - a known false positive", () => {
+    // ACCEPTED, NOT DESIRED, and pinned so that closing it starts from ADR 0013
+    // rather than from the symptom.
+    //
+    // `quotedCount === 0` is a proxy for "no read has ever succeeded, so there is
+    // nothing we are failing to refresh". A confirmation is the first thing that
+    // can fill the map WITHOUT a successful read: a failed launch read, then a
+    // símbolo confirmed in the Compra form, then a saved buy - and Inicio raises
+    // "No pudimos actualizar los precios" over a portfolio whose only price is
+    // seconds old. Rare, and the sentence is not false, since the read did fail.
+    //
+    // If this ever changes, the guard needs a fact the store does not carry today:
+    // whether a read has ever succeeded.
+    expect(showsRefreshFailed({ quotedCount: 1, holdingCount: 1, status: "failed" })).toBe(true);
+  });
+
   it("says nothing to a user holding nothing", () => {
     expect(showsRefreshFailed({ quotedCount: 3, holdingCount: 0, status: "failed" })).toBe(false);
   });

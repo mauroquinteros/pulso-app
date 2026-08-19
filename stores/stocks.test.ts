@@ -70,6 +70,46 @@ describe("useStocksStore", () => {
     expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
   });
 
+  it("a confirmed Stock joins the map without displacing the ones already held", () => {
+    stocksInHand({ AAPL: apple });
+
+    useStocksStore.getState().stockConfirmed(voo);
+
+    expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
+  });
+
+  it("a confirmed Stock replaces an older Quote for the same ticker", () => {
+    stocksInHand({ AAPL: apple });
+    const fresher: Stock = { ...apple, quote: { price: 310.03, quotedAt: "2026-08-18T20:00:00Z" } };
+
+    useStocksStore.getState().stockConfirmed(fresher);
+
+    expect(useStocksStore.getState().stocks).toEqual({ AAPL: fresher });
+  });
+
+  it.each(["unread", "ready", "failed"] as const)("a confirmation leaves the status at %s", (status) => {
+    // The constraint is an ABSENCE, so nothing in a diff reveals it and only this
+    // can hold it. `status` records how the last *read* came out, and a
+    // confirmation is not a read - so a symbol typed into the Compra form must
+    // never clear the refresh-failed banner, which is the fault the store's own
+    // "nothing can unsay a failure" guarantee exists to prevent (ADR 0013).
+    useStocksStore.setState({ status, stocks: { AAPL: apple } });
+
+    useStocksStore.getState().stockConfirmed(voo);
+
+    expect(useStocksStore.getState().status).toBe(status);
+    expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
+  });
+
+  it("signing out drops a confirmed Stock with the rest", () => {
+    stocksInHand({ AAPL: apple });
+    useStocksStore.getState().stockConfirmed(voo);
+
+    useStocksStore.getState().forgetStocks();
+
+    expect(useStocksStore.getState().stocks).toEqual({});
+  });
+
   it("signing out returns the store to its initial state", () => {
     // For freshness, not for privacy - a Quote is shared and leaks nothing. What
     // must not survive is a Quote shown as current in a session whose own read

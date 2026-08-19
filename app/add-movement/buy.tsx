@@ -27,12 +27,14 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { saveMovement } from "@/lib/history";
 import { resolveStock } from "@/lib/resolve-stock";
 import { useMovementsStore } from "@/stores/movements";
+import { useStocksStore } from "@/stores/stocks";
 import { formatShares, formatUSD } from "@/utils/format";
 import { normalizeTicker, sanitizeDecimal, sanitizeSymbol } from "@/utils/input";
 import { initialSymbolCheckState, shouldCheck, symbolCheckError, symbolCheckReducer } from "@/utils/symbol-check";
 
 export default function BuyFormScreen() {
   const movementSaved = useMovementsStore((s) => s.movementSaved);
+  const stockConfirmed = useStocksStore((s) => s.stockConfirmed);
   const availableCash = usePortfolio().cash;
   // Held in state, so the id is minted once per form session rather than once
   // per tap. If the insert lands but its response does not, the second tap
@@ -122,7 +124,18 @@ export default function BuyFormScreen() {
 
     const requestId = ++lastRequestId.current;
     dispatchSymbolCheck({ type: "checkStarted", ticker: symbol, requestId });
-    resolveStock(symbol).then((answer) => dispatchSymbolCheck({ type: "answered", requestId, answer }));
+
+    // Two results, two homes: the verdict opens the save gate, and the Stock it
+    // confirmed joins the map so the Holding this buy creates has a Market Value
+    // the moment it appears. They arrive together on purpose - the answer that
+    // makes the buy saveable is the same one that carries its price, so there is
+    // no window in which a saveable buy has a Stock the app does not hold
+    // (ADR 0013). No Stock comes back when the provider had no quote, which is a
+    // real absence and rendered as one.
+    resolveStock(symbol).then(({ answer, stock }) => {
+      dispatchSymbolCheck({ type: "answered", requestId, answer });
+      if (stock) stockConfirmed(stock);
+    });
   };
 
   // The save waits for Postgres. Nothing is written optimistically: the store is

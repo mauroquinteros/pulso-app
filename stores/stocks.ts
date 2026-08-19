@@ -48,6 +48,12 @@ interface StocksData {
 interface StocksState extends StocksData {
   answerRead: (answer: StocksAnswer) => void;
   /**
+   * One **Stock**, confirmed on its way into a **Compra** and kept (ADR 0013).
+   * Adds to the map and leaves `status` alone - see the implementation for why
+   * that silence is the point rather than an omission.
+   */
+  stockConfirmed: (stock: Stock) => void;
+  /**
    * Throws the Stocks away and returns to `unread`. A Perfil signing out, and
    * nothing else - the read fires on mount, so no retry needs this.
    */
@@ -59,7 +65,8 @@ export const initialStocksState: StocksData = { status: "unread", stocks: {} };
 export const useStocksStore = create<StocksState>((set) => ({
   ...initialStocksState,
 
-  // The only thing that moves either field. A failed read keeps the Stocks, and
+  // The only thing that moves the status, and the only thing that replaces the
+  // map wholesale. A failed read keeps the Stocks, and
   // that is the whole of "a failed refresh is not an absence": the app holds
   // Quotes and could not find out whether newer ones exist. Hiding them would
   // report a fault as an absence. Saying nothing would present them as current,
@@ -71,6 +78,18 @@ export const useStocksStore = create<StocksState>((set) => ({
   // simply a map of Quotes. Here that costs no code at all: nothing runs when a
   // read starts.
   answerRead: (answer) => set(answer.ok ? { status: "ready", stocks: answer.stocks } : { status: "failed" }),
+
+  // Adds one Stock and deliberately does NOT touch `status`. The guarantee above
+  // - that nothing can unsay a failure before another answer lands - is what
+  // makes the refresh banner stay put, and a confirmation setting `ready` would
+  // clear that banner because somebody typed a symbol into a form. It is also
+  // what the field means: `status` is how the last *read* came out, and a
+  // confirmation is not a read (ADR 0013).
+  //
+  // No stale-answer guard, unlike the símbolo reducer that receives the same
+  // reply: a Stock is shared and owned by nobody, so two confirmations racing can
+  // only leave a slightly staler Quote in the map, which costs nothing.
+  stockConfirmed: (stock) => set((state) => ({ stocks: { ...state.stocks, [stock.ticker]: stock } })),
 
   forgetStocks: () => set(initialStocksState),
 }));
