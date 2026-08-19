@@ -42,24 +42,45 @@ working deposit form into this slice for no benefit today.
 
 ## Acceptance criteria
 
-- [ ] Compra opens from the picker; Venta, Dividendo and Retiro keep their *Pronto* tags and stay
+- [x] Compra opens from the picker; Venta, Dividendo and Retiro keep their *Pronto* tags and stay
       unopenable
-- [ ] Saving a buy inserts into the trades table and awaits the answer before the form dismisses
-- [ ] `regulatory_fees` is absent from the insert payload, so a buy stores NULL and the schema's
+- [x] Saving a buy inserts into the trades table and awaits the answer before the form dismisses
+- [x] `regulatory_fees` is absent from the insert payload, so a buy stores NULL and the schema's
       constraint is satisfied
-- [ ] The Movement that joins the History is mapped from the row the database returned, carrying
+- [x] The Movement that joins the History is mapped from the row the database returned, carrying
       the database's `createdAt`
-- [ ] The id is minted once per form session, so a second tap or a retry after a lost response
+- [x] The id is minted once per form session, so a second tap or a retry after a lost response
       carries the same id
-- [ ] A duplicate id reads the stored row back and reports success rather than reporting a failure
-- [ ] A failed save leaves Símbolo, Monto, Precio, Comisión and Fecha as typed, shows a failure
+- [x] A duplicate id reads the stored row back and reports success rather than reporting a failure
+- [x] A failed save leaves Símbolo, Monto, Precio, Comisión and Fecha as typed, shows a failure
       message, and writes nothing
-- [ ] The save button is inert while a save is in flight
-- [ ] Sells and dividends are still refused by the write path
-- [ ] The **Fecha** chosen is stored as that calendar date, unshifted by the device's timezone
-- [ ] Verified on a device: a recorded buy survives a restart, appears in the movements list with
+- [x] The save button is inert while a save is in flight
+- [x] Sells and dividends are still refused by the write path
+- [x] The **Fecha** chosen is stored as that calendar date, unshifted by the device's timezone
+- [x] Verified on a device: a recorded buy survives a restart, appears in the movements list with
       its **Cash Impact**, and its receipt adds up to its total
 
 ## Blocked by
 
 - `.scratch/buy-movement/issues/01-the-buy-total-is-the-figure-that-leaves-buying-power.md`
+
+## Closing note
+
+Done in `ff559c0`, and verified on a device **and** against the live database.
+
+The rows Postgres holds were read back with `supabase db query --linked`:
+`regulatory_fees` is NULL on every buy, `created_at == updated_at` (so the value is the
+database's clock on insert and nothing has updated it since), and `execution_date` is a
+bare calendar date — `2025-04-03` for a buy recorded in August, unshifted.
+
+The failure path was exercised in airplane mode: the message appeared, every field
+survived, and the retry that followed produced **one** row, not two.
+
+The whole portfolio was run through `assemblePortfolio` from the live rows and
+reconciles: `Cash + Market Value == Net Contributions + Total Return`, with
+`holdingsMissingPrice` at 0 once every ticker is priced.
+
+One thing found while extracting `destinationFor`: the duplicate-id read-back had
+`movement_cash` hard-coded, so a retried **buy** would have been answered with whatever
+sat in the cash table under that id. It now follows the movement to its own table, and a
+test names the case.

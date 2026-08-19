@@ -51,24 +51,50 @@ rare, and the sentence is not false. Pin it with a test so that whoever closes i
 
 ## Acceptance criteria
 
-- [ ] The confirmation boundary returns the confirmed **Stock** alongside the verdict, and nothing
+- [x] The confirmation boundary returns the confirmed **Stock** alongside the verdict, and nothing
       when the provider confirmed the symbol but had no price
-- [ ] The flat response is mapped into a domain Stock carrying its **Quote** - price and market
+- [x] The flat response is mapped into a domain Stock carrying its **Quote** - price and market
       moment together, never apart
-- [ ] The buy screen merges the confirmed Stock into the Stocks store in the same step that
+- [x] The buy screen merges the confirmed Stock into the Stocks store in the same step that
       dispatches the verdict
-- [ ] The store action merges one Stock without displacing those already held
-- [ ] The store action leaves the read status untouched in **every** status, `failed` included -
+- [x] The store action merges one Stock without displacing those already held
+- [x] The store action leaves the read status untouched in **every** status, `failed` included -
       covered by a test, because the constraint is an absence and nothing in a diff reveals it
-- [ ] The símbolo state machine, its race guard and its tests are unchanged
+- [x] The símbolo state machine, its race guard and its tests are unchanged
 - [ ] A confirmed símbolo with no price stores no Stock, and a Holding of it renders as a real
       absence
-- [ ] The company name is not rendered anywhere in the buy form
-- [ ] A test pins the accepted banner false positive: a failed status with a non-empty Stocks map
+- [x] The company name is not rendered anywhere in the buy form
+- [x] A test pins the accepted banner false positive: a failed status with a non-empty Stocks map
       and at least one **Holding** raises the banner
-- [ ] Verified on a device: buying a symbol not already in the stocks table yields a Holding with
+- [x] Verified on a device: buying a symbol not already in the stocks table yields a Holding with
       a **Market Value** immediately, with no backgrounding
 
 ## Blocked by
 
 - `.scratch/buy-movement/issues/02-a-compra-is-written-to-postgres.md`
+
+## Closing note
+
+Done in `f74d979`, and verified on a device against two genuinely fresh tickers — the
+only kind that can exercise this, since a symbol already in `stocks` prices from the
+mount read regardless:
+
+```
+MSFT   stocks row created 02:24:28  ->  buy saved 02:25:22
+META   stocks row created 02:27:59  ->  buy saved 02:28:24   (row deleted first, to force the case)
+```
+
+Neither row existed when the tabs mounted, so the store could not have held it, and both
+Holdings carried a **Market Value** as soon as they appeared.
+
+The bug was also reproduced with timestamps *before* the fix, which is what the
+NVDA row records: written at `01:56:59` with a price of $219.74, its buy saved at
+`01:57:47`, and the Holding still read "Sin precio" because the store had been filled
+before either. The price was in Postgres the whole time.
+
+**One criterion is left unchecked: a confirmed símbolo with no price.** It is
+implemented — `toStock` requires a positive number for `price` and a string for
+`quotedAt`, or it yields no Stock — but it has no test, because `lib/resolve-stock.ts`
+was deliberately given no test file, and the provider returned a price for every symbol
+tried on the device. So it is verified by inspection only. Reaching it needs Finnhub's
+quote call to fail twice for a symbol its search confirms.

@@ -42,20 +42,42 @@ it.
 
 ## Acceptance criteria
 
-- [ ] Total a pagar is computed as `executionPrice × shares + fee`, from the same rounded share
+- [x] Total a pagar is computed as `executionPrice × shares + fee`, from the same rounded share
       count the form displays
-- [ ] The funds gate tests that same figure, so a buy whose real cost exceeds available **Cash**
+- [x] The funds gate tests that same figure, so a buy whose real cost exceeds available **Cash**
       cannot be saved
-- [ ] A named test covers Cash $1,000.00 / Precio $7,000.00 / Monto $1,000.00: total $1,000.02
+- [x] A named test covers Cash $1,000.00 / Precio $7,000.00 / Monto $1,000.00: total $1,000.02
       and the gate closed
-- [ ] A **Comisión** that pushes the total past available Cash closes the gate
-- [ ] A blank or non-positive Monto still yields a total of $0.00 whatever the fee
-- [ ] The insufficient-funds message reads "El total a pagar supera tu efectivo." and names no
+- [x] A **Comisión** that pushes the total past available Cash closes the gate
+- [x] A blank or non-positive Monto still yields a total of $0.00 whatever the fee
+- [x] The insufficient-funds message reads "El total a pagar supera tu efectivo." and names no
       figures
-- [ ] Shares still round to nearest at five decimals - no rounding direction changes anywhere
-- [ ] The símbolo confirmation gate is unchanged: a buy is still unsaveable until the símbolo
+- [x] Shares still round to nearest at five decimals - no rounding direction changes anywhere
+- [x] The símbolo confirmation gate is unchanged: a buy is still unsaveable until the símbolo
       confirms
 
 ## Blocked by
 
 None - can start immediately.
+
+## Closing note
+
+Done in `b39ee84`. Every criterion is covered by tests; none of them needed a device.
+
+Two things moved beyond what was written here, both on the user's call:
+
+- **The total is rounded to the cent.** Not in the criteria, and it turned out to matter
+  more than the derivation itself. Left raw, the form prints "Total a pagar $1,000.00"
+  beside "Disponible $1,000.00" and refuses the buy anyway — measured at **49.7% of
+  prices under $1,000**, because below that the drift is always sub-half-cent and
+  `formatUSD` hides it. The $7,000 example this issue was written from is the *benign*
+  case. ADR 0012 now carries the measurement.
+- **A zero-share buy is refused.** The gate tests `shares > 0`, which subsumes
+  `amount > 0 && price > 0` and additionally blocks a Monto too small to buy 0.00001 of
+  a share — which used to save a purchase of nothing for $0.00. It says "El monto es muy
+  pequeño para ese precio."
+
+The cent-rounding let a buy overdraw **Cash** by under half a cent, which surfaced as a
+Cash of `-0` rendering as "-$0.00". Fixed at its source in `13f1744`: `computeCash` now
+rounds each Cash Impact before summing, which is what every other consumer of
+`cashImpact` already did.
