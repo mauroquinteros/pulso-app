@@ -109,3 +109,38 @@ precisely the one whose only remedy sits behind the screen it hides.
 **Raised during:** issue 02 of `history-persistence`, flagged twice before
 proceeding to issue 03. Deliberately not fixed there - it is recoverability, not
 the read path.
+
+---
+
+## `round2` and `formatUSD` disagree on an exact half-cent, and there are six `round2`s
+
+**Type:** bug (minor) · **Status:** backlog · **Raised:** 2026-08-17
+
+**Problem.** `round2` is `Math.round(n * 100) / 100`, and `Math.round` sends a tie
+toward **+Infinity** — so `round2(-447.865)` is `-447.86`. The display path rounds the
+other way: the movements list and the stock detail both call
+`formatUSD(Math.abs(cashImpact(m)))`, and taking the absolute value first lets `Intl`
+round the tie **away from zero**, giving `$447.87`. A movement whose Cash Impact lands
+on an exact half-cent therefore prints one cent more in the list than it moves in the
+balance the list is meant to explain.
+
+Reachable with fractional shares: a buy of 4.47865 shares at $100.00 costs exactly
+$447.865. Pre-existing and not introduced by the per-movement rounding in `computeCash`
+(2026-08-17), which fixed the *accumulating* residue and the `-0` but leaves ties alone.
+
+**Also.** `round2` is defined identically in six files — `utils/portfolio/cash.ts`,
+`valuation.ts`, `reducer.ts`, `components/movement-detail/view-model.ts`,
+`components/stock-detail/view-model.ts`, and again in two test files. Only the `cash.ts`
+copy normalises anything. So `netContributions` (shown as **Aportado**), `costBasis` and
+the rest can each still yield `-0` and render as `-$0.00`, by exactly the route Cash
+used to. Fixing the tie in one copy and not the others would make the inconsistency
+worse rather than better.
+
+**Why deferred.** The fix is one shared helper that rounds halves away from zero *and*
+normalises `-0`, applied in all six places — which changes derived figures across the
+engine and wants its own branch and a pass over the reconciliation corpus. Not worth
+blocking the Compra form on.
+
+**Where to start.** `utils/portfolio/cash.ts` has the reasoning in its `computeCash`
+doc comment, and `docs/adr/0012-a-buy-total-is-derived-from-its-shares.md` explains why
+a buy may overdraw by under half a cent in the first place.

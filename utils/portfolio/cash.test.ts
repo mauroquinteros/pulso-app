@@ -93,9 +93,10 @@ describe("cashImpact", () => {
   });
 
   it("reconciles: the sum of every movement's Cash Impact is Cash", () => {
-    // The invariant that makes the movements list trustworthy — it renders
-    // cashImpact per row, so the rows must add up to the balance they explain.
-    const sum = MOCK_MOVEMENTS.reduce((total, m) => total + cashImpact(m), 0);
+    // The invariant that makes the movements list trustworthy — it renders each
+    // impact to the cent, so the summed figure has to be the sum of those cents
+    // rather than of the raw quantities behind them.
+    const sum = MOCK_MOVEMENTS.reduce((total, m) => total + round2(cashImpact(m)), 0);
     expect(round2(sum)).toBe(computeCash(MOCK_MOVEMENTS));
   });
 
@@ -108,7 +109,7 @@ describe("cashImpact", () => {
       dividend(20, 6),
       withdrawal(200, 1),
     ];
-    const sum = movements.reduce((total, m) => total + cashImpact(m), 0);
+    const sum = movements.reduce((total, m) => total + round2(cashImpact(m)), 0);
     expect(round2(sum)).toBe(computeCash(movements));
     expect(round2(sum)).toBe(1773.57);
   });
@@ -145,5 +146,19 @@ describe("computeCash", () => {
       withdrawal(200, 1),
     ];
     expect(computeCash(movements)).toBe(1773.57);
+  });
+
+  it("never returns a negative zero", () => {
+    // $1,000 deposited, then $1,000 of a $232.14 share: 4.30775 shares cost
+    // 1000.001085, so Cash falls a tenth of a cent short. The buy form's gate
+    // compares cent-rounded figures and lets that through on purpose (ADR 0012).
+    //
+    // This is the test with teeth: summing the raw impacts leaves -0.001085, which
+    // `Math.round` returns as -0 and Intl renders as "-$0.00" on Inicio. `toBe` uses
+    // Object.is, so it fails on -0 where a loose === would not.
+    const cash = computeCash([deposit(1000, 0), buy(232.14, 4.30775, 0)]);
+
+    expect(cash).toBe(0);
+    expect(Object.is(cash, -0)).toBe(false);
   });
 });

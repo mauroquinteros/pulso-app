@@ -14,8 +14,9 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * (gross - tax) and is never treated as a fee.
  *
  * Its direction is fully determined by the movement's type: deposits, sells and
- * dividends always add; buys and withdrawals always subtract. Returned unrounded
- * so callers can sum many impacts and round once.
+ * dividends always add; buys and withdrawals always subtract. Returned unrounded,
+ * and every caller rounds it to the cent before doing anything with it - see
+ * `computeCash` for why that is the total's job rather than this one's.
  */
 export function cashImpact(movement: Movement): number {
   if (isDepositMovement(movement)) return movement.amount;
@@ -28,10 +29,24 @@ export function cashImpact(movement: Movement): number {
 
 /**
  * Computes Cash / Buying Power from all movements: the sum of every movement's
- * Cash Impact. This makes the reconciliation invariant true by construction —
- * the movements list renders `cashImpact` per row, so the list and the balance
- * it explains can never drift apart. Order-independent.
+ * Cash Impact, each rounded to the cent first. Order-independent.
+ *
+ * Rounded per movement rather than once at the end, which is what makes the
+ * reconciliation invariant true rather than merely claimed: the movements list
+ * renders each impact to the cent, so the total has to be the sum of those cents
+ * and not of the raw figures behind them. Every other caller of `cashImpact`
+ * already rounds it - the detail receipt, the movements list, the stock detail -
+ * so this was the one place treating it as a raw quantity.
+ *
+ * Summing raw also produced a Cash of -0: a buy may overdraw by under half a cent,
+ * because the buy form's gate compares cent-rounded figures (ADR 0012), and
+ * `Math.round` keeps the sign of what it rounds away. Money has no signed zero.
+ *
+ * What this does NOT reconcile: an impact landing on an exact half-cent. `round2`
+ * rounds those toward +Infinity while the display rounds them away from zero, so
+ * the row and the ledger can still differ by a cent there. Pre-existing, tracked in
+ * .scratch/tech-debt/backlog.md.
  */
 export function computeCash(movements: Movement[]): number {
-  return round2(movements.reduce((sum, m) => sum + cashImpact(m), 0));
+  return round2(movements.reduce((sum, m) => sum + round2(cashImpact(m)), 0));
 }
