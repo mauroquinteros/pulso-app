@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { Movement } from "@/types/models";
 import { formatShares } from "@/utils/format";
 import { maxSellableAsOf } from "@/utils/portfolio/reducer";
 
@@ -378,16 +379,21 @@ describe("selling the full position shown as Disponible", () => {
   // so typing exactly what was shown was rejected as an over-sell. With shares
   // standardised at 5 dp everywhere, the displayed figure IS the held amount.
   it("closes a derived fractional position (no over-sell block)", () => {
-    const buy = buildBuyMovement(
-      {
-        ticker: "NVDA",
-        amount: "500",
-        executionPrice: "123.7",
-        fee: "",
-        executionDate: "2025-01-01",
-      },
-      { id: () => "buy-x", now: () => "2025-01-01T00:00:00Z" },
-    );
+    // `createdAt` is added here rather than built: the form produces the fields of
+    // a Movement and the database supplies the instant (ADR 0010).
+    const buy: Movement = {
+      ...buildBuyMovement(
+        {
+          ticker: "NVDA",
+          amount: "500",
+          executionPrice: "123.7",
+          fee: "",
+          executionDate: "2025-01-01",
+        },
+        { id: () => "buy-x" },
+      ),
+      createdAt: "2025-01-01T00:00:00Z",
+    };
     const available = maxSellableAsOf([buy], "NVDA", "2025-06-01");
     const shown = formatShares(available); // what the Acciones helper displays
 

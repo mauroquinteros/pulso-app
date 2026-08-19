@@ -21,7 +21,7 @@ const OPERACIONES: RowSpec[] = [
   {
     type: "buy",
     subtitle: "Adquirir acciones o ETF",
-    disabled: true,
+    disabled: false,
     onPress: () => router.push("/add-movement/buy"),
   },
   {

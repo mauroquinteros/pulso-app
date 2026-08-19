@@ -1,4 +1,4 @@
-import type { BuyMovement } from "@/types/models";
+import type { BuyMovement, NewMovement } from "@/types/models";
 import { normalizeTicker, parseAmount, roundShares } from "@/utils/input";
 import type { SymbolCheckState } from "@/utils/symbol-check";
 
@@ -39,7 +39,6 @@ export interface BuySummary {
 
 export interface BuyDeps {
   id: () => string;
-  now: () => string; // ISO timestamp for createdAt
 }
 
 /**
@@ -110,14 +109,16 @@ export function summarizeBuy(
 }
 
 /**
- * Maps validated form input to a typed BuyMovement. The cash-side Monto is converted
- * to shares (`Monto / Precio`) and rounded to the app-wide 5-decimal share precision, so
+ * Maps validated form input to the *fields* of a BuyMovement, not to a BuyMovement:
+ * `createdAt` is absent on purpose, because it is read from the database's clock when
+ * the row is stored (ADR 0010). The cash-side Monto is converted to shares
+ * (`Monto / Precio`) and rounded to the app-wide 5-decimal share precision, so
  * `executionPrice × shares` reconciles back to the Monto only to within that rounding,
- * which is not always a rounding error (ADR 0012). System fields (id, createdAt) come
- * from injected generators so the result is deterministic and unit-testable; the ticker
- * is stored uppercase and an empty Comisión defaults to 0.
+ * which is not always a rounding error (ADR 0012). The id comes from an injected
+ * generator, so the result stays deterministic and unit-testable; the ticker is stored
+ * uppercase and an empty Comisión defaults to 0.
  */
-export function buildBuyMovement(input: BuyInput, deps: BuyDeps): BuyMovement {
+export function buildBuyMovement(input: BuyInput, deps: BuyDeps): NewMovement<BuyMovement> {
   const amount = parseAmount(input.amount);
   const price = parseAmount(input.executionPrice);
 
@@ -129,6 +130,5 @@ export function buildBuyMovement(input: BuyInput, deps: BuyDeps): BuyMovement {
     shares: deriveShares(amount, price),
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
     executionDate: input.executionDate,
-    createdAt: deps.now(),
   };
 }

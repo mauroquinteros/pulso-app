@@ -1,6 +1,6 @@
-import { mapCashRow, mapDividendRow, mapTradeRow } from "@/lib/movement-rows";
+import { mapCashRow, mapDividendRow, mapTradeRow, type CashRow, type TradeRow } from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
-import type { NewMovement } from "@/types/models";
+import type { BuyMovement, DepositMovement, Movement, NewMovement, WithdrawalMovement } from "@/types/models";
 import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
 
 /**
@@ -58,6 +58,30 @@ const CLOCK_DISAGREEMENT = "PGRST303";
 const RETRY_AFTER_MS = 250;
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The tables this file writes to. The dividends table joins when its own slice does. */
+type TableName = "movement_cash" | "movement_trades";
+
+/**
+ * A Movement this file has a branch for. Narrower than `NewMovement` on purpose:
+ * `destinationFor` is total over this union, so adding a type to it without
+ * giving it a table is a type error rather than a row written somewhere wrong.
+ */
+type WritableMovement = NewMovement<BuyMovement | DepositMovement | WithdrawalMovement>;
+
+/**
+ * The row mappers take their own row shapes, and PostgREST hands back untyped
+ * data, so the destination carries the mapper that matches the table it names -
+ * the pairing is made once, where the table is chosen, rather than trusted at
+ * each call site.
+ */
+type RowMapper = (row: unknown) => Movement;
+
+interface Destination {
+  table: TableName;
+  row: Record<string, string | number>;
+  map: RowMapper;
+}
 
 /**
  * The whole of the signed-in Perfil's History, or nothing at all.
@@ -174,11 +198,10 @@ async function attemptRead(): Promise<HistoryAnswer> {
  * and it lies in the one way nothing downstream can detect (ADR 0010).
  */
 export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
-  // This slice wires up `movement_cash` only. Compra, Venta and Dividendo are
-  // "Pronto" in the picker and cannot be opened, so nothing can reach the
-  // branches their own slices will add here. A refusal rather than a throw,
-  // because nothing throws out of this file.
-  if (movement.type !== "deposit" && movement.type !== "withdrawal") {
+  // Venta and Dividendo are still "Pronto" in the picker and cannot be opened, so
+  // nothing can reach the branches their own slices will add. A refusal rather
+  // than a throw, because nothing throws out of this file.
+  if (movement.type === "sell" || movement.type === "dividend") {
     const failure = { table: "", status: 0, code: "unwritten_type", message: `a ${movement.type} cannot be saved yet` };
 
     fault("save refused:", failure);
@@ -205,24 +228,57 @@ function settledSave(answer: SaveAnswer): SaveAnswer {
   return answer;
 }
 
-/** One pass at the insert, and the mapping of whatever came back. */
-async function attemptSave(movement: NewMovement & { type: "deposit" | "withdrawal" }): Promise<SaveAnswer> {
-  const { data, error, status } = await supabase
-    .from("movement_cash")
-    .insert({
-      // `created_at` is deliberately absent, so the column default fires. It is
-      // the chronological tiebreaker between two movements sharing an
-      // executionDate, so it orders Average Cost and Realized P&L - and a
-      // tiebreaker taken from whichever phone happened to record the movement
-      // does not reliably break ties. One clock, the database's (ADR 0010).
+/**
+ * Where a Movement goes, what Postgres wants written, and how to read the answer
+ * back. The type -> table decision lives here beside the mappers that already
+ * encode it - ADR 0006 is explicit that the three-table split is a storage fact
+ * the domain does not follow.
+ *
+ * `created_at` is deliberately absent from every row, so the column default fires.
+ * It is the chronological tiebreaker between two movements sharing an
+ * executionDate, so it orders Average Cost and Realized P&L - and a tiebreaker
+ * taken from whichever phone happened to record the movement does not reliably
+ * break ties. One clock, the database's (ADR 0010).
+ */
+function destinationFor(movement: WritableMovement): Destination {
+  if (movement.type === "buy") {
+    return {
+      table: "movement_trades",
+      row: {
+        id: movement.id,
+        type: movement.type,
+        execution_date: movement.executionDate,
+        ticker: movement.ticker,
+        shares: movement.shares,
+        execution_price: movement.executionPrice,
+        fee: movement.fee,
+        // `regulatory_fees` is omitted rather than sent as null, so the column
+        // default supplies the NULL that `regulatory_fees_belong_to_sells`
+        // requires of a buy. A buy has no regulatory fees at all - not zero of
+        // them - which is the same distinction `mapTradeRow` makes coming back.
+      },
+      map: (row) => mapTradeRow(row as TradeRow),
+    };
+  }
+
+  return {
+    table: "movement_cash",
+    row: {
       id: movement.id,
       type: movement.type,
       execution_date: movement.executionDate,
       amount: movement.amount,
       transfer_fee: movement.transferFee,
-    })
-    .select()
-    .single();
+    },
+    map: (row) => mapCashRow(row as CashRow),
+  };
+}
+
+/** One pass at the insert, and the mapping of whatever came back. */
+async function attemptSave(movement: WritableMovement): Promise<SaveAnswer> {
+  const { table, row, map } = destinationFor(movement);
+
+  const { data, error, status } = await supabase.from(table).insert(row).select().single();
 
   // A duplicate id is not a failure - it is this save's own first attempt,
   // already stored. The id is minted once per form session, so nothing else can
@@ -236,13 +292,13 @@ async function attemptSave(movement: NewMovement & { type: "deposit" | "withdraw
   // here is what would make the human retry unsafe.
   if (error?.code === "23505") {
     trace("id already stored, reading it back rather than writing again:", movement.id);
-    return readSavedMovement(movement.id);
+    return readSavedMovement(movement.id, table, map);
   }
 
   if (error) {
     // Every other reason travels with the refusal, exactly as it does for a
     // read: a policy refusal and a dropped packet must not arrive as one value.
-    const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
+    const failure = { table, status, code: error.code ?? null, message: error.message };
 
     // Traced rather than faulted, as with a read attempt: the caller decides
     // whether this was the final answer.
@@ -255,7 +311,7 @@ async function attemptSave(movement: NewMovement & { type: "deposit" | "withdraw
   // Movement comes into existence exactly one way rather than two that can
   // silently disagree - and `createdAt` arrives filled in by the clock that
   // filled it.
-  const saved = mapCashRow(data);
+  const saved = map(data);
 
   // `createdAt` is worth printing: the form never supplies one, so a value here
   // is the database's clock answering, which is the whole of ADR 0010 visible in
@@ -271,18 +327,18 @@ async function attemptSave(movement: NewMovement & { type: "deposit" | "withdraw
  * being unreadable a moment after proving it exists, which is a genuine fault
  * and reported as one.
  */
-async function readSavedMovement(id: string): Promise<SaveAnswer> {
-  const { data, error, status } = await supabase.from("movement_cash").select().eq("id", id).single();
+async function readSavedMovement(id: string, table: TableName, map: RowMapper): Promise<SaveAnswer> {
+  const { data, error, status } = await supabase.from(table).select().eq("id", id).single();
 
   if (error) {
-    const failure = { table: "movement_cash", status, code: error.code ?? null, message: error.message };
+    const failure = { table, status, code: error.code ?? null, message: error.message };
 
     fault("saved row could not be read back:", failure);
 
     return { ok: false, failure };
   }
 
-  const saved = mapCashRow(data);
+  const saved = map(data);
 
   trace("read back the row already stored:", { id: saved.id, createdAt: saved.createdAt });
 

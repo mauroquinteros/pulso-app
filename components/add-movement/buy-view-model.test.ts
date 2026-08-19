@@ -4,7 +4,6 @@ import { buildBuyMovement, summarizeBuy, type BuyDeps } from "./buy-view-model";
 
 const deps: BuyDeps = {
   id: () => "buy-1",
-  now: () => "2025-06-25T12:00:00Z",
 };
 
 const base = { ticker: "AAPL", executionDate: "2025-06-25" };
@@ -199,7 +198,7 @@ describe("summarizeBuy", () => {
 });
 
 describe("buildBuyMovement", () => {
-  it("maps fields to a typed BuyMovement, deriving shares from Monto / Precio", () => {
+  it("maps fields to a buy's fields, deriving shares from Monto / Precio", () => {
     const movement = buildBuyMovement(
       {
         ticker: "AAPL",
@@ -218,8 +217,19 @@ describe("buildBuyMovement", () => {
       shares: 2,
       fee: 0.15,
       executionDate: "2023-10-24",
-      createdAt: "2025-06-25T12:00:00Z",
     });
+  });
+
+  it("emits no createdAt, because the form does not own that clock", () => {
+    // The form produces the fields for a Movement, not a Movement. `createdAt`
+    // is the tiebreaker between two movements sharing an executionDate, and it
+    // only breaks ties if one clock supplies it - the database's (ADR 0010).
+    const movement = buildBuyMovement(
+      { ticker: "AAPL", amount: "365", executionPrice: "182.5", fee: "", executionDate: "2023-10-24" },
+      deps,
+    );
+
+    expect(movement).not.toHaveProperty("createdAt");
   });
 
   it("stores derived shares rounded to 5 decimals (the app-wide share precision)", () => {

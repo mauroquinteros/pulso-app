@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { DepositMovement, NewMovement } from "@/types/models";
+import type { BuyMovement, DepositMovement, NewMovement } from "@/types/models";
 import { readHistory, saveMovement } from "./history";
 import type { CashRow, DividendRow, TradeRow } from "./movement-rows";
 
@@ -117,6 +117,31 @@ const storedDepositRow: CashRow = {
   execution_date: "2026-05-04",
   amount: 500,
   transfer_fee: 2.5,
+  created_at: "2026-05-04T17:08:52.913Z",
+};
+
+/** What the Compra form produces: every field of a buy but `createdAt`. */
+const newBuy: NewMovement<BuyMovement> = {
+  id: "7c1e0b40-0000-4000-8000-000000000007",
+  type: "buy",
+  executionDate: "2026-05-04",
+  ticker: "NVDA",
+  shares: 4.30775,
+  executionPrice: 232.14,
+  fee: 0.35,
+};
+
+/** What Postgres hands back for it. `regulatory_fees` is NULL, as the schema
+ * requires of a buy, and `created_at` is the database's own clock. */
+const storedBuyRow: TradeRow = {
+  id: newBuy.id,
+  type: "buy",
+  execution_date: "2026-05-04",
+  ticker: "NVDA",
+  shares: 4.30775,
+  execution_price: 232.14,
+  fee: 0.35,
+  regulatory_fees: null,
   created_at: "2026-05-04T17:08:52.913Z",
 };
 
@@ -403,20 +428,121 @@ describe("saveMovement", () => {
   });
 
   it("refuses a type it has no branch for rather than writing it somewhere", async () => {
-    // Compra, Venta and Dividendo are "Pronto" in the picker, so nothing can
-    // reach this. It refuses as a value rather than throwing, because nothing
-    // throws out of that module - and it touches no table on the way out.
+    // Venta and Dividendo are still "Pronto" in the picker, so nothing can reach
+    // this. It refuses as a value rather than throwing, because nothing throws out
+    // of that module - and it touches no table on the way out.
     const answer = await saveMovement({
       id: "7c1e0b40-0000-4000-8000-000000000005",
-      type: "buy",
+      type: "sell",
       executionDate: "2026-05-04",
       ticker: "AAPL",
       shares: 3,
       executionPrice: 190,
       fee: 0.35,
+      regulatoryFees: 0.02,
     });
 
     expect(answer.ok).toBe(false);
     expect(db.inserts).toEqual([]);
+  });
+
+  it("refuses a dividend too, and writes nothing", async () => {
+    const answer = await saveMovement({
+      id: "7c1e0b40-0000-4000-8000-000000000006",
+      type: "dividend",
+      executionDate: "2026-05-04",
+      ticker: "MSFT",
+      grossAmount: 12,
+      tax: 3.6,
+    });
+
+    expect(answer.ok).toBe(false);
+    expect(db.inserts).toEqual([]);
+  });
+
+  it("writes the buy to movement_trades, in the columns' own spelling", async () => {
+    db.inserted = { data: storedBuyRow, error: null, status: 201 };
+
+    await saveMovement(newBuy);
+
+    expect(db.inserts).toEqual([
+      {
+        table: "movement_trades",
+        row: {
+          id: newBuy.id,
+          type: "buy",
+          execution_date: "2026-05-04",
+          ticker: "NVDA",
+          shares: 4.30775,
+          execution_price: 232.14,
+          fee: 0.35,
+        },
+      },
+    ]);
+  });
+
+  it("omits regulatory_fees on a buy, so the column's NULL is what lands", async () => {
+    // The schema's `regulatory_fees_belong_to_sells` requires NULL on a buy, and
+    // PostgREST builds its column list from the payload's keys - so sending an
+    // explicit null and omitting the key are different requests. A buy has no
+    // regulatory fees at all, not zero of them, which is the same distinction
+    // `mapTradeRow` makes on the way back.
+    db.inserted = { data: storedBuyRow, error: null, status: 201 };
+
+    await saveMovement(newBuy);
+
+    expect(db.inserts[0].row).not.toHaveProperty("regulatory_fees");
+    expect(db.inserts[0].row).not.toHaveProperty("created_at");
+  });
+
+  it("hands back the buy built from the row Postgres stored", async () => {
+    db.inserted = { data: storedBuyRow, error: null, status: 201 };
+
+    const answer = await saveMovement(newBuy);
+
+    // `createdAt` is the proof again, and `regulatoryFees` is absent rather than
+    // 0 - the NULL came back through the same mapper the read path uses.
+    expect(answer).toEqual({
+      ok: true,
+      movement: {
+        id: newBuy.id,
+        type: "buy",
+        executionDate: "2026-05-04",
+        createdAt: "2026-05-04T17:08:52.913Z",
+        ticker: "NVDA",
+        shares: 4.30775,
+        executionPrice: 232.14,
+        fee: 0.35,
+      },
+    });
+  });
+
+  it("reads a duplicate buy back from movement_trades, not from movement_cash", async () => {
+    // The duplicate branch has to follow the movement to its own table, or a
+    // retried buy would be answered with whatever `movement_cash` holds.
+    db.inserted = {
+      data: null,
+      error: { message: 'duplicate key value violates unique constraint "movement_trades_pkey"', code: "23505" },
+      status: 409,
+    };
+    db.readBack = { data: storedBuyRow, error: null, status: 200 };
+
+    const answer = await saveMovement(newBuy);
+
+    expect(answer.ok).toBe(true);
+    expect(answer.ok && answer.movement.type).toBe("buy");
+    expect(answer.ok && answer.movement.createdAt).toBe("2026-05-04T17:08:52.913Z");
+  });
+
+  it("names movement_trades when a buy is refused", async () => {
+    db.inserted = {
+      data: null,
+      error: { message: "new row violates row-level security policy", code: "42501" },
+      status: 403,
+    };
+
+    const answer = await saveMovement(newBuy);
+
+    expect(!answer.ok && answer.failure.table).toBe("movement_trades");
   });
 });
