@@ -63,12 +63,17 @@ export default function BuyFormScreen() {
 
   // Errors surface only after a field is touched-then-invalid (no typing spam).
   const showTickerError = touchedTicker && summary.tickerInvalid;
-  const showAmountError = touchedAmount && (summary.amountInvalid || summary.insufficientFunds);
+  const showAmountError =
+    touchedAmount && (summary.amountInvalid || summary.amountTooSmall || summary.insufficientFunds);
   const showPriceError = touchedPrice && summary.priceInvalid;
 
+  // Both refusals name a relationship and quote no figure: Disponible sits above this
+  // field and Total a pagar below it, so the numbers are already on screen.
   const amountErrorMsg = summary.amountInvalid
     ? "Ingresa un monto mayor a $0."
-    : `Solo tienes ${formatUSD(availableCash)} disponible.`;
+    : summary.amountTooSmall
+      ? "El monto es muy pequeño para ese precio."
+      : "El total a pagar supera tu efectivo.";
 
   // The empty-field error and a failed check can never both apply, since a check
   // only ever runs on a non-empty symbol. Empty wins the slot anyway, which
