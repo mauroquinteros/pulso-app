@@ -144,3 +144,39 @@ blocking the Compra form on.
 **Where to start.** `utils/portfolio/cash.ts` has the reasoning in its `computeCash`
 doc comment, and `docs/adr/0012-a-buy-total-is-derived-from-its-shares.md` explains why
 a buy may overdraw by under half a cent in the first place.
+
+---
+
+## Stock detail prints Comisiones unsigned, so a subtracted fee reads as added
+
+**Type:** bug (minor, presentation) · **Status:** backlog · **Raised:** 2026-08-18
+
+**Problem.** The per-ticker return block formats its four components inconsistently.
+`netPnl` and `realized` go through `formatSignedUSD`, but `dividends` and `fees` go
+through plain `formatUSD` — so a commission renders as **`$0.15`**, with no sign and
+no tone, directly above a **Retorno total** that has subtracted it.
+
+Nothing is miscalculated. `buildReturnBlock` computes
+`netPnl + realizedPnl + totalDividends - totalFees`, which is `CONTEXT.md`'s
+definition of **Total Return of a stock**, and a fee erodes it by its full amount.
+
+It misleads only when the return is **negative**, which is exactly when it matters:
+subtracting a fee from a loss makes the loss larger, so the total moves *away* from
+the P&L figure while the fee beside it looks additive. Observed on META — P&L
+-$50.22, Comisiones $0.15, Retorno total -$50.37 — and read as "the commission was
+added, it should be -$50.07". It is not: -$50.07 would require the fee to *improve*
+the return.
+
+**Inconsistent with Inicio**, which already solved this: its own breakdown negates the
+figure and signs it (`{ label: "Comisiones", amount: -totalReturn.totalFees }` through
+`formatSignedUSD`), rendering **-$10.30** in red. The two screens show the same concept
+two ways.
+
+**Fix.** Sign the fee on the stock detail the way Inicio does, and decide whether
+`dividends` should be signed too — the implicit rule seems to be "components with a
+fixed direction go unsigned", which is what breaks down here. Both are one-line changes
+in `buildReturnBlock` plus its tests; the reason it is filed rather than fixed inline is
+that it is a copy decision touching a second screen, not a defect in this slice.
+
+**Where to look.** `components/stock-detail/view-model.ts` (`buildReturnBlock`) beside
+`components/home/view-model.ts` (the `Comisiones` row).
