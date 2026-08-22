@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { BuyMovement, DepositMovement, DividendMovement, NewMovement } from "@/types/models";
+import type { BuyMovement, DepositMovement, DividendMovement, NewMovement, WithdrawalMovement } from "@/types/models";
 import { readHistory, saveMovement } from "./history";
 import type { CashRow, DividendRow, TradeRow } from "./movement-rows";
 
@@ -118,6 +118,25 @@ const storedDepositRow: CashRow = {
   amount: 500,
   transfer_fee: 2.5,
   created_at: "2026-05-04T17:08:52.913Z",
+};
+
+/** What the Retiro form produces: every field of a withdrawal but `createdAt`. */
+const newWithdrawal: NewMovement<WithdrawalMovement> = {
+  id: "7c1e0b40-0000-4000-8000-000000000009",
+  type: "withdrawal",
+  executionDate: "2026-05-04",
+  amount: 200,
+  transferFee: 1,
+};
+
+/** What Postgres hands back for it - the same table and mapper as a deposit. */
+const storedWithdrawalRow: CashRow = {
+  id: newWithdrawal.id,
+  type: "withdrawal",
+  execution_date: "2026-05-04",
+  amount: 200,
+  transfer_fee: 1,
+  created_at: "2026-05-04T18:22:03.117Z",
 };
 
 /** What the Compra form produces: every field of a buy but `createdAt`. */
@@ -467,6 +486,22 @@ describe("saveMovement", () => {
 
     expect(answer.ok).toBe(false);
     expect(db.inserts).toEqual([]);
+  });
+
+  it("saves a withdrawal rather than refusing it", async () => {
+    // The guard above is a string comparison, not a type-level exhaustiveness
+    // check, so nothing but this test stops a later slice from adding
+    // "withdrawal" to it. The symptom would be every Retiro failing at runtime
+    // with a green build, which is why the assertion is that the row lands and
+    // the refusal never fires - not what its columns are spelled. That is the
+    // deposit's branch, already covered, and a withdrawal returns from it.
+    db.inserted = { data: storedWithdrawalRow, error: null, status: 201 };
+
+    const answer = await saveMovement(newWithdrawal);
+
+    expect(answer.ok).toBe(true);
+    expect(db.inserts).toEqual([{ table: "movement_cash", row: expect.objectContaining({ type: "withdrawal" }) }]);
+    expect(answer.ok && answer.movement.type).toBe("withdrawal");
   });
 
   it("writes the dividend to movement_dividends, in the columns' own spelling", async () => {

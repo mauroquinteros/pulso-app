@@ -48,7 +48,7 @@ const EFECTIVO: RowSpec[] = [
   {
     type: "withdrawal",
     subtitle: "Retirar efectivo de tu cuenta",
-    disabled: true,
+    disabled: false,
     onPress: () => router.push("/add-movement/withdrawal"),
   },
 ];

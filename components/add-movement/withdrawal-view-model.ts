@@ -1,4 +1,4 @@
-import type { WithdrawalMovement } from "@/types/models";
+import type { NewMovement, WithdrawalMovement } from "@/types/models";
 import { parseAmount } from "@/utils/input";
 
 export interface WithdrawalInput {
@@ -24,7 +24,6 @@ export interface WithdrawalSummary {
 
 export interface WithdrawalDeps {
   id: () => string;
-  now: () => string; // ISO timestamp for createdAt
 }
 
 /**
@@ -59,17 +58,18 @@ export function summarizeWithdrawal(input: WithdrawalInput, availableCash: numbe
 }
 
 /**
- * Maps validated form input to a typed WithdrawalMovement. System fields
- * (id, createdAt) come from injected generators so the result is
- * deterministic and unit-testable; an empty Comisión defaults to 0.
+ * Maps validated form input to the *fields* of a WithdrawalMovement, not to a
+ * WithdrawalMovement: `createdAt` is absent on purpose, because it is read from
+ * the database's clock when the row is stored (ADR 0010). The id comes from an
+ * injected generator, so the result stays deterministic and unit-testable; an
+ * empty Comisión defaults to 0.
  */
-export function buildWithdrawalMovement(input: WithdrawalInput, deps: WithdrawalDeps): WithdrawalMovement {
+export function buildWithdrawalMovement(input: WithdrawalInput, deps: WithdrawalDeps): NewMovement<WithdrawalMovement> {
   return {
     id: deps.id(),
     type: "withdrawal",
     amount: parseAmount(input.amount),
     transferFee: input.transferFee === "" ? 0 : parseAmount(input.transferFee),
     executionDate: input.executionDate,
-    createdAt: deps.now(),
   };
 }
