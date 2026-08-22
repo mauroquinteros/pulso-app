@@ -180,3 +180,54 @@ that it is a copy decision touching a second screen, not a defect in this slice.
 
 **Where to look.** `components/stock-detail/view-model.ts` (`buildReturnBlock`) beside
 `components/home/view-model.ts` (the `Comisiones` row).
+
+---
+
+## The save lifecycle is copied per form, and each copy carries ADR 0010
+
+**Type:** design (duplication, correctness-sensitive) · **Status:** backlog · **Raised:** 2026-08-21
+
+**Problem.** Every form that writes to Postgres holds its own copy of the same save
+block: the `deps` in `useState`, `saving`, `saveFailed`, the `if (!canSave || saving)`
+guard, the awaited `saveMovement`, the failure branch that leaves every field as typed,
+`movementSaved(answer.movement)`, the haptic, and `router.dismissTo("/")`. The copies in
+`form.tsx` (Depósito) and `buy.tsx` (Compra) differ in **one expression** — which
+`build*Movement` is called. Dividendo makes a third; Venta and Retiro will make five.
+
+**Why it is not ordinary duplication.** That block is where ADR 0010 lives. Three of its
+lines are load-bearing and none of them looks it:
+
+- `useState(defaultMovementDeps)` mints the id **once per form session, not per tap**.
+  This is the whole of the retry-safety story: a second tap after a lost response carries
+  the first attempt's id, so Postgres refuses the duplicate rather than recording the
+  movement twice. Move it inside the handler in one copy and that copy silently
+  double-writes on retry — no error, no warning, a doubled **Cost Basis** or **Aportado**.
+- Nothing is written optimistically, and the Movement that joins the store is built from
+  the row the database returned, never the one the form built. A copy that appends its
+  own object gets `createdAt` from the phone's clock and breaks the reducer's tiebreaker.
+- `saving` is deliberately **not** reset on success, so the button stays inert while the
+  form dismisses.
+
+So the risk is not that the copies are tedious. It is that they can diverge in ways that
+produce a wrong **History** with nothing on screen saying so, which is the exact failure
+class ADR 0010 exists to prevent. Five copies is five places that have to stay right.
+
+**Fix.** One `useMovementSave()` hook returning `{ saving, saveFailed, save }`, taking the
+builder as its argument. Each screen keeps what is genuinely its own — its gates, its
+fields, and its error sentence ("No pudimos guardar tu compra" vs "...tu dividendo").
+Land it as its own commit with Depósito and Compra converted and no behavior change, so
+that a regression in a working form is attributable to the commit that caused it rather
+than hidden inside a feature slice.
+
+**Why deferred.** Raised while planning the Dividendo persistence slice, and deferred so
+that slice touches no working form. The trigger is the next form after it: converting two
+screens is cheap, converting four is the cost of waiting.
+
+**Prior record.** The intention was written down once, inside
+`.scratch/buy-movement/issues/02-a-compra-is-written-to-postgres.md` — *"the third form
+to need it is where a shared module earns its place"* — and then closed with the issue,
+which is why nobody could find it. This entry replaces that as the standing record.
+
+**Where to look.** `app/add-movement/form.tsx` and `app/add-movement/buy.tsx` (the two
+copies today), `components/add-movement/movement-deps.ts`, and
+`docs/adr/0010-a-movement-is-saved-only-when-the-database-says-so.md`.

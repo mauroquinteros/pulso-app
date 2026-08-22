@@ -81,6 +81,25 @@ _Avoid_: principal, capital invested, net deposited
 The high-water mark of **Net Contributions**: walk deposits and withdrawals in chronological order, track the running total, and take the highest it ever reached — the most of your own money ever in at once, i.e. the capital actually put at risk. It is the base the **Total Return** _percentage_ is divided by. Unlike **Net Contributions** it never shrinks on a withdrawal: once a realized gain lets you withdraw more than you deposited, Net Contributions falls (possibly below zero) and dividing by it would invert or inflate the percentage, while Peak stays fixed at the true capital deployed. It equals **Net Contributions** whenever no withdrawal has dropped the running total below an earlier high; the two diverge only after such a withdrawal, and the home screen surfaces a tooltip on the percentage in exactly that case (the base is otherwise not shown on screen).
 _Avoid_: max contributions, high-water aportado (informal), peak invested
 
+**Dividend** (UI: "Dividendo"):
+A payment a **Stock** makes to whoever holds it, recorded as the **cash that arrived**: a
+gross figure and the withholding tax taken out of it, never a per-share rate multiplied by
+a share count. It is income, not a trade — it moves no shares, touches no **Average Cost**
+and no **Realized P&L**, and derives no **Holding**. Its date is the day the cash landed.
+
+A Dividend **lands whole in Cash**. Pulso has no concept of a reinvested dividend: were a
+broker to buy shares with the payment instead of crediting it, that is two events Pulso
+cannot record as one, and recording it as a Dividend would credit **Cash** that never
+arrived while the shares that did arrive went missing — wrong twice, in opposite
+directions, with the reconciliation still balancing because both halves carry the same
+error. Confirmed against Hapi, which credits cash.
+
+A Dividend **presupposes no position**. It does not consume shares the way a sell does, and
+one can land for a ticker already sold in full, so nothing gates it against a **Holding**.
+The **ticker** it names is therefore the user's word alone — unchecked, deliberately (see
+`docs/adr/0009-a-buy-is-blocked-until-its-symbol-is-confirmed.md`).
+_Avoid_: dividend income (unqualified — say gross or **Net Dividends**), payout, cupón
+
 **Net Dividends**:
 Dividend income actually received, after withholding tax: `gross amount − tax`. Shown as its own figure so the user can see dividend earnings separately from **Net P&L**.
 _Avoid_: dividends (unqualified — always specify gross or net)

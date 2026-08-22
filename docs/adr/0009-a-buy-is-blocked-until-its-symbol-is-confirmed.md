@@ -56,6 +56,25 @@ If that ever needs closing, the check for a dividend is **not** this endpoint. I
 "is this ticker already in `stocks`" — answered locally, with no provider call, and
 without refusing the delisted company the user genuinely held.
 
+**That escape hatch is not available as written, and was re-examined and rejected when
+Dividendo became durable.** Making the rows permanent is the strongest case for closing
+the hole — a typo'd `APPL` used to die with the app and now outlives it — and the check
+still fails, because the map it would consult is not "the tickers that exist". `stocks`
+is read as *every Stock the database can price*, filtered on the price, so a ticker's
+absence from it carries the three meanings CONTEXT.md forbids collapsing into one: not
+yet read, could not be read, or a real Stock the provider has no Quote for. A gate built
+on that absence refuses a genuine dividend whenever the price read failed, whenever the
+provider has no quote for a holding, and whenever the company was acquired — the last
+being the very case the paragraph above wrote the hatch to protect. All three render
+identically to the typo, and the two common ones are faults of the app announced as
+verdicts about the ticker.
+
+So the trade is the wrong way round. The typo is **recoverable**: the movement is visible
+in Movimientos and an edit fixes the attribution (ADR 0007). A refused real dividend is
+**not** — the user is simply unable to record something that happened. Dividendo's
+**Símbolo** therefore stays free text with no check of any kind, and the only gate on the
+form remains tax ≤ gross.
+
 ## Considered Options
 
 - **Warn but let it save.** Preserves the PRD's promise literally and protects the
