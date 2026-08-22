@@ -488,13 +488,13 @@ describe("saveMovement", () => {
     expect(db.inserts).toEqual([]);
   });
 
-  it("saves a withdrawal rather than refusing it", async () => {
-    // The guard above is a string comparison, not a type-level exhaustiveness
-    // check, so nothing but this test stops a later slice from adding
-    // "withdrawal" to it. The symptom would be every Retiro failing at runtime
-    // with a green build, which is why the assertion is that the row lands and
-    // the refusal never fires - not what its columns are spelled. That is the
-    // deposit's branch, already covered, and a withdrawal returns from it.
+  it("writes the withdrawal to movement_cash, through the deposit's branch", async () => {
+    // The only direct proof that a Retiro can be written. Today it is covered
+    // transitively - a withdrawal and a deposit share one branch of
+    // `destinationFor`, so the deposit's test happens to run the same code - and
+    // that holds only while the two stay merged. Hence the assertions: the row
+    // lands, and it lands in the cash table carrying its own type. The column
+    // spellings are the deposit's test to make, not this one's.
     db.inserted = { data: storedWithdrawalRow, error: null, status: 201 };
 
     const answer = await saveMovement(newWithdrawal);

@@ -246,13 +246,14 @@ clock** — so that a future change reintroducing a device clock fails loudly ra
 reordering someone's **Average Cost**. Prior art: the deposit view model suite, which is this
 change already made once.
 
-**The movement write path.** One new case: a withdrawal is **saved to `movement_cash` rather than
-refused**. This is the one thing about the slice TypeScript cannot protect. The refusal guarding
-the not-yet-writable types is a **string comparison**, not a type-level exhaustiveness check, so
-nothing but a test stops a future slice from adding the withdrawal to it — and the symptom would be
-every Retiro failing at runtime with a green build. Two slices (Venta, and whatever follows) will
-edit that exact line. Prior art: the existing write-path suite, which already covers the cash
-insert, its retry and its duplicate branch.
+**The movement write path.** One new case: the withdrawal is **written to `movement_cash`**. It is
+the only direct proof that a Retiro can be written at all — deposit, buy and dividend each have such
+a test, and without this one withdrawal would be the sole writable type whose write is never
+exercised. Today it is covered only *transitively*: a withdrawal and a deposit return from the same
+branch of `destinationFor`, so the deposit's test happens to run the same code, and that holds only
+while the two stay merged. The test asserts the row lands in the cash table carrying its own type;
+the column spellings stay the deposit's test to make. Prior art: the existing write-path suite,
+which already covers the cash insert, its retry and its duplicate branch.
 
 **Not tested, and why.** The withdrawal's column spellings and the absence of `created_at` from its
 payload are not re-asserted. Both are already covered on the deposit, which returns from the *same*

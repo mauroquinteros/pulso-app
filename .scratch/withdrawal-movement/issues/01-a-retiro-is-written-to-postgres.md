@@ -74,9 +74,9 @@ in `AGENTS.md`.
 - [ ] The withdrawal view model's summary tests are unchanged; its builder tests drop the
       `createdAt` assertion and gain a named test that the builder **emits no `createdAt`**, mirroring
       the deposit's
-- [ ] One new write-path test: a withdrawal is **saved to the cash table rather than refused** -
-      guarding the not-yet-writable-type refusal, which is a string comparison TypeScript cannot
-      protect
+- [ ] One new write-path test: the withdrawal is **written to the cash table** - the only direct
+      proof a Retiro can be written, since today it is exercised only transitively, through the
+      branch it shares with the deposit
 - [ ] `npm test` green and `tsc --noEmit` clean
 
 ## Blocked by
