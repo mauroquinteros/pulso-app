@@ -79,6 +79,18 @@ Why the split: a `brew install` appears in no diff, passes through no review, an
 
 A legitimate need is still not authorization. `deno` was once installed to type-check the Edge Functions, which `tsc` genuinely cannot do (see the `exclude` note in `tsconfig.json`). The reasoning was sound and the tool was the only option — and it was still the user's call to make, not the agent's.
 
+## 6. Check the Backlog Before Reporting a Bug
+
+**Known debt is not a discovery.**
+
+Before you report a bug, propose a fix, or add a "while I was here" finding to a review, read `.scratch/tech-debt/backlog.md`. Several of this app's rough edges are already found, diagnosed and deliberately deferred, with the reasoning and the intended approach written down. Re-raising one as new costs the user the same conversation a second time, and it buries the entries that really are unresolved.
+
+- **Already there?** Reference the entry. Do not restate its argument — say which one it is and move on.
+- **Fixing one?** Tick its box in the file's _Open items_ index and update its `Status:` line, in the same commit as the fix.
+- **Genuinely new, and you are deferring it?** Add an entry, rather than mentioning it in passing where it will be lost.
+
+The same applies before proposing a refactor: two of the entries are refactors somebody already scoped and chose not to do yet.
+
 ## Code conventions
 
 ### Naming
@@ -103,6 +115,14 @@ Applies to string literals, comments and test assertions alike. To assert the
 _absence_ of a lookalike in a test, write it as a unicode escape —
 `not.toContain("\u2212")` — rather than pasting the glyph, so the assertion
 says out loud which character it means.
+
+### Where a validation lives
+
+**Value rules live in the view-model; the schema holds structural facts only.** Do not propose a Postgres `CHECK` for a rule about a number — this is settled across all five movement types, and not one of them has such a constraint.
+
+The distinction is what the rule protects. A **structural** constraint says which type a row is, or which columns that type may fill, and the row mappers read a row back through it — `regulatory_fees_belong_to_sells` is how a buy is told from a sell coming out of the trades table, so the schema is the only place it can live. A **value** rule — `fee < amount` on a withdrawal, `tax <= gross` on a dividend, `total <= Cash` on a buy — is policy: it changes, it applies to one type and not its sibling, and the form's save button already refuses it.
+
+Reopen this only when a second write path appears — an edit screen, a bulk import, anything reaching the write path without a form in front of it.
 
 ## Agent skills
 

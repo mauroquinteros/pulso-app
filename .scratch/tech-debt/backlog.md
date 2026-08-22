@@ -4,6 +4,20 @@ Deferred, cross-cutting findings (not tied to one feature). Surfaced during the
 2026-07 full-codebase review. Bugs get fixed on their own branches; these are
 larger or design-sensitive and wait for a deliberate pass.
 
+## Open items
+
+Tick the box and set the entry's `Status:` in the same commit as the fix. `Status:`
+carries the detail (`backlog`, `backlog (blocked on backend)`, `fixed - <date>, <where>`);
+the box is the at-a-glance answer to "is this still true?".
+
+- [ ] [Efectivo and Otros are near-identical colors in the same donut](#efectivo-and-otros-are-near-identical-colors-in-the-same-donut) - bug (minor)
+- [ ] [Ordering belongs to the backend, not the view-models](#ordering-belongs-to-the-backend-not-the-view-models) - refactor, blocked on backend
+- [ ] [Define and adopt a type scale (font-size sprawl)](#define-and-adopt-a-type-scale-font-size-sprawl) - design-system / refactor
+- [ ] [A failed History read is a dead end - no way to sign out](#a-failed-history-read-is-a-dead-end---no-way-to-sign-out) - UX / recoverability
+- [ ] [`round2` and `formatUSD` disagree on an exact half-cent](#round2-and-formatusd-disagree-on-an-exact-half-cent-and-there-are-six-round2s) - bug (minor)
+- [ ] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
+- [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
+
 ---
 
 ## Efectivo and Otros are near-identical colors in the same donut

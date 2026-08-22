@@ -3,6 +3,13 @@
 **Type:** AFK
 **Source:** `.scratch/withdrawal-ux/PRD.md` · `.scratch/withdrawal-ux/UX.md`
 
+
+> **Superseded in part.** This issue describes the form-design slice, which was delivered: the
+> screen, its view model and their tests are in the codebase. What it says about **saving** is no
+> longer true - it predates persistence and describes appending to an in-memory store. The save
+> loop, the picker row and the write to Postgres belong to
+> `.scratch/withdrawal-movement/PRD.md`. Do not tick the boxes below against that work.
+
 ## What to build
 
 The pure **withdrawal view-model** — a deep module mirroring the deposit view-model

@@ -3,6 +3,13 @@
 **Type:** AFK
 **Source:** `.scratch/withdrawal-ux/PRD.md` · `.scratch/withdrawal-ux/UX.md` · design prototype `.scratch/withdrawal-ux/stock-portfolio-design-prototype/`
 
+
+> **Superseded in part.** This issue describes the form-design slice, which was delivered: the
+> screen, its view model and their tests are in the codebase. What it says about **saving** is no
+> longer true - it predates persistence and describes appending to an in-memory store. The save
+> loop, the picker row and the write to Postgres belong to
+> `.scratch/withdrawal-movement/PRD.md`. Do not tick the boxes below against that work.
+
 ## What to build
 
 The **Retiro** form screen, a mirror of the Deposit form, wired end-to-end. From the type
