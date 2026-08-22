@@ -1,6 +1,13 @@
-import { mapCashRow, mapDividendRow, mapTradeRow, type CashRow, type TradeRow } from "@/lib/movement-rows";
+import { mapCashRow, mapDividendRow, mapTradeRow, type CashRow, type DividendRow, type TradeRow } from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
-import type { BuyMovement, DepositMovement, Movement, NewMovement, WithdrawalMovement } from "@/types/models";
+import type {
+  BuyMovement,
+  DepositMovement,
+  DividendMovement,
+  Movement,
+  NewMovement,
+  WithdrawalMovement,
+} from "@/types/models";
 import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
 
 /**
@@ -59,15 +66,15 @@ const RETRY_AFTER_MS = 250;
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** The tables this file writes to. The dividends table joins when its own slice does. */
-type TableName = "movement_cash" | "movement_trades";
+/** The tables this file writes to - all three of them now. */
+type TableName = "movement_cash" | "movement_dividends" | "movement_trades";
 
 /**
  * A Movement this file has a branch for. Narrower than `NewMovement` on purpose:
  * `destinationFor` is total over this union, so adding a type to it without
  * giving it a table is a type error rather than a row written somewhere wrong.
  */
-type WritableMovement = NewMovement<BuyMovement | DepositMovement | WithdrawalMovement>;
+type WritableMovement = NewMovement<BuyMovement | DepositMovement | DividendMovement | WithdrawalMovement>;
 
 /**
  * The row mappers take their own row shapes, and PostgREST hands back untyped
@@ -198,10 +205,10 @@ async function attemptRead(): Promise<HistoryAnswer> {
  * and it lies in the one way nothing downstream can detect (ADR 0010).
  */
 export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
-  // Venta and Dividendo are still "Pronto" in the picker and cannot be opened, so
-  // nothing can reach the branches their own slices will add. A refusal rather
-  // than a throw, because nothing throws out of this file.
-  if (movement.type === "sell" || movement.type === "dividend") {
+  // Venta is still "Pronto" in the picker and cannot be opened, so nothing can
+  // reach the branch its own slice will add. A refusal rather than a throw,
+  // because nothing throws out of this file.
+  if (movement.type === "sell") {
     const failure = { table: "", status: 0, code: "unwritten_type", message: `a ${movement.type} cannot be saved yet` };
 
     fault("save refused:", failure);
@@ -258,6 +265,27 @@ function destinationFor(movement: WritableMovement): Destination {
         // them - which is the same distinction `mapTradeRow` makes coming back.
       },
       map: (row) => mapTradeRow(row as TradeRow),
+    };
+  }
+
+  if (movement.type === "dividend") {
+    return {
+      table: "movement_dividends",
+      row: {
+        id: movement.id,
+        // No `type` column, deliberately. That table holds one kind of Movement
+        // and has no such column, unlike the two above - and PostgREST builds
+        // its column list from the payload's keys, so sending the type here is
+        // not a harmless extra field but a request naming a column that does
+        // not exist, refused whole. `mapDividendRow` makes the same statement
+        // coming back: it reads no type and hard-codes `"dividend"`, because
+        // the table a row came from is what says what it is.
+        execution_date: movement.executionDate,
+        ticker: movement.ticker,
+        gross_amount: movement.grossAmount,
+        tax: movement.tax,
+      },
+      map: (row) => mapDividendRow(row as DividendRow),
     };
   }
 

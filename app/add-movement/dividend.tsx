@@ -13,12 +13,18 @@ import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
+import { saveMovement } from "@/lib/history";
 import { useMovementsStore } from "@/stores/movements";
 import { formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
 
 export default function DividendFormScreen() {
   const movementSaved = useMovementsStore((s) => s.movementSaved);
+  // Held in state, so the id is minted once per form session rather than once
+  // per tap. If the insert lands but its response does not, the second tap
+  // carries the id the first one used and Postgres refuses the duplicate -
+  // instead of recording the dividend twice and doubling Net Dividends (ADR 0010).
+  const [deps] = useState(defaultMovementDeps);
   const [ticker, setTicker] = useState("");
   const [grossAmount, setGrossAmount] = useState("");
   const [tax, setTax] = useState("");
@@ -26,6 +32,8 @@ export default function DividendFormScreen() {
   const [touchedTicker, setTouchedTicker] = useState(false);
   const [touchedGross, setTouchedGross] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const summary = summarizeDividend({ ticker, grossAmount, tax, executionDate });
   const canSave = summary.saveEnabled;
@@ -50,16 +58,32 @@ export default function DividendFormScreen() {
 
   const totalColor = summary.taxExceedsGross ? Colors.negative : summary.total > 0 ? Colors.textPrimary : "#3E4470";
 
-  const onSave = () => {
-    if (!canSave) return;
-    const movement = buildDividendMovement(
-      { ticker, grossAmount, tax, executionDate },
-      // Unreachable: Dividendo is "Pronto" in the picker. Its createdAt still
-      // comes from the device clock until its own slice hands the write to
-      // Postgres, which is why `now` is supplied on top of the deps (ADR 0010).
-      { ...defaultMovementDeps(), now: () => new Date().toISOString() },
-    );
-    movementSaved(movement);
+  // The save waits for Postgres. Nothing is written optimistically: the store is
+  // the sole input to the engine, so a dividend it never received would not be a
+  // pending write but an Efectivo and a Net Dividends that are wrong with nothing
+  // on screen saying so - and the Compra form's funds gate trusts that figure
+  // (ADR 0010).
+  const onSave = async () => {
+    if (!canSave || saving) return;
+
+    setSaving(true);
+    setSaveFailed(false);
+
+    const answer = await saveMovement(buildDividendMovement({ ticker, grossAmount, tax, executionDate }, deps));
+
+    if (!answer.ok) {
+      // The form stays exactly as the user left it - Símbolo, Monto bruto,
+      // Impuestos and Fecha all still typed - and says the save failed. There is
+      // nothing to roll back, because nothing was written.
+      setSaving(false);
+      setSaveFailed(true);
+      return;
+    }
+
+    // The Movement built from the row Postgres stored, never the one built here.
+    // `saving` is deliberately left standing: the form is dismissing, and the
+    // button stays inert on the way out.
+    movementSaved(answer.movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };
@@ -164,7 +188,8 @@ export default function DividendFormScreen() {
               <Text style={[styles.totalValue, { color: totalColor }]}>{formatUSD(summary.total)}</Text>
             </View>
           </View>
-          <SaveButton canSave={canSave} onPress={onSave} />
+          {saveFailed && <Text style={styles.saveError}>No pudimos guardar tu dividendo. Inténtalo de nuevo.</Text>}
+          <SaveButton canSave={canSave} pending={saving} onPress={onSave} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -220,5 +245,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.3,
     fontVariant: ["tabular-nums"],
+  },
+  // Above the button rather than beside a field: the failure is the save's, not
+  // any one input's, and it has to be readable without scrolling back up.
+  saveError: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: Colors.negative,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });

@@ -4,7 +4,6 @@ import { buildDividendMovement, summarizeDividend, type DividendDeps } from "./d
 
 const deps: DividendDeps = {
   id: () => "dividend-1",
-  now: () => "2025-06-25T12:00:00Z",
 };
 
 const base = { ticker: "AAPL", executionDate: "2025-06-25" };
@@ -93,7 +92,7 @@ describe("summarizeDividend", () => {
 });
 
 describe("buildDividendMovement", () => {
-  it("maps fields to a typed DividendMovement with injected system fields", () => {
+  it("maps fields to the fields of a DividendMovement, with an injected id", () => {
     const movement = buildDividendMovement(
       {
         ticker: "AAPL",
@@ -110,8 +109,18 @@ describe("buildDividendMovement", () => {
       grossAmount: 130,
       tax: 5.5,
       executionDate: "2023-10-24",
-      createdAt: "2025-06-25T12:00:00Z",
     });
+  });
+
+  it("supplies no createdAt, so the stored instant can only be the database's", () => {
+    // Not an omission being tolerated - it is the point. That instant is the
+    // reducer's chronological tiebreaker, and it is read from one clock when the
+    // row is stored (ADR 0010). A builder that filled it in here would hand over
+    // the phone's, and two same-day movements recorded on two phones would order
+    // Average Cost and Realized P&L by whichever device was further ahead.
+    const movement = buildDividendMovement({ ...base, ticker: "AAPL", grossAmount: "130", tax: "" }, deps);
+
+    expect(movement).not.toHaveProperty("createdAt");
   });
 
   it("stores the ticker uppercase and trimmed", () => {

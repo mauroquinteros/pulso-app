@@ -1,4 +1,4 @@
-import type { DividendMovement } from "@/types/models";
+import type { DividendMovement, NewMovement } from "@/types/models";
 import { normalizeTicker, parseAmount } from "@/utils/input";
 
 export interface DividendInput {
@@ -27,7 +27,6 @@ export interface DividendSummary {
 
 export interface DividendDeps {
   id: () => string;
-  now: () => string; // ISO timestamp for createdAt
 }
 
 /**
@@ -64,12 +63,16 @@ export function summarizeDividend(input: DividendInput): DividendSummary {
 }
 
 /**
- * Maps validated form input to a typed DividendMovement. System fields (id, createdAt)
- * come from injected generators so the result is deterministic and unit-testable; the ticker is
- * stored uppercase and empty Impuestos defaults to 0. The UI label "Impuestos" maps to the model
- * field `tax` (the withholding tax — a dividend has no `fee`).
+ * Maps validated form input to the *fields* of a DividendMovement - every one but
+ * `createdAt`, which this no longer supplies. That instant is the reducer's chronological
+ * tiebreaker and is read from one clock, the database's, when the row is stored (ADR 0010);
+ * a builder handing over the phone's would be the wrong clock in the one place it matters.
+ * The id still comes from an injected generator, so the result is deterministic and
+ * unit-testable. The ticker is stored uppercase and empty Impuestos defaults to 0. The UI
+ * label "Impuestos" maps to the model field `tax` (the withholding tax - a dividend has no
+ * `fee`).
  */
-export function buildDividendMovement(input: DividendInput, deps: DividendDeps): DividendMovement {
+export function buildDividendMovement(input: DividendInput, deps: DividendDeps): NewMovement<DividendMovement> {
   return {
     id: deps.id(),
     type: "dividend",
@@ -77,6 +80,5 @@ export function buildDividendMovement(input: DividendInput, deps: DividendDeps):
     grossAmount: parseAmount(input.grossAmount),
     tax: input.tax === "" ? 0 : parseAmount(input.tax),
     executionDate: input.executionDate,
-    createdAt: deps.now(),
   };
 }

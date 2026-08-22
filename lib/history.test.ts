@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { BuyMovement, DepositMovement, NewMovement } from "@/types/models";
+import type { BuyMovement, DepositMovement, DividendMovement, NewMovement } from "@/types/models";
 import { readHistory, saveMovement } from "./history";
 import type { CashRow, DividendRow, TradeRow } from "./movement-rows";
 
@@ -142,6 +142,28 @@ const storedBuyRow: TradeRow = {
   execution_price: 232.14,
   fee: 0.35,
   regulatory_fees: null,
+  created_at: "2026-05-04T17:08:52.913Z",
+};
+
+/** What the Dividendo form produces: every field of a dividend but `createdAt`. */
+const newDividend: NewMovement<DividendMovement> = {
+  id: "7c1e0b40-0000-4000-8000-000000000008",
+  type: "dividend",
+  executionDate: "2026-05-04",
+  ticker: "MSFT",
+  grossAmount: 18.6,
+  tax: 5.58,
+};
+
+/** What Postgres hands back for it. There is no `type` column on that table, so
+ * none comes back either - `mapDividendRow` hard-codes the type from the table
+ * the row was read out of. */
+const storedDividendRow: DividendRow = {
+  id: newDividend.id,
+  execution_date: "2026-05-04",
+  ticker: "MSFT",
+  gross_amount: 18.6,
+  tax: 5.58,
   created_at: "2026-05-04T17:08:52.913Z",
 };
 
@@ -428,9 +450,10 @@ describe("saveMovement", () => {
   });
 
   it("refuses a type it has no branch for rather than writing it somewhere", async () => {
-    // Venta and Dividendo are still "Pronto" in the picker, so nothing can reach
-    // this. It refuses as a value rather than throwing, because nothing throws out
-    // of that module - and it touches no table on the way out.
+    // Venta alone now: Dividendo has its own branch. Venta is still "Pronto" in
+    // the picker, so nothing can reach this. It refuses as a value rather than
+    // throwing, because nothing throws out of that module - and it touches no
+    // table on the way out.
     const answer = await saveMovement({
       id: "7c1e0b40-0000-4000-8000-000000000005",
       type: "sell",
@@ -446,18 +469,103 @@ describe("saveMovement", () => {
     expect(db.inserts).toEqual([]);
   });
 
-  it("refuses a dividend too, and writes nothing", async () => {
-    const answer = await saveMovement({
-      id: "7c1e0b40-0000-4000-8000-000000000006",
-      type: "dividend",
-      executionDate: "2026-05-04",
-      ticker: "MSFT",
-      grossAmount: 12,
-      tax: 3.6,
+  it("writes the dividend to movement_dividends, in the columns' own spelling", async () => {
+    db.inserted = { data: storedDividendRow, error: null, status: 201 };
+
+    await saveMovement(newDividend);
+
+    expect(db.inserts).toEqual([
+      {
+        table: "movement_dividends",
+        row: {
+          id: newDividend.id,
+          execution_date: "2026-05-04",
+          ticker: "MSFT",
+          gross_amount: 18.6,
+          tax: 5.58,
+        },
+      },
+    ]);
+  });
+
+  it("sends no type on a dividend, because that table has no such column", async () => {
+    // The other two branches both send one, so the omission reads like a slip
+    // and is not. `movement_dividends` holds one kind of Movement and has no
+    // `type` column at all - and PostgREST builds its column list from the
+    // payload's keys, so a type here is not a harmless extra field but a request
+    // naming a column that does not exist. The whole insert is refused.
+    db.inserted = { data: storedDividendRow, error: null, status: 201 };
+
+    await saveMovement(newDividend);
+
+    expect(db.inserts[0].row).not.toHaveProperty("type");
+    expect(db.inserts[0].row).not.toHaveProperty("created_at");
+  });
+
+  it("hands back the dividend built from the row Postgres stored", async () => {
+    db.inserted = { data: storedDividendRow, error: null, status: 201 };
+
+    const answer = await saveMovement(newDividend);
+
+    // `createdAt` is the proof: the caller supplied no such field and could not
+    // have guessed it, so an answer echoing the argument back cannot produce it.
+    // And `type` comes back on the Movement despite never being stored - the
+    // table a row was read from is what says what it is.
+    expect(answer).toEqual({
+      ok: true,
+      movement: {
+        id: newDividend.id,
+        type: "dividend",
+        executionDate: "2026-05-04",
+        createdAt: "2026-05-04T17:08:52.913Z",
+        ticker: "MSFT",
+        grossAmount: 18.6,
+        tax: 5.58,
+      },
     });
+  });
+
+  it("reads a duplicate dividend back from movement_dividends, not from another table", async () => {
+    // The same trap the buy branch fell into: the duplicate branch has to follow
+    // the movement to its own table, or a retried dividend is answered with
+    // whatever sits under that id elsewhere.
+    db.inserted = {
+      data: null,
+      error: { message: 'duplicate key value violates unique constraint "movement_dividends_pkey"', code: "23505" },
+      status: 409,
+    };
+    db.readBack = { data: storedDividendRow, error: null, status: 200 };
+
+    const answer = await saveMovement(newDividend);
+
+    expect(db.selects).toEqual(["movement_dividends"]);
+    expect(answer).toEqual({
+      ok: true,
+      movement: {
+        id: newDividend.id,
+        type: "dividend",
+        executionDate: "2026-05-04",
+        createdAt: "2026-05-04T17:08:52.913Z",
+        ticker: "MSFT",
+        grossAmount: 18.6,
+        tax: 5.58,
+      },
+    });
+  });
+
+  it("returns the cause when a dividend insert is refused, and writes no Movement", async () => {
+    db.inserted = {
+      data: null,
+      error: { message: "new row violates row-level security policy", code: "42501" },
+      status: 403,
+    };
+
+    const answer = await saveMovement(newDividend);
 
     expect(answer.ok).toBe(false);
-    expect(db.inserts).toEqual([]);
+    if (answer.ok) throw new Error("expected a refusal");
+    expect(answer.failure.table).toBe("movement_dividends");
+    expect(answer.failure.code).toBe("42501");
   });
 
   it("writes the buy to movement_trades, in the columns' own spelling", async () => {

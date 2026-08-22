@@ -33,7 +33,7 @@ const OPERACIONES: RowSpec[] = [
   {
     type: "dividend",
     subtitle: "Ingreso por dividendos",
-    disabled: true,
+    disabled: false,
     onPress: () => router.push("/add-movement/dividend"),
   },
 ];
