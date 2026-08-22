@@ -52,27 +52,27 @@ whose trigger is the next form after this one.
 
 ## Acceptance criteria
 
-- [ ] The **Dividendo** row in OPERACIONES is active (no *Pronto*) and opens the form; Venta and
+- [x] The **Dividendo** row in OPERACIONES is active (no *Pronto*) and opens the form; Venta and
       Retiro keep their tags and stay unopenable
-- [ ] The write path admits a dividend, and its blanket refusal narrows to **Venta alone**
-- [ ] Saving a dividend inserts into the dividends table and awaits the answer before dismissing
-- [ ] The insert payload carries **no `type` column**, which that table does not have
-- [ ] The Movement that joins the History is mapped from the row the database returned, carrying
+- [x] The write path admits a dividend, and its blanket refusal narrows to **Venta alone**
+- [x] Saving a dividend inserts into the dividends table and awaits the answer before dismissing
+- [x] The insert payload carries **no `type` column**, which that table does not have
+- [x] The Movement that joins the History is mapped from the row the database returned, carrying
       the database's `createdAt`
-- [ ] The id is minted once per form session, so a second tap or a retry after a lost response
+- [x] The id is minted once per form session, so a second tap or a retry after a lost response
       carries the same id
-- [ ] A duplicate id reads the stored row back from the **dividends** table and reports success
-- [ ] A failed save keeps Símbolo, Monto bruto, Impuestos and Fecha as typed, shows a failure
+- [x] A duplicate id reads the stored row back from the **dividends** table and reports success
+- [x] A failed save keeps Símbolo, Monto bruto, Impuestos and Fecha as typed, shows a failure
       message, does not dismiss, and writes nothing
-- [ ] The save button is inert while a save is in flight
-- [ ] **Símbolo** remains free text with no gate; the only gate is tax <= gross
-- [ ] The **Fecha** chosen is stored as that calendar date, unshifted by the device's timezone
-- [ ] On save the modal dismisses to Inicio, where **Efectivo** and **Dividendos netos** have
+- [x] The save button is inert while a save is in flight
+- [x] **Símbolo** remains free text with no gate; the only gate is tax <= gross
+- [x] The **Fecha** chosen is stored as that calendar date, unshifted by the device's timezone
+- [x] On save the modal dismisses to Inicio, where **Efectivo** and **Dividendos netos** have
       moved by the net with no manual refresh
-- [ ] Verified on a device **and** against the live table: `created_at == updated_at`,
+- [x] Verified on a device **and** against the live table: `created_at == updated_at`,
       `execution_date` a bare calendar date, `user_id` filled by the column default
-- [ ] Verified on a device: the dividend survives a restart
-- [ ] Verified on a device: airplane mode refuses without dismissing, and the retry that follows
+- [x] Verified on a device: the dividend survives a restart
+- [x] Verified on a device: airplane mode refuses without dismissing, and the retry that follows
       produces **one** row, not two
 
 ## Blocked by
@@ -87,3 +87,37 @@ default and its `updated_at` trigger have existed since the first migration and 
 fired. Every other part of this slice is a copy of code known to work; that table is the one
 genuine unknown, and no unit test can reach it - which is why the last three criteria are
 device-and-database rather than test-only.
+
+## Closing note
+
+Done in `c1466d1`, and verified on a device **and** against the live database.
+
+The rows Postgres holds were read back with `supabase db query --linked`. Two dividends -
+MSFT and VOO - and every database criterion holds on both: `created_at == updated_at`, so
+the value is the database's clock on insert and the `updated_at` trigger has not fired
+since; `user_id` is filled by the column default; and `execution_date` is a bare calendar
+date - `2026-06-12` and `2026-07-01` for rows inserted on 2026-08-22 UTC, unshifted in
+either direction.
+
+**Three things in `movement_dividends` ran for the first time in the life of the project**
+and all three worked on first contact: the RLS insert policy, the `user_id` default, and
+the `set_updated_at` trigger. They had existed since the first migration and had never
+been exercised, which is why they were the one part of this slice no unit test could
+stand in for.
+
+The insert landing at all is what proves the payload carried no `type`. PostgREST builds
+its column list from the payload's keys and refuses a request naming a column the table
+does not have, so a row in that table is the assertion - the test names the case, and the
+database enforced it.
+
+The dividends survived a restart, and the airplane-mode failure and the retry after it were
+exercised: the form refused without dismissing and kept every field, and the retry produced
+one row. Corroborated by the table itself, which holds exactly two rows under two distinct
+ids for the two dividends recorded.
+
+Efectivo and Dividendos netos both moved by the net on Inicio with no manual refresh -
+the first real value **Net Dividends** has ever been shown in the running app.
+
+Nothing was found that needed fixing. One comment in `lib/history.test.ts` had gone stale
+by this slice's own hand - it still said Dividendo was *Pronto* - and was corrected in the
+same commit.
