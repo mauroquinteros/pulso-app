@@ -1,14 +1,25 @@
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { format, parseISO } from "date-fns";
-import { Modal, Platform, Pressable, StyleSheet, Text } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet } from "react-native";
 
+import { isDayTap } from "@/components/add-movement/date-picker-dismiss";
 import { Colors } from "@/constants/theme";
 
 /**
  * The shared "Fecha" picker for every add-movement form. iOS shows an inline
- * calendar inside a modal sheet (commit on "Listo"); Android uses the native
- * dialog, which closes itself and commits only on "set". `value`/`onChange`
- * speak the form's `YYYY-MM-DD` string.
+ * calendar inside a modal sheet; Android uses the native dialog, which closes
+ * itself and commits only on "set". `value`/`onChange` speak the form's
+ * `YYYY-MM-DD` string.
+ *
+ * The iOS sheet commits on every change and closes as soon as you tap a day,
+ * the way every other calendar picker behaves. Telling a day tap apart from a
+ * month/year wheel scroll -- which must not dismiss -- is `isDayTap`.
+ *
+ * There is no confirm button: the date is already saved by the time you could
+ * press one. The sheet is dismissed by tapping a day, or by tapping the
+ * backdrop -- which is the only way out of the one case a day tap cannot
+ * cover, changing month or year and keeping the same day number, which fires
+ * no change to close on.
  */
 export function MovementDatePicker({
   value,
@@ -31,6 +42,12 @@ export function MovementDatePicker({
     }
   };
 
+  const onInlineChange = (_: DateTimePickerEvent, selected?: Date) => {
+    if (!selected) return;
+    onChange(format(selected, "yyyy-MM-dd"));
+    if (isDayTap(value, selected)) onClose();
+  };
+
   if (Platform.OS !== "ios") {
     return <DateTimePicker value={parseISO(value)} mode="date" maximumDate={new Date()} onChange={onAndroidChange} />;
   }
@@ -46,11 +63,8 @@ export function MovementDatePicker({
             maximumDate={new Date()}
             themeVariant="dark"
             accentColor={Colors.accent}
-            onChange={(_, d) => d && onChange(format(d, "yyyy-MM-dd"))}
+            onChange={onInlineChange}
           />
-          <Pressable style={styles.modalDone} onPress={onClose}>
-            <Text style={styles.modalDoneText}>Listo</Text>
-          </Pressable>
         </Pressable>
       </Pressable>
     </Modal>
@@ -70,18 +84,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 12,
-  },
-  modalDone: {
-    alignSelf: "center",
-    marginTop: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 28,
-    borderRadius: 12,
-    backgroundColor: Colors.accent,
-  },
-  modalDoneText: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#04211E",
   },
 });
