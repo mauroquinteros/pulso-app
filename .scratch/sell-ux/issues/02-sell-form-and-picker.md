@@ -3,6 +3,13 @@
 **Type:** AFK
 **Source:** `.scratch/sell-ux/PRD.md` · `.scratch/sell-ux/UX.md`
 
+
+> **Superseded in part.** This issue describes the form-design slice, which was delivered: the
+> screen, its view model and their tests are in the codebase. What it says about **saving** is no
+> longer true - it predates persistence and describes appending to an in-memory store. The save
+> loop, the picker row and the write to Postgres belong to `.scratch/sell-movement/PRD.md`. Do
+> not tick the boxes below against that work.
+
 ## What to build
 
 The **Venta** form screen, a mirror of the Compra form, wired end-to-end. From the type

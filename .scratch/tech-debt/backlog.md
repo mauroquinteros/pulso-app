@@ -10,6 +10,7 @@ Tick the box and set the entry's `Status:` in the same commit as the fix. `Statu
 carries the detail (`backlog`, `backlog (blocked on backend)`, `fixed - <date>, <where>`);
 the box is the at-a-glance answer to "is this still true?".
 
+- [ ] [A fully exited position disappears from the app](#a-fully-exited-position-disappears-from-the-app) - UX / feature gap
 - [ ] [Efectivo and Otros are near-identical colors in the same donut](#efectivo-and-otros-are-near-identical-colors-in-the-same-donut) - bug (minor)
 - [ ] [Ordering belongs to the backend, not the view-models](#ordering-belongs-to-the-backend-not-the-view-models) - refactor, blocked on backend
 - [ ] [Define and adopt a type scale (font-size sprawl)](#define-and-adopt-a-type-scale-font-size-sprawl) - design-system / refactor
@@ -19,6 +20,41 @@ the box is the at-a-glance answer to "is this still true?".
 - [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
 
 ---
+
+## A fully exited position disappears from the app
+
+**Type:** UX / feature gap · **Status:** backlog · **Raised:** 2026-08-22
+
+**Problem.** Selling a whole holding drives its share count to 0, and the engine filters
+holdings on `shares > 0` - so a fully exited ticker stops being a **Holding**. It leaves
+**Mis Activos** on Inicio and Portafolio, and since those two rows are the only routes to
+`/stock/[ticker]`, its detail screen becomes unreachable. Its **Realized P&L** still counts,
+folded into the portfolio total, but with no per-stock row to attribute it to. Its buys and
+sells remain in **Movimientos**, each still opening its own receipt.
+
+Not a rendering fault: `buildStockDetailView` returns `not-found` for an absent ticker and
+the screen says "No encontramos esta acción", but nothing can navigate there. The stock
+simply ceases to exist anywhere in the app.
+
+**Why it is worth fixing eventually.** `CONTEXT.md` defines **Total Return of a stock** as
+the four-component formula "counting every movement ever recorded for that ticker" - it
+answers "how has this stock done for me", as against **Net P&L**'s "how is the position I
+still hold doing". It even reasons about exits ("exit fully and the denominator is zero").
+So the domain treats a closed position as a first-class thing, while the app makes it
+unreachable at the moment the question is most natural: right after closing it.
+
+**Why it was deferred.** Raised and accepted during the sell slice, which is what made full
+exits reachable in the first place. The `shares > 0` filter is load-bearing far beyond this
+screen - **Cost Basis**, **Market Value**, the allocation percentages and Inicio's donut all
+assume `holdings` means *open positions* - so letting closed ones in means answering what a
+0-share row does to each. That is a feature with its own design, not a line in a persistence
+slice.
+
+**Approach (when picked up).** Prefer leaving `holdings` alone. Give closed positions their
+own route instead, reachable from a "vendidas" section or from a sell's receipt, and let the
+detail screen render from movements when there is no holding behind the ticker. Decide then
+what a closed position's card shows - **Total Return of a stock** is the figure it exists for,
+and per `CONTEXT.md` it carries no percentage.
 
 ## Efectivo and Otros are near-identical colors in the same donut
 
