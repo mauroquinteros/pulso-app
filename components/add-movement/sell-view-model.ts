@@ -1,4 +1,4 @@
-import type { SellMovement } from "@/types/models";
+import type { NewMovement, SellMovement } from "@/types/models";
 import { normalizeTicker, parseAmount, roundShares } from "@/utils/input";
 
 export interface SellInput {
@@ -41,7 +41,6 @@ export interface SellSummary {
 
 export interface SellDeps {
   id: () => string;
-  now: () => string; // ISO timestamp for createdAt
 }
 
 /**
@@ -96,12 +95,16 @@ export function summarizeSell(input: SellInput, availableShares: number): SellSu
 }
 
 /**
- * Maps validated form input to a typed SellMovement. System fields (id, createdAt)
- * come from injected generators so the result is deterministic and unit-testable; the ticker
- * is stored uppercase and empty Comisión/Impuestos default to 0. The UI label "Impuestos"
- * maps to the model field `regulatoryFees` (a sell has no `tax`).
+ * Maps validated form input to the *fields* of a SellMovement, not to a SellMovement:
+ * `createdAt` is absent on purpose, because it is read from the database's clock when the row
+ * is stored (ADR 0010). That instant matters more here than for any other type - it is the
+ * tiebreaker between two movements sharing an executionDate, so it decides whether a sale is
+ * measured against a same-day buy's Average Cost or against no buy at all. The id comes from
+ * an injected generator, so the result stays deterministic and unit-testable; the ticker is
+ * stored uppercase and empty Comisión/Impuestos default to 0. The UI label "Impuestos" maps to
+ * the model field `regulatoryFees` (a sell has no `tax`).
  */
-export function buildSellMovement(input: SellInput, deps: SellDeps): SellMovement {
+export function buildSellMovement(input: SellInput, deps: SellDeps): NewMovement<SellMovement> {
   return {
     id: deps.id(),
     type: "sell",
@@ -111,6 +114,5 @@ export function buildSellMovement(input: SellInput, deps: SellDeps): SellMovemen
     fee: input.fee === "" ? 0 : parseAmount(input.fee),
     regulatoryFees: input.regulatoryFees === "" ? 0 : parseAmount(input.regulatoryFees),
     executionDate: input.executionDate,
-    createdAt: deps.now(),
   };
 }

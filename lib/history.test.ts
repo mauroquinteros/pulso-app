@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { BuyMovement, DepositMovement, DividendMovement, NewMovement, WithdrawalMovement } from "@/types/models";
+import type {
+  BuyMovement,
+  DepositMovement,
+  DividendMovement,
+  NewMovement,
+  SellMovement,
+  WithdrawalMovement,
+} from "@/types/models";
 import { readHistory, saveMovement } from "./history";
 import type { CashRow, DividendRow, TradeRow } from "./movement-rows";
 
@@ -137,6 +144,32 @@ const storedWithdrawalRow: CashRow = {
   amount: 200,
   transfer_fee: 1,
   created_at: "2026-05-04T18:22:03.117Z",
+};
+
+/** What the Venta form produces: every field of a sell but `createdAt`. */
+const newSell: NewMovement<SellMovement> = {
+  id: "7c1e0b40-0000-4000-8000-000000000005",
+  type: "sell",
+  executionDate: "2026-05-04",
+  ticker: "AAPL",
+  shares: 3,
+  executionPrice: 190,
+  fee: 0.35,
+  regulatoryFees: 0.02,
+};
+
+/** What Postgres hands back for it. `regulatory_fees` is a real number here,
+ * where a buy's is NULL - the two halves of `regulatory_fees_belong_to_sells`. */
+const storedSellRow: TradeRow = {
+  id: newSell.id,
+  type: "sell",
+  execution_date: "2026-05-04",
+  ticker: "AAPL",
+  shares: 3,
+  execution_price: 190,
+  fee: 0.35,
+  regulatory_fees: 0.02,
+  created_at: "2026-05-04T19:31:44.208Z",
 };
 
 /** What the Compra form produces: every field of a buy but `createdAt`. */
@@ -468,26 +501,6 @@ describe("saveMovement", () => {
     });
   });
 
-  it("refuses a type it has no branch for rather than writing it somewhere", async () => {
-    // Venta alone now: Dividendo has its own branch. Venta is still "Pronto" in
-    // the picker, so nothing can reach this. It refuses as a value rather than
-    // throwing, because nothing throws out of that module - and it touches no
-    // table on the way out.
-    const answer = await saveMovement({
-      id: "7c1e0b40-0000-4000-8000-000000000005",
-      type: "sell",
-      executionDate: "2026-05-04",
-      ticker: "AAPL",
-      shares: 3,
-      executionPrice: 190,
-      fee: 0.35,
-      regulatoryFees: 0.02,
-    });
-
-    expect(answer.ok).toBe(false);
-    expect(db.inserts).toEqual([]);
-  });
-
   it("writes the withdrawal to movement_cash, through the deposit's branch", async () => {
     // The only direct proof that a Retiro can be written. Today it is covered
     // transitively - a withdrawal and a deposit share one branch of
@@ -636,6 +649,46 @@ describe("saveMovement", () => {
 
     expect(db.inserts[0].row).not.toHaveProperty("regulatory_fees");
     expect(db.inserts[0].row).not.toHaveProperty("created_at");
+  });
+
+  it("sends regulatory_fees on a sell, where the buy omits it", async () => {
+    // The other half of `regulatory_fees_belong_to_sells`, which requires the
+    // column NOT NULL on a sell. The mistake this guards is copying the buy
+    // branch directly above it - seven identical fields, same table, same
+    // mapper - and inheriting its deliberate omission, which the constraint
+    // then refuses at runtime for every sell. TypeScript cannot see it: the row
+    // is a string-keyed bag of values, where a missing key is not an error.
+    db.inserted = { data: storedSellRow, error: null, status: 201 };
+
+    await saveMovement(newSell);
+
+    expect(db.inserts).toEqual([
+      {
+        table: "movement_trades",
+        row: {
+          id: newSell.id,
+          type: "sell",
+          execution_date: "2026-05-04",
+          ticker: "AAPL",
+          shares: 3,
+          execution_price: 190,
+          fee: 0.35,
+          regulatory_fees: 0.02,
+        },
+      },
+    ]);
+    expect(db.inserts[0].row).not.toHaveProperty("created_at");
+  });
+
+  it("sends a zero regulatory_fees rather than omitting it", async () => {
+    // A sell with no Impuestos typed has zero of them, not none at all - so the
+    // key is still sent. Omitting it because the value is falsy would trip the
+    // same constraint the test above guards.
+    db.inserted = { data: { ...storedSellRow, regulatory_fees: 0 }, error: null, status: 201 };
+
+    await saveMovement({ ...newSell, regulatoryFees: 0 });
+
+    expect(db.inserts[0].row.regulatory_fees).toBe(0);
   });
 
   it("hands back the buy built from the row Postgres stored", async () => {

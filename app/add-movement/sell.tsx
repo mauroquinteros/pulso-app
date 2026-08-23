@@ -14,6 +14,7 @@ import { buildSellMovement, summarizeSell } from "@/components/add-movement/sell
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
+import { saveMovement } from "@/lib/history";
 import { useMovementsStore } from "@/stores/movements";
 import { formatShares, formatUSD } from "@/utils/format";
 import { sanitizeDecimal } from "@/utils/input";
@@ -23,6 +24,12 @@ export default function SellFormScreen() {
   const movementSaved = useMovementsStore((s) => s.movementSaved);
   const movements = useMovementsStore((s) => s.movements);
   const holdings = usePortfolio().holdings;
+  // Held in state, so the id is minted once per form session rather than once
+  // per tap. If the insert lands but its response does not, the second tap
+  // carries the id the first one used and Postgres refuses the duplicate -
+  // instead of recording the sale twice and closing a position that is still
+  // open (ADR 0010).
+  const [deps] = useState(defaultMovementDeps);
   const [ticker, setTicker] = useState("");
   const [shares, setShares] = useState("");
   const [executionPrice, setExecutionPrice] = useState("");
@@ -33,6 +40,8 @@ export default function SellFormScreen() {
   const [touchedShares, setTouchedShares] = useState(false);
   const [touchedPrice, setTouchedPrice] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   // What the user holds today (for the "never owned it" message) vs. what a
   // sell dated `executionDate` may actually take: a backdated sale is limited
@@ -92,16 +101,37 @@ export default function SellFormScreen() {
         ? Colors.textPrimary
         : "#3E4470";
 
-  const onSave = () => {
-    if (!canSave) return;
-    const movement = buildSellMovement(
-      { ticker, shares, executionPrice, fee, regulatoryFees, executionDate },
-      // Unreachable: Venta is "Pronto" in the picker. Its createdAt still comes
-      // from the device clock until its own slice hands the write to Postgres,
-      // which is why `now` is supplied on top of the deps (ADR 0010).
-      { ...defaultMovementDeps(), now: () => new Date().toISOString() },
+  // The save waits for Postgres. Nothing is written optimistically: the store is
+  // the sole input to the engine, so a sell it never received would not be a
+  // pending write but a position shown as closed that is still open, an
+  // overstated Cash and a Realized P&L for a sale that did not happen - and
+  // this form's own shares gate trusts those figures (ADR 0010).
+  const onSave = async () => {
+    if (!canSave || saving) return;
+
+    setSaving(true);
+    setSaveFailed(false);
+
+    const answer = await saveMovement(
+      buildSellMovement({ ticker, shares, executionPrice, fee, regulatoryFees, executionDate }, deps),
     );
-    movementSaved(movement);
+
+    if (!answer.ok) {
+      // The form stays exactly as the user left it - Símbolo, Acciones, Precio,
+      // Comisión, Impuestos and Fecha all still typed - and says the save
+      // failed. There is nothing to roll back, because nothing was written.
+      setSaving(false);
+      setSaveFailed(true);
+      return;
+    }
+
+    // The Movement built from the row Postgres stored, never the one built
+    // here - so `createdAt` arrives from the database's clock, which for a sell
+    // is what orders it against a same-day buy and therefore decides the
+    // Average Cost the sale is measured against. `saving` is deliberately left
+    // standing: the form is dismissing, and the button stays inert on the way
+    // out.
+    movementSaved(answer.movement);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.dismissTo("/");
   };
@@ -244,7 +274,8 @@ export default function SellFormScreen() {
               <Text style={styles.errorText}>La comisión y los impuestos superan el monto bruto</Text>
             )}
           </View>
-          <SaveButton canSave={canSave} onPress={onSave} />
+          {saveFailed && <Text style={styles.saveError}>No pudimos guardar tu venta. Inténtalo de nuevo.</Text>}
+          <SaveButton canSave={canSave} pending={saving} onPress={onSave} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -308,5 +339,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.3,
     fontVariant: ["tabular-nums"],
+  },
+  // Above the button rather than beside a field: the failure is the save's, not
+  // any one input's, and it has to be readable without scrolling back up.
+  saveError: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: Colors.negative,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });

@@ -13,27 +13,23 @@ import type { MovementType } from "@/types/models";
 type RowSpec = {
   type: MovementType;
   subtitle: string;
-  disabled: boolean;
-  onPress?: () => void;
+  onPress: () => void;
 };
 
 const OPERACIONES: RowSpec[] = [
   {
     type: "buy",
     subtitle: "Adquirir acciones o ETF",
-    disabled: false,
     onPress: () => router.push("/add-movement/buy"),
   },
   {
     type: "sell",
     subtitle: "Vender una posición",
-    disabled: true,
     onPress: () => router.push("/add-movement/sell"),
   },
   {
     type: "dividend",
     subtitle: "Ingreso por dividendos",
-    disabled: false,
     onPress: () => router.push("/add-movement/dividend"),
   },
 ];
@@ -42,13 +38,11 @@ const EFECTIVO: RowSpec[] = [
   {
     type: "deposit",
     subtitle: "Agregar efectivo a tu cuenta",
-    disabled: false,
     onPress: () => router.push("/add-movement/form"),
   },
   {
     type: "withdrawal",
     subtitle: "Retirar efectivo de tu cuenta",
-    disabled: false,
     onPress: () => router.push("/add-movement/withdrawal"),
   },
 ];
@@ -64,19 +58,10 @@ function TypeRow({ spec }: { spec: RowSpec }) {
         <Text style={styles.rowTitle}>{meta.label}</Text>
         <Text style={styles.rowSubtitle}>{spec.subtitle}</Text>
       </View>
-      {spec.disabled ? (
-        <View style={styles.prontoTag}>
-          <Text style={styles.prontoText}>Pronto</Text>
-        </View>
-      ) : (
-        <Ionicons name="chevron-forward" size={18} color={Colors.accent} />
-      )}
+      <Ionicons name="chevron-forward" size={18} color={Colors.accent} />
     </>
   );
 
-  if (spec.disabled) {
-    return <View style={[styles.row, styles.rowDisabled]}>{inner}</View>;
-  }
   return (
     <Pressable style={styles.row} onPress={spec.onPress}>
       {inner}
@@ -174,9 +159,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: 14,
   },
-  rowDisabled: {
-    opacity: 0.45,
-  },
   rowIcon: {
     width: 38,
     height: 38,
@@ -196,18 +178,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 1,
-  },
-  prontoTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 9999,
-    backgroundColor: "rgba(142,142,147,0.14)",
-  },
-  prontoText: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    color: Colors.textSecondary,
-    textTransform: "uppercase",
   },
 });

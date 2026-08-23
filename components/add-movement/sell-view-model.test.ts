@@ -9,7 +9,6 @@ import { buildSellMovement, summarizeSell, type SellDeps } from "./sell-view-mod
 
 const deps: SellDeps = {
   id: () => "sell-1",
-  now: () => "2025-06-25T12:00:00Z",
 };
 
 const base = { ticker: "GOOG", executionDate: "2025-06-25" };
@@ -316,7 +315,7 @@ describe("summarizeSell", () => {
 });
 
 describe("buildSellMovement", () => {
-  it("maps fields to a typed SellMovement with injected system fields", () => {
+  it("maps fields to the sell's fields, with an injected id", () => {
     const movement = buildSellMovement(
       {
         ticker: "GOOG",
@@ -337,8 +336,27 @@ describe("buildSellMovement", () => {
       fee: 0.1,
       regulatoryFees: 0.02,
       executionDate: "2023-10-24",
-      createdAt: "2025-06-25T12:00:00Z",
     });
+  });
+
+  it("emits no createdAt, because the form does not own that clock", () => {
+    // The form produces the fields for a Movement, not a Movement. `createdAt`
+    // is the tiebreaker between two movements sharing an executionDate, and for
+    // a sell it decides the Average Cost the sale is measured against - so it
+    // only breaks ties if one clock supplies it, the database's (ADR 0010).
+    const movement = buildSellMovement(
+      {
+        ticker: "GOOG",
+        shares: "2",
+        executionPrice: "349.60",
+        fee: "0.10",
+        regulatoryFees: "0.02",
+        executionDate: "2023-10-24",
+      },
+      deps,
+    );
+
+    expect(movement).not.toHaveProperty("createdAt");
   });
 
   it("stores the ticker uppercase and trimmed", () => {

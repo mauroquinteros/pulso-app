@@ -1,4 +1,11 @@
-import { mapCashRow, mapDividendRow, mapTradeRow, type CashRow, type DividendRow, type TradeRow } from "@/lib/movement-rows";
+import {
+  mapCashRow,
+  mapDividendRow,
+  mapTradeRow,
+  type CashRow,
+  type DividendRow,
+  type TradeRow,
+} from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
 import type {
   BuyMovement,
@@ -68,13 +75,6 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** The tables this file writes to - all three of them now. */
 type TableName = "movement_cash" | "movement_dividends" | "movement_trades";
-
-/**
- * A Movement this file has a branch for. Narrower than `NewMovement` on purpose:
- * `destinationFor` is total over this union, so adding a type to it without
- * giving it a table is a type error rather than a row written somewhere wrong.
- */
-type WritableMovement = NewMovement<BuyMovement | DepositMovement | DividendMovement | WithdrawalMovement>;
 
 /**
  * The row mappers take their own row shapes, and PostgREST hands back untyped
@@ -205,17 +205,6 @@ async function attemptRead(): Promise<HistoryAnswer> {
  * and it lies in the one way nothing downstream can detect (ADR 0010).
  */
 export async function saveMovement(movement: NewMovement): Promise<SaveAnswer> {
-  // Venta is still "Pronto" in the picker and cannot be opened, so nothing can
-  // reach the branch its own slice will add. A refusal rather than a throw,
-  // because nothing throws out of this file.
-  if (movement.type === "sell") {
-    const failure = { table: "", status: 0, code: "unwritten_type", message: `a ${movement.type} cannot be saved yet` };
-
-    fault("save refused:", failure);
-
-    return { ok: false, failure };
-  }
-
   const first = await attemptSave(movement);
 
   if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return settledSave(first);
@@ -247,7 +236,7 @@ function settledSave(answer: SaveAnswer): SaveAnswer {
  * taken from whichever phone happened to record the movement does not reliably
  * break ties. One clock, the database's (ADR 0010).
  */
-function destinationFor(movement: WritableMovement): Destination {
+function destinationFor(movement: NewMovement): Destination {
   if (movement.type === "buy") {
     return {
       table: "movement_trades",
@@ -263,6 +252,31 @@ function destinationFor(movement: WritableMovement): Destination {
         // default supplies the NULL that `regulatory_fees_belong_to_sells`
         // requires of a buy. A buy has no regulatory fees at all - not zero of
         // them - which is the same distinction `mapTradeRow` makes coming back.
+      },
+      map: (row) => mapTradeRow(row as TradeRow),
+    };
+  }
+
+  if (movement.type === "sell") {
+    return {
+      table: "movement_trades",
+      row: {
+        id: movement.id,
+        type: movement.type,
+        execution_date: movement.executionDate,
+        ticker: movement.ticker,
+        shares: movement.shares,
+        execution_price: movement.executionPrice,
+        fee: movement.fee,
+        // Sent, where the buy above omits it - the opposite halves of
+        // `regulatory_fees_belong_to_sells`, which requires the column NOT NULL
+        // on a sell and NULL on a buy. So this branch cannot be the buy's with a
+        // field added: inheriting that omission is refused by the constraint at
+        // runtime, and the row is a string-keyed bag where a missing key is not
+        // a type error. A `0` here is a real zero - a sell has however many
+        // regulatory fees it has, possibly none, where a buy has no such thing
+        // at all. Same distinction `mapTradeRow` makes coming back.
+        regulatory_fees: movement.regulatoryFees,
       },
       map: (row) => mapTradeRow(row as TradeRow),
     };
@@ -303,7 +317,7 @@ function destinationFor(movement: WritableMovement): Destination {
 }
 
 /** One pass at the insert, and the mapping of whatever came back. */
-async function attemptSave(movement: WritableMovement): Promise<SaveAnswer> {
+async function attemptSave(movement: NewMovement): Promise<SaveAnswer> {
   const { table, row, map } = destinationFor(movement);
 
   const { data, error, status } = await supabase.from(table).insert(row).select().single();
