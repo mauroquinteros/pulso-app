@@ -67,9 +67,16 @@ export function deriveHoldingFacts(movements: Movement[]): HoldingFacts {
     }
   }
 
+  // One share count for every field that needs one: `roundShares` returns a
+  // value rather than changing `shares`, so rounding inline and then dividing
+  // by the local described one position with two quantities.
+  const held = roundShares(shares);
+
   return {
-    shares: roundShares(shares),
-    avgCost: shares > 0 ? round2(costTotal / shares) : 0,
+    shares: held,
+    // Accumulated, not `avgCost * held` as CONTEXT.md words it: Average Cost is
+    // rounded to cents, so multiplying it back amplifies by the share count.
+    avgCost: held > 0 ? round2(costTotal / held) : 0,
     costBasis: round2(costTotal),
     realizedPnl: round2(realizedPnl),
     totalDividends: round2(totalDividends),

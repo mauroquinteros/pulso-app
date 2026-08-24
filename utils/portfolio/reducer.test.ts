@@ -2,6 +2,8 @@ import type { BuyMovement, DividendMovement, SellMovement } from "@/types/models
 import { describe, expect, it } from "vitest";
 import { deriveHoldingFacts, maxSellableAsOf } from "./reducer";
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 let seq = 0;
 const buy = (executionPrice: number, shares: number, executionDate: string, fee = 0): BuyMovement => ({
   id: `b${seq++}`,
@@ -144,6 +146,23 @@ describe("deriveHoldingFacts", () => {
       expect(facts.realizedPnl).toBe(0);
       expect(facts.shares).toBe(0);
     });
+  });
+});
+
+describe("deriveHoldingFacts states one share count, not two", () => {
+  // Fed a count finer than the grid - the one input that tells a rounded share
+  // count from an unrounded one, and unreachable through the app, which is why
+  // nothing caught this.
+  const facts = () => deriveHoldingFacts([buy(7000, 0.142857, "2025-01-02")]);
+
+  it("reports an Average Cost that multiplies back to the Cost Basis", () => {
+    // Was 1000.02 against a Cost Basis of 1000.00.
+    expect(round2(facts().avgCost * facts().shares)).toBe(facts().costBasis);
+  });
+
+  it("values the same count it reports", () => {
+    expect(facts().shares).toBe(0.14286);
+    expect(facts().costBasis).toBe(1000);
   });
 });
 
