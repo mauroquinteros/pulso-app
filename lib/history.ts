@@ -7,14 +7,7 @@ import {
   type TradeRow,
 } from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
-import type {
-  BuyMovement,
-  DepositMovement,
-  DividendMovement,
-  Movement,
-  NewMovement,
-  WithdrawalMovement,
-} from "@/types/models";
+import type { Movement, NewMovement } from "@/types/models";
 import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
 
 /**
