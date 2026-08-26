@@ -30,3 +30,22 @@ point of use. No per-size copies needed.
 - **Minimum size.** 24px for `mark.svg`. Below that, use `dot.svg`.
 - **Wordmark.** "pulso", Manrope ExtraBold, lowercase, -3% tracking. Mark to
   the left of the word, gap equal to the width of the letter "o".
+
+## Launcher icons
+
+The PNGs under `assets/images/` are rendered from `mark.svg` and committed;
+there is no build step. Redoing them by hand means honoring four things the
+mark itself does not say:
+
+- **Field.** The mark sits on ink `#04211E`, never on transparency. Expo's icon
+  plugin flattens alpha in the source onto **white**, so transparent corners
+  come back white rather than ink.
+- **Inset.** Mark at 66% of the canvas on iOS. On Android, 44% - the adaptive
+  icon foreground is a 108-unit canvas masked to its center 72, so a smaller
+  source lands the same size on screen.
+- **Alpha.** `icon.png` and `favicon.png` must carry **no alpha channel**; iOS
+  rejects an app icon that does. The two Android layers must carry one.
+- **Monochrome.** `android-icon-monochrome.png` is the disc with the beat
+  punched out of its *alpha* - Android discards the color and tints the rest.
+
+Sizes: `icon.png` 1024, the Android layers 512, `favicon.png` 48.
