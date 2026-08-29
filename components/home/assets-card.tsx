@@ -12,23 +12,21 @@ type Props = {
 const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
 export function AssetsCard({ assets, onPressHolding, withheldLabel }: Props) {
+  // A withheld aggregate carries no tone: the rows it sums are unpriced, so
+  // there is no gain or loss to color.
+  const statColor = assets.netPnl === null ? Colors.textSecondary : toneColor(assets.netPnlTone);
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Activos</Text>
-        <Text style={styles.headerStat}>
-          Net P&L{" "}
-          <Text
-            style={[
-              styles.headerStatValue,
-              // A withheld aggregate carries no tone: the rows it sums are
-              // unpriced, so there is no gain or loss to color.
-              { color: assets.netPnl === null ? Colors.textSecondary : toneColor(assets.netPnlTone) },
-            ]}
-          >
-            {assets.netPnl ?? withheldLabel}
-          </Text>
-        </Text>
+        <Text style={styles.title}>Mis Activos</Text>
+        <View style={styles.headerStat}>
+          <Text style={styles.headerStatLabel}>Net P&L</Text>
+          <Text style={[styles.headerStatValue, { color: statColor }]}>{assets.netPnl ?? withheldLabel}</Text>
+          {assets.netPnlPct !== null && (
+            <Text style={[styles.headerStatPct, { color: statColor }]}>{assets.netPnlPct}</Text>
+          )}
+        </View>
       </View>
       {assets.holdings.map((h) => (
         <HoldingRow key={h.ticker} holding={h} onPress={() => onPressHolding?.(h.ticker)} />
@@ -51,7 +49,10 @@ function HoldingRow({ holding, onPress }: { holding: HomeView["assets"]["holding
         {holding.priceAvailable && holding.value !== null ? (
           <>
             <Text style={styles.value}>{holding.value}</Text>
-            <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>{holding.pnl}</Text>
+            <View style={styles.pnlRow}>
+              <Text style={[styles.pnl, { color: toneColor(holding.pnlTone) }]}>{holding.pnl}</Text>
+              <Text style={[styles.pnlPct, { color: toneColor(holding.pnlTone) }]}>{holding.pnlPct}</Text>
+            </View>
           </>
         ) : (
           <Text style={styles.noPrice}>Sin precio</Text>
@@ -84,12 +85,24 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   headerStat: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+  headerStatLabel: {
     fontSize: 12,
     fontWeight: "500",
     color: Colors.textSecondary,
   },
   headerStatValue: {
+    fontSize: 12,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+  /** The qualifier, not the answer: same tone, one weight down. */
+  headerStatPct: {
+    fontSize: 12,
+    fontWeight: "500",
     fontVariant: ["tabular-nums"],
   },
   row: {
@@ -136,10 +149,22 @@ const styles = StyleSheet.create({
     color: Colors.textBright,
     fontVariant: ["tabular-nums"],
   },
+  pnlRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    // Space instead of the U+00B7 that used to join them: two signed figures at
+    // one weight read as a single token, and the separator was what made it one.
+    gap: 8,
+    marginTop: 1,
+  },
   pnl: {
     fontSize: 12,
     fontWeight: "700",
-    marginTop: 1,
+    fontVariant: ["tabular-nums"],
+  },
+  pnlPct: {
+    fontSize: 12,
+    fontWeight: "500",
     fontVariant: ["tabular-nums"],
   },
   noPrice: {

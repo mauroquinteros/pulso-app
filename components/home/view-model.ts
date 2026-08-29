@@ -1,6 +1,6 @@
 import type { StocksStatus } from "@/stores/stocks";
 import type { Portfolio } from "@/types/models";
-import { formatSharesLabel, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
+import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
 export type Tone = "positive" | "negative";
 
@@ -65,14 +65,21 @@ export interface HomeView {
     }[];
   };
   assets: {
+    /** The amount and its percentage are two fields, not one joined string, so
+     * the card can weight them apart - the amount answers the question and the
+     * percentage qualifies it. Both are withheld together. */
     netPnl: string | null;
+    netPnlPct: string | null;
     netPnlTone: Tone;
     holdings: {
       ticker: string;
+      /** A plain count, no "acc" suffix: the row already names the ticker, and
+       * Portafolio's identical row dropped the suffix (`portfolio-ux/UX.md`). */
       shares: string;
       priceAvailable: boolean;
       value: string | null;
       pnl: string | null;
+      pnlPct: string | null;
       pnlTone: Tone;
     }[];
   };
@@ -206,17 +213,16 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
   const netPnl = totalReturn.unrealizedPnl;
   const netPnlPercent = portfolio.costBasis !== 0 ? (netPnl / portfolio.costBasis) * 100 : 0;
   const assets: HomeView["assets"] = {
-    netPnl: unpriceable ? null : `${formatSignedUSD(netPnl)} · ${formatSignedPercent(netPnlPercent)}`,
+    netPnl: unpriceable ? null : formatSignedUSD(netPnl),
+    netPnlPct: unpriceable ? null : formatSignedPercent(netPnlPercent),
     netPnlTone: toneOf(netPnl),
     holdings: holdings.map((h) => ({
       ticker: h.ticker,
-      shares: formatSharesLabel(h.shares),
+      shares: formatShares(h.shares),
       priceAvailable: h.priceAvailable,
       value: h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null,
-      pnl:
-        h.priceAvailable && h.netPnl !== null
-          ? `${formatSignedUSD(h.netPnl)} · ${formatSignedPercent(h.netPnlPercent ?? 0)}`
-          : null,
+      pnl: h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
+      pnlPct: h.priceAvailable && h.netPnl !== null ? formatSignedPercent(h.netPnlPercent ?? 0) : null,
       pnlTone: toneOf(h.netPnl ?? 0),
     })),
   };

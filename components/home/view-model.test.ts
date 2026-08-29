@@ -113,24 +113,28 @@ describe("buildHomeView", () => {
 
     // Assets — aggregate Net P&L over Cost Basis + per-holding rows.
     // 275.68 / 4320.63 = 6.38% (over Cost Basis, not net contributions).
-    expect(view.assets.netPnl).toBe("+$275.68 · +6.38%");
+    expect(view.assets.netPnl).toBe("+$275.68");
+    expect(view.assets.netPnlPct).toBe("+6.38%");
     expect(view.assets.netPnlTone).toBe("positive");
 
     expect(view.assets.holdings).toEqual([
       {
         ticker: "AAPL",
-        shares: "15.07666 acc",
+        // A plain count: no "acc", matching Portafolio's row for the same holding.
+        shares: "15.07666",
         priceAvailable: true,
         value: "$2,991.21",
-        pnl: "+$240.18 · +8.73%",
+        pnl: "+$240.18",
+        pnlPct: "+8.73%",
         pnlTone: "positive",
       },
       {
         ticker: "VOO",
-        shares: "3.5 acc",
+        shares: "3.5",
         priceAvailable: true,
         value: "$1,605.10",
-        pnl: "+$35.50 · +2.26%",
+        pnl: "+$35.50",
+        pnlPct: "+2.26%",
         pnlTone: "positive",
       },
     ]);
@@ -151,7 +155,8 @@ describe("buildHomeView", () => {
     expect(empty.worth.cash.pct).toBe("0.0%");
     expect(empty.return.total).toBe("+$0.00");
     expect(empty.return.valeHoy).toBe("$0.00");
-    expect(empty.assets.netPnl).toBe("+$0.00 · +0.00%");
+    expect(empty.assets.netPnl).toBe("+$0.00");
+    expect(empty.assets.netPnlPct).toBe("+0.00%");
     expect(empty.priceNote).toBeNull();
 
     // Same for a Perfil who has deposited but bought nothing.
@@ -170,9 +175,10 @@ describe("buildHomeView", () => {
     expect(aapl.priceAvailable).toBe(false);
     expect(aapl.value).toBeNull();
     expect(aapl.pnl).toBeNull();
-    // The shares label and ticker still render.
+    expect(aapl.pnlPct).toBeNull();
+    // The shares count and ticker still render.
     expect(aapl.ticker).toBe("AAPL");
-    expect(aapl.shares).toBe("10 acc");
+    expect(aapl.shares).toBe("10");
   });
 
   it("shows Market Value 0 and all-cash composition for a deposits-only portfolio", () => {
@@ -233,7 +239,8 @@ describe("buildHomeView", () => {
     expect(view.return.valeHoy).toBe("$999.00");
     expect(view.return.components.map((c) => c.value)).toEqual(["+$100.00", "+$0.00", "+$0.00", "-$1.00"]);
     expect(view.return.components.every((c) => c.fill !== null)).toBe(true);
-    expect(view.assets.netPnl).toBe("+$100.00 · +16.67%"); // over the priced Cost Basis
+    expect(view.assets.netPnl).toBe("+$100.00");
+    expect(view.assets.netPnlPct).toBe("+16.67%"); // over the priced Cost Basis
 
     expect(view.priceNote).toBe("1 activo sin precio, excluido de los totales");
   });
@@ -260,6 +267,7 @@ describe("buildHomeView", () => {
     expect(view.return.valeHoy).toBeNull();
     expect(view.return.components[0]).toMatchObject({ label: "No realizado", value: null });
     expect(view.assets.netPnl).toBeNull();
+    expect(view.assets.netPnlPct).toBeNull(); // the pair is withheld together
     // Every fill goes at once: rescaling to the three known components would
     // draw the largest of *those* full, stating a share of a refused total.
     expect(view.return.components.map((c) => c.fill)).toEqual([null, null, null, null]);
@@ -277,10 +285,11 @@ describe("buildHomeView", () => {
     expect(view.assets.holdings).toEqual([
       {
         ticker: "AAPL",
-        shares: "5 acc",
+        shares: "5",
         priceAvailable: false,
         value: null,
         pnl: null,
+        pnlPct: null,
         pnlTone: "positive",
       },
     ]);
