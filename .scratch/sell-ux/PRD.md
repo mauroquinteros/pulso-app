@@ -184,7 +184,10 @@ From the user's perspective:
 - The other operation — **Dividendo** (later PRD). The picker still shows it as "Pronto".
 - **Realized P&L preview** on this form (deferred to Home / movement detail).
 - A **holdings selector** for the symbol (free text + held-shares lookup chosen instead).
-- A **"Vender todo" / sell-all** shortcut (a trading affordance; for a tracker the user knows the exact shares).
+- ~~A **"Vender todo" / sell-all** shortcut (a trading affordance; for a tracker the user knows the exact shares).~~
+  **REVERSED 2026-08-24 — shipped.** The parenthetical is false: the share count is derived (`0012`)
+  and displayed at full precision nowhere but the sell form's `Disponible` helper. See
+  `.scratch/full-exit/PRD.md` and `docs/adr/0014-a-full-exit-sells-the-apps-share-count.md`.
 - **Edit / delete** of movements (create-only).
 - **Persistence** of the store (in-memory; Supabase later). Restart ⇒ back to seed.
 - **Auth / real `userId`**, UUID strategy (placeholders for now).

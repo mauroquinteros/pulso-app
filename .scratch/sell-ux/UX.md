@@ -301,7 +301,11 @@ Mirror Compra's pure-view-model approach (`components/add-movement/buy-view-mode
 1. **Input model** → **shares-first** (Acciones + Precio → Total a recibir), the **inverse of Compra**.
 2. **Symbol** → **free text, force-uppercase, no search**; held shares looked up from holdings.
 3. **Funds/shares gate** → **strict block** when `Acciones > available shares`; "Disponible X" shown.
-4. **No "Vender todo"** → it's a trading affordance; for a tracker the user knows the exact shares.
+4. ~~**No "Vender todo"** → it's a trading affordance; for a tracker the user knows the exact shares.~~
+   **REVERSED 2026-08-24 — the app has a "Vender todo" control.** The struck-through premise is
+   false, and always was: a bought position's share count is *derived* (`0012`) and is shown at full
+   precision nowhere but this form's `Disponible` helper, so the user cannot know the exact shares.
+   See `docs/adr/0014-a-full-exit-sells-the-apps-share-count.md` and `.scratch/full-exit/`.
 5. **Two deductions** → **Comisión (`fee`) + Impuestos (`regulatoryFees`)**, both empty → 0, both subtract.
 6. **Realized P&L** → **deferred** (not in the capture form); minimalist, matching v1.
 7. **Precio** → empty/manual (no current-price pre-fill).

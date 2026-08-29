@@ -57,6 +57,12 @@ _Avoid_: cost per share, basis, break-even
 What the user paid for the shares they currently hold: `Average Cost × shares held`. Because **Average Cost** excludes commissions, so does Cost Basis — fees never enter it.
 _Avoid_: invested amount, total invested
 
+**Dust**:
+The residual fraction of a **Holding** left behind when a position the user believes they closed is sold at the count their broker filled: the app's count was *derived* from the **Monto** typed at the buy (see `docs/adr/0012-a-buy-total-is-derived-from-its-shares.md`), the broker's is what was actually executed, and the two part company in the fifth decimal.
+Dust is a **Holding** by every rule the app has — it carries a **Cost Basis** of a cent or two, takes a **Market Value**, and sits in **Mis Activos** — and that is what makes it a defect rather than a curiosity: a position reported as closed goes on printing `+100.00%` **Net P&L** against its one-cent basis, arithmetically right and unreadable as anything but broken.
+It is **not a rounding error**, and saying so sends the reader to the wrong place. Nothing is miscalculated; every figure derived from Dust is correct. What is wrong sits upstream, in what the app believed was held. A sell records **Vender todo**'s count rather than the broker's precisely so that a full exit leaves none (see `docs/adr/0014-a-full-exit-sells-the-apps-share-count.md`); Dust recorded before that, or by a sale typed from the broker's figure, is cleared only by recording a second sale of the remainder — a **Movement** the broker never made.
+_Avoid_: rounding error, leftover shares, residual position, sobrante
+
 **Net P&L**:
 **Unrealized** gain or loss on currently-held shares only: `Market Value − Cost Basis`. It equals the sum of the per-holding P&L rows. As a percentage: `Net P&L ÷ Cost Basis`. It deliberately excludes realized gains and dividends, so `Total Portfolio Value ≠ deposits + Net P&L` — that identity does not hold and is not expected to.
 _Avoid_: profit, return, total gain
