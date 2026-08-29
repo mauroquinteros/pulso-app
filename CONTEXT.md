@@ -65,7 +65,8 @@ _Avoid_: rounding error, leftover shares, residual position, sobrante
 
 **Net P&L**:
 **Unrealized** gain or loss on currently-held shares only: `Market Value − Cost Basis`. It equals the sum of the per-holding P&L rows. As a percentage: `Net P&L ÷ Cost Basis`. It deliberately excludes realized gains and dividends, so `Total Portfolio Value ≠ deposits + Net P&L` — that identity does not hold and is not expected to.
-_Avoid_: profit, return, total gain
+UI: **"Rendimiento no realizado"** where it stands alone (Inicio's Mis Activos card), shortened to **"No realizado"** inside any block that already concludes with a **Rendimiento total** line. The percentage is printed only where its base is on screen beside it — the stock detail, which shows **Costo total** — never on Inicio, where a second percentage over a different base sat nearby.
+_Avoid_: profit, total gain, "Net P&L" as a UI label; **unqualified** "rendimiento"/return, which belongs to **Total Return** alone — the qualified "Rendimiento no realizado" is the deliberate exception
 
 **Realized P&L**:
 The **gross** locked-in gain or loss from shares the user has sold — price gain only: `(sale price − Average Cost at time of sale) × shares sold`, **before** sell fees. Sell commissions are not netted here; they live in **Fees**, and their effect is already captured in **Total Return**. Real cash, already inside **Cash**, and excluded from **Net P&L**.
@@ -75,9 +76,9 @@ _Avoid_: capital gain (a tax term), booked profit, net realized
 The complete, all-in gain or loss: `Net P&L (unrealized) + Realized P&L + Net Dividends − Fees`. Equivalently `Total Portfolio Value − Net Contributions`. As a percentage: `Total Return ÷ Peak Contributions` — the base is **Peak Contributions**, _not_ **Net Contributions**. Once a realized gain lets the user withdraw more than they deposited, Net Contributions shrinks (and can go negative), which would inflate or invert the percentage; Peak stays fixed at the capital actually put at risk. The app's headline transparency figure, shown with its four components broken out — the number Hapi obscures.
 _Avoid_: real P&L (informal; pending UI-label decision), total gain, profit
 
-**Total Return of a stock** (UI: "Retorno total"):
+**Total Return of a stock** (UI: "Rendimiento total", on the stock's own screen):
 The same four-component formula scoped to one ticker: `Net P&L + Realized P&L + Net Dividends − Fees`, counting every movement ever recorded for that ticker. It answers "how has this stock done for me", as opposed to **Net P&L**, which only answers "how is the position I still hold doing". **It is a dollar figure and carries no percentage** — deliberately. There is no denominator to divide it by: **Net Contributions** is a bank-boundary concept and does not scope to a ticker, and **Cost Basis** only counts the shares still held, so a lifetime numerator over a current-position denominator inflates without bound as the user sells (sell half a doubled position and the ratio prints roughly double the true return; exit fully and the denominator is zero). The only percentage that belongs beside it is **Net P&L**'s, whose numerator and denominator are both current-position figures.
-_Avoid_: stock return %, per-stock ROI (there is no such ratio)
+_Avoid_: stock return %, per-stock ROI (there is no such ratio), "Retorno total" (the former UI label — dropped so that one concept is not spelled two ways at two scopes)
 
 **Net Contributions** (a.k.a. **Aportado**):
 What the user has actually put in, measured at the **bank boundary** (out of pocket): a deposit contributes `amount + transferFee` (the money that left your bank to fund the account); a withdrawal removes `amount − fee` (the money that actually reached your bank). So `Aportado = Σ(deposit amount + transferFee) − Σ(withdrawal amount − fee)`. The transfer fee is therefore _part_ of what you contributed — it is the friction between **Cash** and Aportado, which is exactly what makes a fee erode **Total Return**. It is the base of the _dollar_ **Total Return** (`Total Portfolio Value − Net Contributions`) and the "Aportado" in the home screen's "Aportado → Vale hoy" bridge — but **not** the base of the Total Return _percentage_, which is taken over **Peak Contributions** (a withdrawal can pull Net Contributions below an earlier peak, or negative).
