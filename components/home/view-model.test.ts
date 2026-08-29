@@ -120,20 +120,20 @@ describe("buildHomeView", () => {
       {
         ticker: "AAPL",
         shares: "15.07666",
-        priceAvailable: true,
         value: "$2,991.21",
         pnl: "+$240.18",
         pnlPct: "+8.73%",
         pnlTone: "positive",
+        a11yLabel: "AAPL, $2,991.21, 15.07666 acciones, rendimiento +$240.18 +8.73%",
       },
       {
         ticker: "VOO",
         shares: "3.5",
-        priceAvailable: true,
         value: "$1,605.10",
         pnl: "+$35.50",
         pnlPct: "+2.26%",
         pnlTone: "positive",
+        a11yLabel: "VOO, $1,605.10, 3.5 acciones, rendimiento +$35.50 +2.26%",
       },
     ]);
 
@@ -169,7 +169,6 @@ describe("buildHomeView", () => {
 
     expect(view.assets.holdings).toHaveLength(1);
     const aapl = view.assets.holdings[0];
-    expect(aapl.priceAvailable).toBe(false);
     expect(aapl.value).toBeNull();
     expect(aapl.pnl).toBeNull();
     expect(aapl.pnlPct).toBeNull();
@@ -241,6 +240,26 @@ describe("buildHomeView", () => {
     expect(view.priceNote).toBe("1 activo sin precio, excluido de los totales");
   });
 
+  it("orders Mis Activos by Market Value descending, unpriced last", () => {
+    // Bought smallest-first, so first-purchase order is the reverse of the
+    // answer: without a sort the rows would come back SMALL, BIG, and the
+    // unpriced one in the middle. Nothing else on Inicio establishes an order.
+    const movements: Movement[] = [
+      deposit(10_000),
+      buy("SMALL", 10, 1), // $20
+      buy("NOPRICE", 50, 4), // no quote - sorts last whatever it cost
+      buy("BIG", 100, 5), // $600
+    ];
+    const portfolio = assemblePortfolio(movements, {
+      SMALL: stock("SMALL", 20),
+      BIG: stock("BIG", 120),
+    });
+
+    const view = buildHomeView(portfolio, "ready");
+    expect(view.assets.holdings.map((h) => h.ticker)).toEqual(["BIG", "SMALL", "NOPRICE"]);
+    expect(view.assets.holdings.map((h) => h.value)).toEqual(["$600.00", "$20.00", null]);
+  });
+
   it("counts the unpriced holdings in the note, in the plural", () => {
     const movements: Movement[] = [deposit(1000), buy("AAPL", 100, 5, 1), buy("MSFT", 50, 2), buy("NVDA", 10, 1)];
     const portfolio = assemblePortfolio(movements, { AAPL: stock("AAPL", 120) });
@@ -281,11 +300,12 @@ describe("buildHomeView", () => {
       {
         ticker: "AAPL",
         shares: "5",
-        priceAvailable: false,
         value: null,
         pnl: null,
         pnlPct: null,
         pnlTone: "positive",
+        // The unit is spelled out only here: the row drops it on screen.
+        a11yLabel: "AAPL, sin precio, 5 acciones",
       },
     ]);
 

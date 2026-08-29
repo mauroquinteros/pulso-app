@@ -1,8 +1,17 @@
 import type { StocksStatus } from "@/stores/stocks";
-import type { Portfolio } from "@/types/models";
+import type { HoldingRow, Tone } from "@/components/holdings/types";
+import type { Portfolio, ValuedHolding } from "@/types/models";
 import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
-export type Tone = "positive" | "negative";
+export type { Tone };
+
+const marketValueOf = (h: ValuedHolding): number =>
+  h.priceAvailable && h.marketValue !== null ? h.marketValue : -Infinity;
+
+/** Market Value descending; unpriced holdings (no market value) sort last.
+ * Duplicated from `components/portfolio/view-model.ts` rather than shared: the
+ * backlog has both copies moving to the backend together. */
+const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number => marketValueOf(b) - marketValueOf(a);
 
 /**
  * What a card prints where a price-dependent figure would have gone. Two words,
@@ -70,15 +79,7 @@ export interface HomeView {
      * unstated and different denominators read as a part exceeding its whole. */
     netPnl: string | null;
     netPnlTone: Tone;
-    holdings: {
-      ticker: string;
-      shares: string;
-      priceAvailable: boolean;
-      value: string | null;
-      pnl: string | null;
-      pnlPct: string | null;
-      pnlTone: Tone;
-    }[];
+    holdings: HoldingRow[];
   };
   /** The one line naming holdings left out of figures that still printed. null
    * when every Holding is priced, and null when none is - a total miss explains
@@ -209,15 +210,28 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
   const assets: HomeView["assets"] = {
     netPnl: unpriceable ? null : formatSignedUSD(netPnl),
     netPnlTone: toneOf(netPnl),
-    holdings: holdings.map((h) => ({
-      ticker: h.ticker,
-      shares: formatShares(h.shares),
-      priceAvailable: h.priceAvailable,
-      value: h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null,
-      pnl: h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
-      pnlPct: h.priceAvailable && h.netPnl !== null ? formatSignedPercent(h.netPnlPercent ?? 0) : null,
-      pnlTone: toneOf(h.netPnl ?? 0),
-    })),
+    holdings: [...holdings].sort(byMarketValueDesc).map((h) => {
+      const priced = h.priceAvailable && h.netPnl !== null;
+      const shares = formatShares(h.shares);
+      const value = h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null;
+      const pnl = priced ? formatSignedUSD(h.netPnl ?? 0) : null;
+      const pnlPct = priced ? formatSignedPercent(h.netPnlPercent ?? 0) : null;
+      return {
+        ticker: h.ticker,
+        shares,
+        value,
+        pnl,
+        pnlPct,
+        pnlTone: toneOf(h.netPnl ?? 0),
+        // "acciones" is spelled out here and nowhere on screen: the row drops
+        // the unit because the ticker above it makes the number unambiguous,
+        // which is a fact about the layout that a screen reader cannot use.
+        a11yLabel:
+          value === null
+            ? `${h.ticker}, sin precio, ${shares} acciones`
+            : `${h.ticker}, ${value}, ${shares} acciones, rendimiento ${pnl} ${pnlPct}`,
+      };
+    }),
   };
 
   return {

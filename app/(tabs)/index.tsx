@@ -1,4 +1,4 @@
-import { AssetsCard } from "@/components/home/assets-card";
+import { AssetsCard } from "@/components/holdings/assets-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { RefreshFailedBanner } from "@/components/home/refresh-failed-banner";
 import { ReturnCard } from "@/components/home/return-card";
@@ -31,10 +31,24 @@ export default function HomeScreen() {
         {refreshFailed && <RefreshFailedBanner />}
         <WorthCard worth={view.worth} note={view.priceNote} withheldLabel={view.withheldLabel} />
         <ReturnCard return={view.return} withheldLabel={view.withheldLabel} />
+        {/* The label is deliberately the breakdown row's vocabulary, not this
+            card's: the same figure prints as "No realizado" one card above, and
+            sharing the noun is what makes the two read as one object. It is
+            spelled out in full here because, unlike the breakdown, this card has
+            no "Rendimiento total" title above it.
+
+            No percentage on purpose. Net P&L's base is Cost Basis while
+            Rendimiento total's is Peak Contributions, so printing both invited a
+            part-bigger-than-whole reading with nothing on screen to resolve it.
+            The rows keep their percentage, which is self-contained. */}
         <AssetsCard
-          assets={view.assets}
+          holdings={view.assets.holdings}
           onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
-          withheldLabel={view.withheldLabel}
+          stat={{
+            label: "Rendimiento no realizado",
+            value: view.assets.netPnl ?? view.withheldLabel,
+            tone: view.assets.netPnl === null ? null : view.assets.netPnlTone,
+          }}
         />
       </ScrollView>
     </SafeAreaView>
