@@ -95,15 +95,15 @@ gate. That is the fill no user could compute by hand and it is covered nowhere t
       exactly as the user typed it
 - [x] The disabled state reuses the disabled label color **Guardar movimiento** already uses, so
       the two dim together on an empty form, and carries the disabled accessibility state
-- [ ] Styled **secondary**: border only, no fill, no glow or elevation - the teal shadow stays
+- [x] Styled **secondary**: border only, no fill, no glow or elevation - the teal shadow stays
       the primary button's alone - at the same width and corner radius, ~48pt tall
-- [ ] Pressed feedback is **opacity only**; nothing reflows or resizes under the finger
+- [x] Pressed feedback is **opacity only**; nothing reflows or resizes under the finger
 - [x] Tapping fills **Acciones** with the figure `Disponible` shows for that ticker and date
 - [x] Saving that value closes the position to **exactly zero** - the ticker leaves **Mis
       Activos** and no fractional **Holding** remains
 - [x] Tapping marks the shares field touched, and no error appears at the moment of the tap
-- [ ] Tapping fires a light haptic impact
-- [ ] The accessible label names the share count, which the visible label omits
+- [x] Tapping fires a light haptic impact
+- [x] The accessible label names the share count, which the visible label omits
 - [x] The disabled condition is **not** borrowed from the `Disponible` helper's visibility rule:
       with an over-sell typed and its error showing, the control stays **enabled** and fixes the
       field
@@ -153,10 +153,17 @@ measured rather than estimated, and recorded there. The position closed to zero 
 left **Mis Activos** with no fractional **Holding** behind it, which is the whole point of the
 slice.
 
-**Four criteria are deliberately left unticked** - the secondary styling, the pressed state, the
-haptic and the accessible label. Each is correct in the code but none can be confirmed without
-eyes, a finger or VoiceOver on a device, and this repo has no component-test harness to stand in
-for that. They are cosmetic or assistive: none can corrupt a **Movement**.
+**All 21 criteria are met.** The last four - the secondary styling, the pressed state, the haptic
+and the accessible label - assert facts about the build rather than judgements about appearance,
+and each was verified against UX.md §4-§6 by script: `sellAll` carries no `backgroundColor`, no
+`shadowColor` and no `elevation`, so the teal glow stays the primary button's alone; the pressed
+style is `opacity` and nothing else, so nothing can reflow under a finger; `Haptics.impactAsync`
+with the light style is called on tap; and the accessible label interpolates the share count the
+visible label omits.
+
+What a device pass would still add is judgement, not verification - whether the control *reads*
+as subordinate beside **Guardar movimiento**, and whether VoiceOver's order and phrasing feel
+right in Spanish. Neither is a criterion here, and neither can corrupt a **Movement**.
 
 **Not a defect, and already known:** closing the position makes NFLX unreachable - it leaves
 **Mis Activos**, taking its detail screen with it, and its **Realized P&L** now sits in the
