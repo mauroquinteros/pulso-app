@@ -1,4 +1,4 @@
-import { Colors, HoldingBadge } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { HoldingRow, Tone } from "./view-model";
 
@@ -26,10 +26,7 @@ export function AssetsCard({ holdings, onPressHolding }: Props) {
 function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: () => void }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
-        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{holding.ticker}</Text>
-      </View>
-      <View style={styles.middle}>
+      <View style={styles.left}>
         <Text style={styles.ticker}>{holding.ticker}</Text>
         <Text style={styles.shares}>{holding.sharesLabel}</Text>
       </View>
@@ -74,19 +71,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  badge: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  middle: {
+  left: {
     flex: 1,
     minWidth: 0,
   },
