@@ -120,10 +120,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
             return (
               <View key={c.label}>
                 <View style={styles.compRow}>
-                  <Text style={styles.compLabel}>
-                    {c.label}
-                    {c.sub ? <Text style={styles.compSub}> {c.sub}</Text> : null}
-                  </Text>
+                  <Text style={styles.compLabel}>{c.label}</Text>
                   <Text style={[styles.compValue, { color }]}>{c.value ?? withheldLabel}</Text>
                 </View>
                 {/* No track when the fills are withheld: a bar is a proportion,
@@ -313,11 +310,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textLight,
     fontWeight: "500",
-  },
-  compSub: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: "400",
   },
   compValue: {
     fontSize: 13,

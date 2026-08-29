@@ -1,4 +1,4 @@
-import { Colors, HoldingBadge } from "@/constants/theme";
+import { Colors } from "@/constants/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { HomeView, Tone } from "./view-model";
 
@@ -20,12 +20,9 @@ export function AssetsCard({ assets, onPressHolding, withheldLabel }: Props) {
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>Mis Activos</Text>
-        <View style={styles.headerStat}>
-          <Text style={styles.headerStatLabel}>Net P&L</Text>
-          <Text style={[styles.headerStatValue, { color: statColor }]}>{assets.netPnl ?? withheldLabel}</Text>
-          {assets.netPnlPct !== null && (
-            <Text style={[styles.headerStatPct, { color: statColor }]}>{assets.netPnlPct}</Text>
-          )}
+        <View style={styles.statRow}>
+          <Text style={styles.statLabel}>Rendimiento no realizado</Text>
+          <Text style={[styles.statValue, { color: statColor }]}>{assets.netPnl ?? withheldLabel}</Text>
         </View>
       </View>
       {assets.holdings.map((h) => (
@@ -38,10 +35,7 @@ export function AssetsCard({ assets, onPressHolding, withheldLabel }: Props) {
 function HoldingRow({ holding, onPress }: { holding: HomeView["assets"]["holdings"][number]; onPress?: () => void }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
-        <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{holding.ticker}</Text>
-      </View>
-      <View style={styles.middle}>
+      <View style={styles.left}>
         <Text style={styles.ticker}>{holding.ticker}</Text>
         <Text style={styles.shares}>{holding.shares}</Text>
       </View>
@@ -74,35 +68,28 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 6,
+    marginBottom: 8,
+    gap: 6,
   },
   title: {
     fontSize: 18,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
-  headerStat: {
+  statRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    gap: 6,
+    justifyContent: "space-between",
+    gap: 10,
   },
-  headerStatLabel: {
-    fontSize: 12,
+  statLabel: {
+    fontSize: 13,
     fontWeight: "500",
-    color: Colors.textSecondary,
+    color: Colors.textLight,
   },
-  headerStatValue: {
-    fontSize: 12,
+  statValue: {
+    fontSize: 13,
     fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-  /** The qualifier, not the answer: same tone, one weight down. */
-  headerStatPct: {
-    fontSize: 12,
-    fontWeight: "500",
     fontVariant: ["tabular-nums"],
   },
   row: {
@@ -113,19 +100,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
-  badge: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  middle: {
+  left: {
     flex: 1,
     minWidth: 0,
   },

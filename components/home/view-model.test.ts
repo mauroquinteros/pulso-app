@@ -80,7 +80,6 @@ describe("buildHomeView", () => {
 
     expect(unrealized).toMatchObject({
       label: "No realizado",
-      sub: "· Net P&L",
       value: "+$275.68",
       tone: "positive",
     });
@@ -89,7 +88,6 @@ describe("buildHomeView", () => {
       value: "+$67.29",
       tone: "positive",
     });
-    expect(realized.sub).toBeUndefined();
     expect(dividends).toMatchObject({
       label: "Dividendos netos",
       value: "+$21.56",
@@ -113,14 +111,14 @@ describe("buildHomeView", () => {
 
     // Assets — aggregate Net P&L over Cost Basis + per-holding rows.
     // 275.68 / 4320.63 = 6.38% (over Cost Basis, not net contributions).
+    // The amount alone: Mis Activos prints no aggregate percentage, since its
+    // base is Cost Basis and Rendimiento total's is Peak Contributions.
     expect(view.assets.netPnl).toBe("+$275.68");
-    expect(view.assets.netPnlPct).toBe("+6.38%");
     expect(view.assets.netPnlTone).toBe("positive");
 
     expect(view.assets.holdings).toEqual([
       {
         ticker: "AAPL",
-        // A plain count: no "acc", matching Portafolio's row for the same holding.
         shares: "15.07666",
         priceAvailable: true,
         value: "$2,991.21",
@@ -156,7 +154,6 @@ describe("buildHomeView", () => {
     expect(empty.return.total).toBe("+$0.00");
     expect(empty.return.valeHoy).toBe("$0.00");
     expect(empty.assets.netPnl).toBe("+$0.00");
-    expect(empty.assets.netPnlPct).toBe("+0.00%");
     expect(empty.priceNote).toBeNull();
 
     // Same for a Perfil who has deposited but bought nothing.
@@ -239,8 +236,7 @@ describe("buildHomeView", () => {
     expect(view.return.valeHoy).toBe("$999.00");
     expect(view.return.components.map((c) => c.value)).toEqual(["+$100.00", "+$0.00", "+$0.00", "-$1.00"]);
     expect(view.return.components.every((c) => c.fill !== null)).toBe(true);
-    expect(view.assets.netPnl).toBe("+$100.00");
-    expect(view.assets.netPnlPct).toBe("+16.67%"); // over the priced Cost Basis
+    expect(view.assets.netPnl).toBe("+$100.00"); // over the priced holdings only
 
     expect(view.priceNote).toBe("1 activo sin precio, excluido de los totales");
   });
@@ -267,7 +263,6 @@ describe("buildHomeView", () => {
     expect(view.return.valeHoy).toBeNull();
     expect(view.return.components[0]).toMatchObject({ label: "No realizado", value: null });
     expect(view.assets.netPnl).toBeNull();
-    expect(view.assets.netPnlPct).toBeNull(); // the pair is withheld together
     // Every fill goes at once: rescaling to the three known components would
     // draw the largest of *those* full, stating a share of a refused total.
     expect(view.return.components.map((c) => c.fill)).toEqual([null, null, null, null]);

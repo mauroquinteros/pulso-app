@@ -55,7 +55,6 @@ export interface HomeView {
     valeHoy: string | null;
     components: {
       label: string;
-      sub?: string;
       /** null only for "No realizado", the one component holding Net P&L. */
       value: string | null;
       tone: Tone;
@@ -65,16 +64,14 @@ export interface HomeView {
     }[];
   };
   assets: {
-    /** The amount and its percentage are two fields, not one joined string, so
-     * the card can weight them apart - the amount answers the question and the
-     * percentage qualifies it. Both are withheld together. */
+    /** Net P&L over the priced holdings, as a signed amount and nothing else.
+     * It carries no percentage: its base is Cost Basis while Rendimiento
+     * total's is Peak Contributions, and two same-coloured percentages with
+     * unstated and different denominators read as a part exceeding its whole. */
     netPnl: string | null;
-    netPnlPct: string | null;
     netPnlTone: Tone;
     holdings: {
       ticker: string;
-      /** A plain count, no "acc" suffix: the row already names the ticker, and
-       * Portafolio's identical row dropped the suffix (`portfolio-ux/UX.md`). */
       shares: string;
       priceAvailable: boolean;
       value: string | null;
@@ -175,7 +172,6 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
   const componentAmounts = [
     {
       label: "No realizado",
-      sub: "· Net P&L",
       amount: totalReturn.unrealizedPnl,
       priceDependent: true,
     },
@@ -197,7 +193,6 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
     valeHoy: unpriceable ? null : formatUSD(total),
     components: componentAmounts.map((c) => ({
       label: c.label,
-      ...(c.sub ? { sub: c.sub } : {}),
       value: unpriceable && c.priceDependent ? null : formatSignedUSD(c.amount),
       tone: toneOf(c.amount),
       // A fill is a share of the largest component, so a withheld component
@@ -208,13 +203,11 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
     })),
   };
 
-  // Assets — aggregate Net P&L over Cost Basis, plus per-holding rows. The rows
+  // Assets — aggregate Net P&L as an amount, plus per-holding rows. The rows
   // already say "Sin precio" one by one; only the aggregate is withheld.
   const netPnl = totalReturn.unrealizedPnl;
-  const netPnlPercent = portfolio.costBasis !== 0 ? (netPnl / portfolio.costBasis) * 100 : 0;
   const assets: HomeView["assets"] = {
     netPnl: unpriceable ? null : formatSignedUSD(netPnl),
-    netPnlPct: unpriceable ? null : formatSignedPercent(netPnlPercent),
     netPnlTone: toneOf(netPnl),
     holdings: holdings.map((h) => ({
       ticker: h.ticker,
