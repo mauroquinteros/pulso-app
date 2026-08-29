@@ -1,7 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
 
-import { initialsFrom, profileFrom } from "./profile";
+import { firstNameFrom, initialsFrom, profileFrom } from "./profile";
 
 /** Only the two fields the derivation reads; the rest of a Session is noise. */
 const sessionFor = (user: Partial<User>) => ({ user }) as Session;
@@ -71,5 +71,26 @@ describe("initialsFrom", () => {
     // No particle heuristic on purpose. Asserted so nobody "fixes" it by
     // accident: "Mauro de la Cruz" reads its second word like any other.
     expect(initialsFrom("Mauro de la Cruz")).toBe("MD");
+  });
+});
+
+describe("firstNameFrom", () => {
+  it("takes the first word", () => {
+    expect(firstNameFrom("Mauro Quinteros")).toBe("Mauro");
+  });
+
+  it("keeps the case the provider sent", () => {
+    // Unlike initials, which uppercase: this is printed as a name, not a glyph.
+    expect(firstNameFrom("mauro quinteros")).toBe("mauro");
+  });
+
+  it("survives extra whitespace anywhere", () => {
+    expect(firstNameFrom("  Mauro   Quinteros  ")).toBe("Mauro");
+  });
+
+  it("returns an empty string for a blank name", () => {
+    // Which is what drops the comma: the header greets with a bare "Hola".
+    expect(firstNameFrom("")).toBe("");
+    expect(firstNameFrom("   ")).toBe("");
   });
 });

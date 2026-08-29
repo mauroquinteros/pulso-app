@@ -1,6 +1,6 @@
 /**
- * Derives what a Perfil shows. Initials are computed at display time and never
- * stored, so `Profile` holds a name and nothing spelled out of it.
+ * Derives what a Perfil shows. Initials and first names are computed at display
+ * time and never stored, so `Profile` holds a name and nothing spelled out of it.
  */
 
 import type { Session } from "@supabase/supabase-js";
@@ -39,4 +39,9 @@ export function initialsFrom(name: string): string {
     .slice(0, 2)
     .map((word) => word[0].toUpperCase())
     .join("");
+}
+
+/** The name the greeting says: the first word, or "" when there is none. */
+export function firstNameFrom(name: string): string {
+  return name.trim().split(/\s+/)[0];
 }
