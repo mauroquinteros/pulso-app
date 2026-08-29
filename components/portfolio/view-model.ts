@@ -1,7 +1,7 @@
-import type { HoldingRow, Tone } from "@/components/holdings/types";
+import { byMarketValueDesc, buildHoldingRow, toneOf, type HoldingRow, type Tone } from "@/components/holdings/row";
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import type { Portfolio, ValuedHolding } from "@/types/models";
-import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
+import { formatSignedUSD, formatUSD } from "@/utils/format";
 
 
 /** Links a segment to its legend row by color: a segment's position index into
@@ -48,9 +48,6 @@ export interface PortfolioView {
   holdings: HoldingRow[]; // "Mis Activos", Market Value desc, unpriced last
 }
 
-/** A signed figure is negative only past the ±0.005 rounding threshold. */
-const toneOf = (amount: number): Tone => (amount < -0.005 ? "negative" : "positive");
-
 /** One-decimal share-of-total, e.g. "61.6%". */
 const allocationPct = (fraction: number): string => `${(fraction * 100).toFixed(1)}%`;
 
@@ -58,12 +55,6 @@ const allocationPct = (fraction: number): string => `${(fraction * 100).toFixed(
 // segment: the top TOP_WHEN_GROUPED plus "Otros". Efectivo is never grouped.
 const MAX_HOLDING_SEGMENTS = 5;
 const TOP_WHEN_GROUPED = 5;
-
-const marketValueOf = (h: ValuedHolding): number =>
-  h.priceAvailable && h.marketValue !== null ? h.marketValue : -Infinity;
-
-/** Market Value descending; unpriced holdings (no market value) sort last. */
-const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number => marketValueOf(b) - marketValueOf(a);
 
 /**
  * Pure view-model for the Portfolio screen: turns the derived Portfolio into a
@@ -77,25 +68,7 @@ export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
 
   // "Mis Activos" rows — priced first (Market Value desc), unpriced last.
   const sorted = [...holdings].sort(byMarketValueDesc);
-  const holdingRows: HoldingRow[] = sorted.map((h) => {
-    const priced = h.priceAvailable && h.netPnl !== null;
-    const shares = formatShares(h.shares);
-    const value = h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null;
-    const pnl = priced ? formatSignedUSD(h.netPnl ?? 0) : null;
-    const pnlPct = priced ? formatSignedPercent(h.netPnlPercent ?? 0) : null;
-    return {
-      ticker: h.ticker,
-      shares,
-      value,
-      pnl,
-      pnlPct,
-      pnlTone: toneOf(h.netPnl ?? 0),
-      a11yLabel:
-        value === null
-          ? `${h.ticker}, sin precio, ${shares} acciones`
-          : `${h.ticker}, ${value}, ${shares} acciones, rendimiento ${pnl} ${pnlPct}`,
-    };
-  });
+  const holdingRows: HoldingRow[] = sorted.map(buildHoldingRow);
 
   // Nothing to show: no holdings and no positive cash.
   if (holdings.length === 0 && cash <= 0) {

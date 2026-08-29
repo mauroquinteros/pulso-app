@@ -1,6 +1,6 @@
 import { Colors, HoldingBadge } from "@/constants/theme";
 import { Fragment } from "react";
-import type { HoldingRow, Tone } from "./types";
+import type { HoldingRow, Tone } from "./row";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {

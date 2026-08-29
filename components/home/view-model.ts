@@ -1,17 +1,9 @@
+import { byMarketValueDesc, buildHoldingRow, toneOf, type HoldingRow, type Tone } from "@/components/holdings/row";
 import type { StocksStatus } from "@/stores/stocks";
-import type { HoldingRow, Tone } from "@/components/holdings/types";
-import type { Portfolio, ValuedHolding } from "@/types/models";
-import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
+import type { Portfolio } from "@/types/models";
+import { formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
 export type { Tone };
-
-const marketValueOf = (h: ValuedHolding): number =>
-  h.priceAvailable && h.marketValue !== null ? h.marketValue : -Infinity;
-
-/** Market Value descending; unpriced holdings (no market value) sort last.
- * Duplicated from `components/portfolio/view-model.ts` rather than shared: the
- * backlog has both copies moving to the backend together. */
-const byMarketValueDesc = (a: ValuedHolding, b: ValuedHolding): number => marketValueOf(b) - marketValueOf(a);
 
 /**
  * What a card prints where a price-dependent figure would have gone. Two words,
@@ -89,9 +81,6 @@ export interface HomeView {
    * not know yet, or what it could not work out. */
   withheldLabel: string;
 }
-
-/** A signed figure is negative only past the ±0.005 rounding threshold. */
-const toneOf = (amount: number): Tone => (amount < -0.005 ? "negative" : "positive");
 
 /** One-decimal share-of-total percent, e.g. "94.7%". Guards a zero total. */
 const compositionPct = (part: number, total: number): string =>
@@ -210,28 +199,7 @@ export function buildHomeView(portfolio: Portfolio, status: StocksStatus): HomeV
   const assets: HomeView["assets"] = {
     netPnl: unpriceable ? null : formatSignedUSD(netPnl),
     netPnlTone: toneOf(netPnl),
-    holdings: [...holdings].sort(byMarketValueDesc).map((h) => {
-      const priced = h.priceAvailable && h.netPnl !== null;
-      const shares = formatShares(h.shares);
-      const value = h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null;
-      const pnl = priced ? formatSignedUSD(h.netPnl ?? 0) : null;
-      const pnlPct = priced ? formatSignedPercent(h.netPnlPercent ?? 0) : null;
-      return {
-        ticker: h.ticker,
-        shares,
-        value,
-        pnl,
-        pnlPct,
-        pnlTone: toneOf(h.netPnl ?? 0),
-        // "acciones" is spelled out here and nowhere on screen: the row drops
-        // the unit because the ticker above it makes the number unambiguous,
-        // which is a fact about the layout that a screen reader cannot use.
-        a11yLabel:
-          value === null
-            ? `${h.ticker}, sin precio, ${shares} acciones`
-            : `${h.ticker}, ${value}, ${shares} acciones, rendimiento ${pnl} ${pnlPct}`,
-      };
-    }),
+    holdings: [...holdings].sort(byMarketValueDesc).map(buildHoldingRow),
   };
 
   return {
