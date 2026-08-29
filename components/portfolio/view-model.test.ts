@@ -76,21 +76,21 @@ describe("buildPortfolioView", () => {
     expect(view.holdings).toEqual([
       {
         ticker: "AAPL",
-        sharesLabel: "15.07666",
-        priceAvailable: true,
+        shares: "15.07666",
         value: "$2,991.21",
         pnl: "+$240.18",
         pnlPct: "+8.73%",
         pnlTone: "positive",
+        a11yLabel: "AAPL, $2,991.21, 15.07666 acciones, rendimiento +$240.18 +8.73%",
       },
       {
         ticker: "VOO",
-        sharesLabel: "3.5",
-        priceAvailable: true,
+        shares: "3.5",
         value: "$1,605.10",
         pnl: "+$35.50",
         pnlPct: "+2.26%",
         pnlTone: "positive",
+        a11yLabel: "VOO, $1,605.10, 3.5 acciones, rendimiento +$35.50 +2.26%",
       },
     ]);
   });
@@ -162,7 +162,6 @@ describe("buildPortfolioView", () => {
     // XYZ still lists, flagged, with null price-applied fields.
     const xyz = view.holdings.find((h) => h.ticker === "XYZ")!;
     expect(xyz).toMatchObject({
-      priceAvailable: false,
       value: null,
       pnl: null,
       pnlPct: null,

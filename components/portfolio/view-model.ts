@@ -1,8 +1,8 @@
+import type { HoldingRow, Tone } from "@/components/holdings/types";
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import type { Portfolio, ValuedHolding } from "@/types/models";
 import { formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 
-export type Tone = "positive" | "negative";
 
 /** Links a segment to its legend row by color: a segment's position index into
  * the palette, or one of the two reserved colors. */
@@ -36,15 +36,6 @@ export interface LegendRow {
   negative: boolean; // red treatment for a negative-cash row
 }
 
-export interface HoldingRow {
-  ticker: string;
-  sharesLabel: string; // plain number, max 5 decimals, no suffix
-  priceAvailable: boolean;
-  value: string | null; // "$2,991.21"
-  pnl: string | null; // "+$240.18" / "-$12.40"
-  pnlPct: string | null; // "+8.73%" / "-1.20%" (2 decimals, signed like Home)
-  pnlTone: Tone; // threshold ±0.005
-}
 
 export interface PortfolioView {
   state: "empty" | "ready"; // empty → CTA screen, no cards
@@ -86,15 +77,25 @@ export function buildPortfolioView(portfolio: Portfolio): PortfolioView {
 
   // "Mis Activos" rows — priced first (Market Value desc), unpriced last.
   const sorted = [...holdings].sort(byMarketValueDesc);
-  const holdingRows: HoldingRow[] = sorted.map((h) => ({
-    ticker: h.ticker,
-    sharesLabel: formatShares(h.shares),
-    priceAvailable: h.priceAvailable,
-    value: h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null,
-    pnl: h.priceAvailable && h.netPnl !== null ? formatSignedUSD(h.netPnl) : null,
-    pnlPct: h.priceAvailable && h.netPnl !== null ? formatSignedPercent(h.netPnlPercent ?? 0) : null,
-    pnlTone: toneOf(h.netPnl ?? 0),
-  }));
+  const holdingRows: HoldingRow[] = sorted.map((h) => {
+    const priced = h.priceAvailable && h.netPnl !== null;
+    const shares = formatShares(h.shares);
+    const value = h.priceAvailable && h.marketValue !== null ? formatUSD(h.marketValue) : null;
+    const pnl = priced ? formatSignedUSD(h.netPnl ?? 0) : null;
+    const pnlPct = priced ? formatSignedPercent(h.netPnlPercent ?? 0) : null;
+    return {
+      ticker: h.ticker,
+      shares,
+      value,
+      pnl,
+      pnlPct,
+      pnlTone: toneOf(h.netPnl ?? 0),
+      a11yLabel:
+        value === null
+          ? `${h.ticker}, sin precio, ${shares} acciones`
+          : `${h.ticker}, ${value}, ${shares} acciones, rendimiento ${pnl} ${pnlPct}`,
+    };
+  });
 
   // Nothing to show: no holdings and no positive cash.
   if (holdings.length === 0 && cash <= 0) {

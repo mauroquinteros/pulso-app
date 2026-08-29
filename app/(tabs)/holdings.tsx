@@ -1,4 +1,4 @@
-import { AssetsCard } from "@/components/portfolio/assets-card";
+import { AssetsCard } from "@/components/holdings/assets-card";
 import { DistributionCard } from "@/components/portfolio/distribution-card";
 import { EmptyState } from "@/components/portfolio/empty-state";
 import { buildPortfolioView } from "@/components/portfolio/view-model";
