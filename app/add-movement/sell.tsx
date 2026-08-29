@@ -80,6 +80,18 @@ export default function SellFormScreen() {
 
   const showDisponible = ticker !== "" && availableShares > 0 && !(touchedShares && summary.insufficientShares);
 
+  // Deliberately not `showDisponible`: that hides the helper while an over-sell
+  // error is up, which is exactly when this button is worth reaching for.
+  const canSellAll = ticker !== "" && availableShares > 0 && !saving;
+
+  // The count the app believes, not the one the broker filled - a position sold
+  // at the broker's figure keeps Dust forever (ADR 0014).
+  const onSellAll = () => {
+    setShares(formatShares(availableShares));
+    setTouchedShares(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const tickerBorderColor = showTickerError ? Colors.negative : ticker !== "" ? "rgba(0,229,204,0.5)" : Colors.border;
 
   const sharesBorderColor = showSharesError
@@ -274,6 +286,19 @@ export default function SellFormScreen() {
               <Text style={styles.errorText}>La comisión y los impuestos superan el monto bruto</Text>
             )}
           </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.sellAll,
+              canSellAll ? styles.sellAllActive : styles.sellAllDisabled,
+              pressed && styles.sellAllPressed,
+            ]}
+            onPress={onSellAll}
+            disabled={!canSellAll}
+            accessibilityRole="button"
+            accessibilityLabel={`Vender todo, ${formatShares(availableShares)} acciones`}
+          >
+            <Text style={[styles.sellAllText, !canSellAll && styles.sellAllTextDisabled]}>Vender todo</Text>
+          </Pressable>
           {saveFailed && <Text style={styles.saveError}>No pudimos guardar tu venta. Inténtalo de nuevo.</Text>}
           <SaveButton canSave={canSave} pending={saving} onPress={onSave} />
         </View>
@@ -339,6 +364,32 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.3,
     fontVariant: ["tabular-nums"],
+  },
+  // Secondary to Guardar movimiento in every respect but width and radius: no
+  // fill, lighter label, and none of its teal glow.
+  sellAll: {
+    paddingVertical: 14,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  sellAllActive: {
+    borderColor: "rgba(0,229,204,0.35)",
+  },
+  sellAllDisabled: {
+    borderColor: Colors.border,
+  },
+  sellAllPressed: {
+    opacity: 0.6,
+  },
+  sellAllText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.accent,
+  },
+  sellAllTextDisabled: {
+    color: "#4A5070",
   },
   // Above the button rather than beside a field: the failure is the save's, not
   // any one input's, and it has to be readable without scrolling back up.

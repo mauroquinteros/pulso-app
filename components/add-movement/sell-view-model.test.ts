@@ -391,11 +391,12 @@ describe("buildSellMovement", () => {
   });
 });
 
-describe("selling the full position shown as Disponible", () => {
-  // A position bought through the form (shares = Monto / Precio) used to be
-  // stored at full float precision while "Disponible" showed only 5 decimals,
-  // so typing exactly what was shown was rejected as an over-sell. With shares
-  // standardised at 5 dp everywhere, the displayed figure IS the held amount.
+describe("the figure Vender todo fills (the full position shown as Disponible)", () => {
+  // This is that button's only guard. It writes `formatShares(maxSellableAsOf(...))`
+  // into Acciones, so the figure shown has to round-trip back through the form and
+  // pass the gate - which holds only because roundShares (1e5), formatShares
+  // (toFixed(5)) and the gate agree at 5 dp, three independent literals. The first
+  // thing to fail if that precision moves (ADR 0014).
   it("closes a derived fractional position (no over-sell block)", () => {
     // `createdAt` is added here rather than built: the form produces the fields of
     // a Movement and the database supplies the instant (ADR 0010).
@@ -423,6 +424,53 @@ describe("selling the full position shown as Disponible", () => {
         fee: "",
         regulatoryFees: "",
         executionDate: "2025-06-01",
+      },
+      available,
+    );
+
+    expect(summary.insufficientShares).toBe(false);
+    expect(summary.saveEnabled).toBe(true);
+  });
+
+  it("fills the capped figure on a backdated sale, and that figure saves", () => {
+    // Jan buy 10, Mar sell 4. A sale dated February may take only 6, or March's
+    // sale is left with nothing behind it - so "everything" on a backdated sale
+    // is not the position held that day, and is not a figure the screen shows.
+    const movements: Movement[] = [
+      {
+        ...buildBuyMovement(
+          { ticker: "NVDA", amount: "1000", executionPrice: "100", fee: "", executionDate: "2025-01-01" },
+          { id: () => "buy-x" },
+        ),
+        createdAt: "2025-01-01T00:00:00Z",
+      },
+      {
+        ...buildSellMovement(
+          {
+            ticker: "NVDA",
+            shares: "4",
+            executionPrice: "120",
+            fee: "",
+            regulatoryFees: "",
+            executionDate: "2025-03-01",
+          },
+          { id: () => "sell-x" },
+        ),
+        createdAt: "2025-03-01T00:00:00Z",
+      },
+    ];
+
+    const available = maxSellableAsOf(movements, "NVDA", "2025-02-01");
+    expect(available).toBe(6);
+
+    const summary = summarizeSell(
+      {
+        ticker: "NVDA",
+        shares: formatShares(available),
+        executionPrice: "110",
+        fee: "",
+        regulatoryFees: "",
+        executionDate: "2025-02-01",
       },
       available,
     );
