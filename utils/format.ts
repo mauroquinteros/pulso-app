@@ -45,8 +45,3 @@ export function formatSignedPercent(value: number): string {
   const sign = value < -0.005 ? "-" : "+";
   return `${sign}${Math.abs(value).toFixed(2)}%`;
 }
-
-/** Share quantity with the "acc" (acciones) suffix: "15.07666 acc". */
-export function formatSharesLabel(shares: number): string {
-  return `${formatShares(shares)} acc`;
-}

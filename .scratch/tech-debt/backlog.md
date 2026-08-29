@@ -16,7 +16,7 @@ the box is the at-a-glance answer to "is this still true?".
 - [ ] [Define and adopt a type scale (font-size sprawl)](#define-and-adopt-a-type-scale-font-size-sprawl) - design-system / refactor
 - [ ] [A failed History read is a dead end - no way to sign out](#a-failed-history-read-is-a-dead-end---no-way-to-sign-out) - UX / recoverability
 - [ ] [`round2` and `formatUSD` disagree on an exact half-cent](#round2-and-formatusd-disagree-on-an-exact-half-cent-and-there-are-six-round2s) - bug (minor)
-- [ ] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
+- [x] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
 - [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
 
 ---
@@ -199,7 +199,7 @@ a buy may overdraw by under half a cent in the first place.
 
 ## Stock detail prints Comisiones unsigned, so a subtracted fee reads as added
 
-**Type:** bug (minor, presentation) · **Status:** backlog · **Raised:** 2026-08-18
+**Type:** bug (minor, presentation) · **Status:** fixed - 2026-08-28, `buildReturnBlock` · **Raised:** 2026-08-18
 
 **Problem.** The per-ticker return block formats its four components inconsistently.
 `netPnl` and `realized` go through `formatSignedUSD`, but `dividends` and `fees` go
@@ -230,6 +230,16 @@ that it is a copy decision touching a second screen, not a defect in this slice.
 
 **Where to look.** `components/stock-detail/view-model.ts` (`buildReturnBlock`) beside
 `components/home/view-model.ts` (the `Comisiones` row).
+
+**Fixed 2026-08-28.** `fees` now goes through `formatSignedUSD(-totalFees)` and
+`dividends` through `formatSignedUSD` — every component is signed, as on Inicio, so the
+rows visibly add up to the total. The open question ("should dividends be signed too?")
+resolved yes: the same pass renamed the block's total from **Retorno total** to
+**Rendimiento total**, making it structurally identical to Inicio's breakdown, which
+signs all four. The "components with a fixed direction go unsigned" rule is gone, not
+patched. Landed alongside the stock detail's label alignment (`P&L no realizada` ->
+`No realizado`), which is why the cross-screen copy decision this entry was waiting for
+finally had an owner.
 
 ---
 

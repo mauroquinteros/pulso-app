@@ -11,9 +11,8 @@ import type { MovementRow as Row } from "./view-model";
  * noise down a long history.
  *
  * The amount is the movement's Cash Impact as a magnitude — no sign, no colour.
- * The stock detail passes two extras the Movimientos tab never does:
+ * The stock detail passes one extra the Movimientos tab never does:
  *
- * - `sharesLabel` joins the date ("12 oct 2023 · 0.5 acc").
  * - `buyTone` is the buy's cheap-vs-expensive mark against today's price:
  *   `"up"`/`"down"` draw a coloured line at the left edge plus a small arrow
  *   (redundant on purpose — the arrow carries the meaning without the colour);
@@ -25,12 +24,10 @@ import type { MovementRow as Row } from "./view-model";
 export function MovementRow({
   row,
   onPress,
-  sharesLabel,
   buyTone,
 }: {
   row: Row;
   onPress?: () => void;
-  sharesLabel?: string | null;
   buyTone?: "up" | "down" | "neutral" | null;
 }) {
   const meta = MOVEMENT_TYPE_META[row.type];
@@ -46,7 +43,7 @@ export function MovementRow({
       </View>
       <View style={styles.middle}>
         <Text style={styles.title}>{row.title}</Text>
-        <Text style={styles.date}>{sharesLabel ? `${row.dateLabel} · ${sharesLabel}` : row.dateLabel}</Text>
+        <Text style={styles.date}>{row.dateLabel}</Text>
       </View>
       <View style={styles.amountGroup}>
         <Text style={styles.amount}>{row.amount}</Text>

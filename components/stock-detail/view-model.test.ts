@@ -93,10 +93,10 @@ describe("buildStockDetailView", () => {
         netPnl: "+$20.71",
         netPnlPercent: "+8.13%",
         netPnlTone: "positive",
-        dividends: "$0.85",
+        dividends: "+$0.85",
         realized: "+$4.20",
         realizedTone: "positive",
-        fees: "$0.25",
+        fees: "-$0.25",
         total: "+$25.51", // 20.71 + 4.20 + 0.85 - 0.25 — the glossary formula
         totalTone: "positive",
       },
@@ -129,11 +129,14 @@ describe("buildStockDetailView", () => {
       expect(view.position?.return?.total).not.toContain("\u2212");
     });
 
-    it("dividends and fees are unsigned magnitudes — direction lives in the label", () => {
+    it("signs every component, so the rows visibly add up to the total", () => {
+      // The fee is negated, not just signed: it is subtracted from the total,
+      // and an unsigned $0.25 beside a total that took it off does not add up.
       const view = buildStockDetailView("AAPL", [valued("AAPL")], 189.45, []);
 
-      expect(view.position?.return?.dividends).toBe("$0.85");
-      expect(view.position?.return?.fees).toBe("$0.25");
+      expect(view.position?.return?.dividends).toBe("+$0.85");
+      expect(view.position?.return?.fees).toBe("-$0.25");
+      expect(view.position?.return?.fees).not.toContain("\u2212");
     });
   });
 
@@ -207,19 +210,6 @@ describe("buildStockDetailView", () => {
 
       expect(view.rows.map((r) => r.title)).toEqual(["Dividendo", "Compra", "Venta"]);
       expect(view.rows.map((r) => r.dateLabel)).toEqual(["1 nov 2023", "12 oct 2023", "15 ago 2023"]);
-    });
-
-    it("buy/sell rows carry a sharesLabel next to the date; dividends don't", () => {
-      const view = buildStockDetailView("AAPL", [valued("AAPL")], 189.45, [
-        buy("AAPL", 85, 0.5),
-        sell("AAPL", 192, 0.2),
-        dividend("AAPL", 0.34),
-      ]);
-      const byTitle = Object.fromEntries(view.rows.map((r) => [r.title, r]));
-
-      expect(byTitle["Compra"].sharesLabel).toBe("0.5 acc");
-      expect(byTitle["Venta"].sharesLabel).toBe("0.2 acc");
-      expect(byTitle["Dividendo"].sharesLabel).toBeNull();
     });
 
     it("amounts are unsigned magnitudes, like the Movimientos tab", () => {
@@ -296,7 +286,7 @@ describe("buildStockDetailView", () => {
       view.price,
       ...Object.values(positionRest).filter((v): v is string => typeof v === "string"),
       ...Object.values(returnRest).filter((v): v is string => typeof v === "string"),
-      ...view.rows.flatMap((r) => [r.title, r.dateLabel, r.amount, r.sharesLabel]),
+      ...view.rows.flatMap((r) => [r.title, r.dateLabel, r.amount]),
     ];
     for (const s of others) expect(s ?? "").not.toContain("%");
   });

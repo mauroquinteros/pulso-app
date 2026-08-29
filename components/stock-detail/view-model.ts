@@ -1,14 +1,7 @@
 import { byChronologicalDesc, type MovementRow } from "@/components/movements/view-model";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import type { Movement, ValuedHolding } from "@/types/models";
-import {
-  formatDate,
-  formatShares,
-  formatSharesLabel,
-  formatSignedPercent,
-  formatSignedUSD,
-  formatUSD,
-} from "@/utils/format";
+import { formatDate, formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
 import { cashImpact } from "@/utils/portfolio/cash";
 
 export type Tone = "positive" | "negative";
@@ -18,11 +11,10 @@ export type Tone = "positive" | "negative";
  * `"neutral"` = within the ±1% band — no mark at all. */
 export type BuyTone = "up" | "down" | "neutral";
 
-/** The Movimientos-tab row plus the two per-stock extras. The title carries no
+/** The Movimientos-tab row plus the one per-stock extra. The title carries no
  * ticker (every row here is the same stock), and the amount keeps the tab's
  * convention: a magnitude, never signed, never coloured. */
 export interface StockMovementRow extends MovementRow {
-  sharesLabel: string | null; // "0.5 acc" on buy/sell; null on dividend
   buyTone: BuyTone | null; // only buys with a current price; null otherwise
 }
 
@@ -30,18 +22,17 @@ export interface StockMovementRow extends MovementRow {
  * (glossary): `Net P&L + Realized P&L + Net Dividends - Fees`. A dollar figure
  * with NO percentage, ever — there is no honest denominator for one. The only
  * % here belongs to Net P&L, whose numerator and denominator are both
- * current-position figures. Dividends and fees are magnitudes (their direction
- * is in the label, like the movement rows' amounts); realized can swing either
- * way, so it carries sign and tone, and hides entirely at zero. */
+ * current-position figures. Every component is signed, as on Inicio, so the
+ * rows visibly add up to the total; realized hides entirely at zero. */
 export interface StockReturnBlock {
   netPnl: string;
   netPnlPercent: string; // the only % on the screen
   netPnlTone: Tone;
-  dividends: string; // "$0.85" — Net Dividends, magnitude
+  dividends: string; // "+$0.85" — Net Dividends
   realized: string | null; // "+$4.20" | null when 0 — no row for "never sold"
   realizedTone: Tone;
-  fees: string; // "$0.25" — magnitude
-  total: string; // "+$25.51" — Retorno total, never a %
+  fees: string; // "-$0.25" — always a subtraction
+  total: string; // "+$25.51" — Rendimiento total, never a %
   totalTone: Tone;
 }
 
@@ -122,7 +113,6 @@ export function buildStockDetailView(
       dateLabel: formatDate(m.executionDate),
       amount: formatUSD(Math.abs(cashImpact(m))),
       type: m.type,
-      sharesLabel: "shares" in m ? formatSharesLabel(m.shares) : null,
       buyTone: m.type === "buy" && price !== undefined ? buyToneOf(m.executionPrice, price) : null,
     }));
 
@@ -155,10 +145,12 @@ function buildReturnBlock(holding: ValuedHolding): StockReturnBlock | null {
     netPnl: formatSignedUSD(holding.netPnl),
     netPnlPercent: formatSignedPercent(holding.netPnlPercent),
     netPnlTone: toneOf(holding.netPnl),
-    dividends: formatUSD(holding.totalDividends),
+    dividends: formatSignedUSD(holding.totalDividends),
     realized: holding.realizedPnl !== 0 ? formatSignedUSD(holding.realizedPnl) : null,
     realizedTone: toneOf(holding.realizedPnl),
-    fees: formatUSD(holding.totalFees),
+    // Negated, not just signed: the fee is subtracted from the total, and an
+    // unsigned magnitude beside a total that subtracted it does not add up.
+    fees: formatSignedUSD(-holding.totalFees),
     total: formatSignedUSD(total),
     totalTone: toneOf(total),
   };

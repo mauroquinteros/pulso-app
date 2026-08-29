@@ -45,12 +45,7 @@ export default function StockDetailScreen() {
                 {view.rows.map((row, i) => (
                   <Fragment key={row.id}>
                     {i > 0 && <MovementSeparator />}
-                    <MovementRow
-                      row={row}
-                      sharesLabel={row.sharesLabel}
-                      buyTone={row.buyTone}
-                      onPress={() => router.push(`/movement/${row.id}`)}
-                    />
+                    <MovementRow row={row} buyTone={row.buyTone} onPress={() => router.push(`/movement/${row.id}`)} />
                   </Fragment>
                 ))}
               </View>

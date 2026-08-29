@@ -37,8 +37,7 @@ function Cell({ label, value }: { label: string; value: string }) {
 
 const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Colors.positive);
 
-/** One lifetime-return component row: Dividendos / Realizado / Comisiones.
- * Untoned rows are magnitudes whose direction lives in the label. */
+/** One lifetime-return component row: Dividendos / Realizado / Comisiones. */
 function ComponentRow({ label, value, tone }: { label: string; value: string; tone?: Tone }) {
   return (
     <View style={styles.componentRow}>
@@ -48,17 +47,17 @@ function ComponentRow({ label, value, tone }: { label: string; value: string; to
   );
 }
 
-/** Net P&L, its three lifetime siblings, and their sum — the Total Return of
- * a stock. The total never carries a % (glossary: there is no honest
- * denominator); the only % is Net P&L's. Realizado only appears once the user
- * has actually sold. */
+/** Net P&L, its three lifetime siblings, and their sum. The total never
+ * carries a % (glossary: there is no honest denominator); the only % is Net
+ * P&L's, whose base - Costo total - is printed in the grid above it. Realizado
+ * only appears once the user has actually sold. */
 function ReturnBlock({ block }: { block: StockReturnBlock }) {
   const pnlColor = toneColor(block.netPnlTone);
   return (
     <>
       <View style={styles.divider} />
       <View style={styles.pnlRow}>
-        <Text style={styles.pnlLabel}>P&L no realizada</Text>
+        <Text style={styles.pnlLabel}>No realizado</Text>
         <View style={styles.pnlFigures}>
           <Text style={[styles.pnlValue, { color: pnlColor }]}>{block.netPnl}</Text>
           <Text style={[styles.pnlPercent, { color: pnlColor }]}>{block.netPnlPercent}</Text>
@@ -73,7 +72,7 @@ function ReturnBlock({ block }: { block: StockReturnBlock }) {
 
       <View style={styles.divider} />
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Retorno total</Text>
+        <Text style={styles.totalLabel}>Rendimiento total</Text>
         <Text style={[styles.totalValue, { color: toneColor(block.totalTone) }]}>{block.total}</Text>
       </View>
     </>
@@ -82,8 +81,8 @@ function ReturnBlock({ block }: { block: StockReturnBlock }) {
 
 /**
  * The "Tu posición" card: the 2×2 grid of today's figures plus the lifetime
- * return block, concluded by the Retorno total. Green/red only on figures that
- * mean gain/loss (Net P&L, Realizado, Retorno total); everything else is a
+ * return block, concluded by the Rendimiento total. Green/red only on figures
+ * that mean gain/loss (Net P&L, Realizado, Rendimiento total); everything is a
  * neutral fact. Renders the view verbatim: a null market value drops its cell,
  * a null return block drops entirely and shows the no-price copy instead.
  */
