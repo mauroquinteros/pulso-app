@@ -31,7 +31,13 @@ import { StyleSheet, Text, View } from "react-native";
 export function RefreshFailedBanner() {
   return (
     <View style={styles.banner}>
-      <Ionicons name="cloud-offline-outline" size={15} color={Colors.textSecondary} />
+      <Ionicons
+        name="cloud-offline-outline"
+        size={15}
+        color={Colors.textSecondary}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      />
       <Text style={styles.text}>No pudimos actualizar los precios</Text>
     </View>
   );

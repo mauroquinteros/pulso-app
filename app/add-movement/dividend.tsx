@@ -118,9 +118,20 @@ export default function DividendFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
+              <Pressable
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Fecha, ${dateDisplay}`}
+              >
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Colors.textSecondary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
               </Pressable>
             </View>
           </View>

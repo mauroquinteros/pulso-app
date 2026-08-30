@@ -12,7 +12,13 @@ export function DetailIdentity({ header }: { header: NonNullable<MovementDetailV
   return (
     <View style={styles.identity}>
       <View style={[styles.badge, { backgroundColor: meta.bg }]}>
-        <Ionicons name={meta.icon} size={21} color={meta.color} />
+        <Ionicons
+          name={meta.icon}
+          size={21}
+          color={meta.color}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       </View>
       <View style={styles.identityText}>
         <Text style={styles.title}>{header.title}</Text>

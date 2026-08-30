@@ -68,7 +68,13 @@ function ReadingHistory() {
 function HistoryUnavailable({ onRetry }: { onRetry: () => void }) {
   return (
     <View style={styles.wrap}>
-      <Ionicons name="cloud-offline-outline" size={64} color={GLYPH} />
+      <Ionicons
+        name="cloud-offline-outline"
+        size={64}
+        color={GLYPH}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+      />
       <Text style={styles.title}>No pudimos cargar tus movimientos</Text>
       <Text style={styles.body}>Revisa tu conexión e inténtalo de nuevo.</Text>
       <Pressable onPress={onRetry}>

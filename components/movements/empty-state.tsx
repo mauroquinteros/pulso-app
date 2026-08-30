@@ -12,7 +12,14 @@ const BADGE_OUTLINE = "#3B4380";
 /** A ledger sheet with a "add" badge — vector, so it scales and themes cleanly. */
 function EmptyLedger() {
   return (
-    <Svg width={112} height={112} viewBox="0 0 120 120" fill="none">
+    <Svg
+      width={112}
+      height={112}
+      viewBox="0 0 120 120"
+      fill="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+    >
       <Rect x={30} y={18} width={60} height={84} rx={10} stroke={OUTLINE} strokeWidth={2.5} />
       <Path d="M42 40h36M42 54h36M42 68h24" stroke={OUTLINE} strokeWidth={2.5} strokeLinecap="round" />
       <Circle cx={90} cy={90} r={16} fill={Colors.surface} stroke={BADGE_OUTLINE} strokeWidth={2.5} />

@@ -203,16 +203,40 @@ export default function BuyFormScreen() {
                     spinner would announce itself by shoving the ticker sideways.
                     Same slot trick as the sign-in button's glyph. */}
                 <View style={styles.symbolStatus}>
-                  {symbolCheck.status === "checking" && <ActivityIndicator size="small" color={Colors.textSecondary} />}
-                  {symbolCheck.status === "confirmed" && <Ionicons name="checkmark" size={16} color={Colors.accent} />}
+                  {symbolCheck.status === "checking" && (
+                    <ActivityIndicator
+                      size="small"
+                      color={Colors.textSecondary}
+                      accessibilityLabel="Verificando símbolo"
+                    />
+                  )}
+                  {symbolCheck.status === "confirmed" && (
+                    <Ionicons
+                      name="checkmark"
+                      size={16}
+                      color={Colors.accent}
+                      accessibilityLabel="Símbolo confirmado"
+                    />
+                  )}
                 </View>
               </View>
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
+              <Pressable
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Fecha, ${dateDisplay}`}
+              >
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Colors.textSecondary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
               </Pressable>
             </View>
           </View>
@@ -273,7 +297,13 @@ export default function BuyFormScreen() {
 
           {/* FEE HINT (one line) */}
           <View style={styles.hint}>
-            <Ionicons name="information-circle-outline" size={14} color="#7BA7E8" />
+            <Ionicons
+              name="information-circle-outline"
+              size={14}
+              color="#7BA7E8"
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            />
             <Text style={styles.hintText}>La comisión se suma al total a pagar.</Text>
           </View>
 

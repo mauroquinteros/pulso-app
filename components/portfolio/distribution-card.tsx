@@ -50,7 +50,12 @@ export function DistributionCard({ distribution }: Props) {
         </Text>
       )}
 
-      <Pressable style={styles.legendToggle} onPress={() => setLegendOpen((o) => !o)}>
+      <Pressable
+        style={styles.legendToggle}
+        onPress={() => setLegendOpen((o) => !o)}
+        accessibilityRole="button"
+        accessibilityLabel={legendOpen ? "Ocultar leyenda" : "Ver leyenda"}
+      >
         <Text style={styles.legendToggleText}>{legendOpen ? "Ocultar leyenda" : "Ver leyenda"}</Text>
         <Ionicons
           name="chevron-down"

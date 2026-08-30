@@ -67,6 +67,7 @@ function TypeRow({ spec }: { spec: RowSpec }) {
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       onPress={spec.onPress}
       accessibilityRole="button"
+      accessibilityLabel={`${meta.label}. ${spec.subtitle}`}
     >
       {inner}
     </Pressable>

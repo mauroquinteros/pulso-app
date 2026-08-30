@@ -148,9 +148,20 @@ export default function WithdrawalFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
+              <Pressable
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Fecha, ${dateDisplay}`}
+              >
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Colors.textSecondary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
               </Pressable>
             </View>
           </View>
@@ -165,7 +176,14 @@ export default function WithdrawalFormScreen() {
 
           {/* INFO HINT */}
           <View style={styles.hint}>
-            <Ionicons name="information-circle-outline" size={16} color="#7BA7E8" style={styles.hintIcon} />
+            <Ionicons
+              name="information-circle-outline"
+              size={16}
+              color="#7BA7E8"
+              style={styles.hintIcon}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            />
             <Text style={styles.hintText}>
               Revisa la comisión que aplica tu banco; se descuenta de lo que recibes, no del efectivo que sale.
             </Text>

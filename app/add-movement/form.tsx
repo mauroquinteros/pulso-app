@@ -131,9 +131,20 @@ export default function DepositFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable style={styles.dateBox} onPress={() => setShowPicker(true)}>
+              <Pressable
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Fecha, ${dateDisplay}`}
+              >
                 <Text style={styles.dateText}>{dateDisplay}</Text>
-                <Ionicons name="calendar-outline" size={15} color={Colors.textSecondary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={15}
+                  color={Colors.textSecondary}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
               </Pressable>
             </View>
           </View>
@@ -147,7 +158,14 @@ export default function DepositFormScreen() {
 
           {/* INFO HINT */}
           <View style={styles.hint}>
-            <Ionicons name="information-circle-outline" size={16} color="#7BA7E8" style={styles.hintIcon} />
+            <Ionicons
+              name="information-circle-outline"
+              size={16}
+              color="#7BA7E8"
+              style={styles.hintIcon}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            />
             <Text style={styles.hintText}>Revisa la comisión. Se suma a tu monto para formar lo que aportas.</Text>
           </View>
         </ScrollView>

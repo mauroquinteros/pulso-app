@@ -43,6 +43,7 @@ function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFoc
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={label}
     >
       <Ionicons name={iconName} size={24} color={color} />
       <Text style={[styles.tabLabel, { color }]}>{label}</Text>
@@ -75,6 +76,8 @@ function FabButton() {
       <AnimatedPressable
         style={[styles.fab, animatedStyle]}
         onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel="Nuevo movimiento"
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
