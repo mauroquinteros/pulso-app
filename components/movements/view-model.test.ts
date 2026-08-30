@@ -205,4 +205,9 @@ describe("buildMovementsView", () => {
       "15 ene 2025", // the 15th stays the 15th — never the 14th
     ]);
   });
+
+  it("reads a row as one sentence, in the order the layout stacks it", () => {
+    const view = buildMovementsView([buy("AAPL", 100, 4.4786, 0, "2025-01-15")], null);
+    expect(view.rows[0].a11yLabel).toBe("Compra AAPL, 15 ene 2025, $447.86");
+  });
 });

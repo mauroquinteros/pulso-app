@@ -1,4 +1,4 @@
-import { byChronologicalDesc, type MovementRow } from "@/components/movements/view-model";
+import { byChronologicalDesc, movementA11yLabel, type MovementRow } from "@/components/movements/view-model";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import type { Movement, ValuedHolding } from "@/types/models";
 import { formatDate, formatShares, formatSignedPercent, formatSignedUSD, formatUSD } from "@/utils/format";
@@ -16,6 +16,10 @@ export type BuyTone = "up" | "down" | "neutral";
  * convention: a magnitude, never signed, never coloured. */
 export interface StockMovementRow extends MovementRow {
   buyTone: BuyTone | null; // only buys with a current price; null otherwise
+  /** What one share cost on the day, so the row can be read against the price
+   * at the top of the screen. `null` for a dividend, which has no execution
+   * price to show - not a gap to fill (ADR 0006). */
+  price: string | null;
 }
 
 /** The ticker's lifetime return, concluded by its Total Return of a stock
@@ -71,6 +75,15 @@ const buyToneOf = (executionPrice: number, currentPrice: number): BuyTone => {
   return signal > 0 ? "up" : "down";
 };
 
+/** The mark, said out loud. The arrow is a glyph and the colour is nothing at
+ * all, so neither survives the trip through a screen reader; `neutral` adds no
+ * phrase because it draws no mark either. */
+const BUY_TONE_LABEL: Record<BuyTone, string | null> = {
+  up: "bajo el precio de hoy",
+  down: "sobre el precio de hoy",
+  neutral: null,
+};
+
 const notFound = (ticker: string): StockDetailView => ({
   state: "not-found",
   ticker,
@@ -107,14 +120,21 @@ export function buildStockDetailView(
   const rows: StockMovementRow[] = movements
     .filter((m) => "ticker" in m && m.ticker === ticker)
     .sort(byChronologicalDesc)
-    .map((m) => ({
-      id: m.id,
-      title: MOVEMENT_TYPE_META[m.type].label, // "Compra" — no ticker here
-      dateLabel: formatDate(m.executionDate),
-      amount: formatUSD(Math.abs(cashImpact(m))),
-      type: m.type,
-      buyTone: m.type === "buy" && price !== undefined ? buyToneOf(m.executionPrice, price) : null,
-    }));
+    .map((m) => {
+      const buyTone = m.type === "buy" && price !== undefined ? buyToneOf(m.executionPrice, price) : null;
+      const rowPrice = m.type === "buy" || m.type === "sell" ? formatUSD(m.executionPrice) : null;
+      const row = {
+        id: m.id,
+        title: MOVEMENT_TYPE_META[m.type].label, // "Compra" — no ticker here
+        dateLabel: formatDate(m.executionDate),
+        amount: formatUSD(Math.abs(cashImpact(m))),
+        type: m.type,
+      };
+      const extra = [rowPrice && `precio ${rowPrice}`, buyTone && BUY_TONE_LABEL[buyTone]]
+        .filter(Boolean)
+        .join(", ");
+      return { ...row, a11yLabel: movementA11yLabel(row, extra), buyTone, price: rowPrice };
+    });
 
   return {
     state: "found",

@@ -267,6 +267,31 @@ describe("buildStockDetailView", () => {
       expect(up.rows[0].buyTone).toBe("up");
       expect(down.rows[0].buyTone).toBe("down");
     });
+
+    it("prints the execution price on a trade and withholds it from a dividend, which has none", () => {
+      const view = buildStockDetailView("AAPL", [valued("AAPL")], 189.45, [
+        buy("AAPL", 85, 0.5),
+        sell("AAPL", 192, 0.2),
+        dividend("AAPL", 12.3),
+      ]);
+      const byTitle = Object.fromEntries(view.rows.map((r) => [r.title, r]));
+
+      expect(byTitle["Compra"].price).toBe("$85.00");
+      expect(byTitle["Venta"].price).toBe("$192.00");
+      // ADR 0006: a dividend has no execution price. Not a gap to fill.
+      expect(byTitle["Dividendo"].price).toBeNull();
+    });
+
+    it("says the mark out loud, since neither the arrow nor the colour survives a screen reader", () => {
+      const up = buildStockDetailView("AAPL", [valued("AAPL")], 101.5, [buy("AAPL", 100, 1)]);
+      const down = buildStockDetailView("AAPL", [valued("AAPL")], 98.5, [buy("AAPL", 100, 1)]);
+      const neutral = buildStockDetailView("AAPL", [valued("AAPL")], 100, [buy("AAPL", 100, 1)]);
+
+      expect(up.rows[0].a11yLabel).toBe("Compra, 15 ene 2025, $100.50, precio $100.00, bajo el precio de hoy");
+      expect(down.rows[0].a11yLabel).toBe("Compra, 15 ene 2025, $100.50, precio $100.00, sobre el precio de hoy");
+      // No mark drawn, so no phrase to read.
+      expect(neutral.rows[0].a11yLabel).toBe("Compra, 15 ene 2025, $100.50, precio $100.00");
+    });
   });
 
   it("the Net P&L percent is the only emitted string containing %", () => {

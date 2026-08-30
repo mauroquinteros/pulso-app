@@ -15,6 +15,8 @@ export interface MovementRow {
   dateLabel: string; // "15 ene 2025"
   amount: string; // "$447.86" — magnitude, never signed
   type: MovementType; // the component resolves icon/colors from the type
+  /** What VoiceOver reads for the whole row. */
+  a11yLabel: string;
 }
 
 export interface MovementsView {
@@ -45,6 +47,15 @@ const titleOf = (movement: Movement): string => {
   const { label } = MOVEMENT_TYPE_META[movement.type];
   return "ticker" in movement ? `${label} ${movement.ticker}` : label;
 };
+
+/** The row's three stacked fields, read as one sentence, plus whatever the
+ * screen adds after them. Shared because both view-models that build a
+ * `MovementRow` would otherwise carry their own copy, and a drifted
+ * accessibility label is invisible until someone turns VoiceOver on. */
+export const movementA11yLabel = (
+  parts: { title: string; dateLabel: string; amount: string },
+  mark?: string | null,
+): string => [parts.title, parts.dateLabel, parts.amount, mark].filter(Boolean).join(", ");
 
 /**
  * Pure view-model for the Movements screen: turns the raw Movement list into a
@@ -86,12 +97,15 @@ export function buildMovementsView(movements: Movement[], selectedType: Movement
     state: "ready",
     chips,
     filteredEmptyMessage: null,
-    rows: filtered.map((movement) => ({
-      id: movement.id,
-      title: titleOf(movement),
-      dateLabel: formatDate(movement.executionDate),
-      amount: formatUSD(Math.abs(cashImpact(movement))),
-      type: movement.type,
-    })),
+    rows: filtered.map((movement) => {
+      const row = {
+        id: movement.id,
+        title: titleOf(movement),
+        dateLabel: formatDate(movement.executionDate),
+        amount: formatUSD(Math.abs(cashImpact(movement))),
+        type: movement.type,
+      };
+      return { ...row, a11yLabel: movementA11yLabel(row) };
+    }),
   };
 }
