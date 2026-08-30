@@ -8,7 +8,13 @@ import { Colors } from "@/constants/theme";
 export function ScreenHeader({ title }: { title: string }) {
   return (
     <View style={styles.header}>
-      <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={8}>
+      <Pressable
+        style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+        onPress={() => router.back()}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Atrás"
+      >
         <Ionicons name="chevron-back" size={22} color={Colors.accent} />
       </Pressable>
       <Text style={styles.headerTitle}>{title}</Text>
@@ -34,6 +40,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: "center",
     justifyContent: "center",
+  },
+  backBtnPressed: {
+    opacity: 0.6,
   },
   headerTitle: {
     fontSize: 21,

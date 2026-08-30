@@ -63,7 +63,11 @@ function TypeRow({ spec }: { spec: RowSpec }) {
   );
 
   return (
-    <Pressable style={styles.row} onPress={spec.onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      onPress={spec.onPress}
+      accessibilityRole="button"
+    >
       {inner}
     </Pressable>
   );
@@ -73,7 +77,13 @@ export default function SelectMovementTypeScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable style={styles.closeBtn} onPress={() => router.dismiss()} hitSlop={8}>
+        <Pressable
+          style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
+          onPress={() => router.dismiss()}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar"
+        >
           <Ionicons name="close" size={16} color={Colors.textSecondary} />
         </Pressable>
         <Text style={styles.headerTitle}>Nuevo movimiento</Text>
@@ -111,6 +121,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 18,
+  },
+  /** Shared by the five type cards and the close button: each is a whole object
+   * that responds at once, so it dims rather than lighting up. The fill belongs
+   * to rows that must stand out from siblings inside one card. */
+  pressed: {
+    opacity: 0.6,
   },
   closeBtn: {
     width: 34,
