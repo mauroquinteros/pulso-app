@@ -38,7 +38,12 @@ function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFoc
   const iconName = isFocused ? icons.active : icons.inactive;
 
   return (
-    <Pressable style={styles.tabButton} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.tabButton, pressed && styles.tabButtonPressed]}
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+    >
       <Ionicons name={iconName} size={24} color={color} />
       <Text style={[styles.tabLabel, { color }]}>{label}</Text>
     </Pressable>
@@ -136,6 +141,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.xs,
+  },
+  /** The focused colour says *where I am*; this says *I heard you*. Fading the
+   * whole button rather than tinting it keeps those two apart. */
+  tabButtonPressed: {
+    opacity: 0.6,
   },
   tabLabel: {
     fontSize: Typography.tabLabel.fontSize,
