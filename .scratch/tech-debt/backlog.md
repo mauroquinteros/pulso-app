@@ -18,6 +18,7 @@ the box is the at-a-glance answer to "is this still true?".
 - [ ] [`round2` and `formatUSD` disagree on an exact half-cent](#round2-and-formatusd-disagree-on-an-exact-half-cent-and-there-are-six-round2s) - bug (minor)
 - [x] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
 - [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
+- [ ] [The sign-in button is painted with the divider token](#the-sign-in-button-is-painted-with-the-divider-token) - design (visual hierarchy)
 
 ---
 
@@ -291,3 +292,43 @@ which is why nobody could find it. This entry replaces that as the standing reco
 **Where to look.** `app/add-movement/form.tsx` and `app/add-movement/buy.tsx` (the two
 copies today), `components/add-movement/movement-deps.ts`, and
 `docs/adr/0010-a-movement-is-saved-only-when-the-database-says-so.md`.
+
+---
+
+## The sign-in button is painted with the divider token
+
+**Type:** design (visual hierarchy) · **Status:** backlog · **Raised:** 2026-08-31
+
+**Problem.** `app/(auth)/sign-in.tsx` fills its "Continuar con Google" button with
+`Colors.border` (`#1C224D`). That token is the app's **divider** colour: of the eight
+`backgroundColor: Colors.border` in the codebase, the other seven are all on elements
+with `height: 1`. So the only primary CTA on the only unauthenticated screen is painted
+in the colour reserved for 1px hairlines.
+
+It measures **1.25:1** against the screen behind it (`#0A0E27`). For scale, the
+"Entra a Pulso" title above it is 19.00:1. A button at 1.25:1 barely reads as an object,
+which is what makes the screen look unfinished.
+
+It is also the app's only primary CTA that is not teal - `Reintentar`, `Agregar
+movimiento` and `Guardar movimiento` all are.
+
+**Why it was deferred.** Both official replacements were built and looked at on device
+on 2026-08-31, and both were rejected:
+
+- **Google light** (`#FFFFFF` / stroke `#747775` / text `#1F1F1F`): fills 19.00:1, the
+  same as the title, and the pill competed with the headline. "El blanco esta muy fuerte."
+- **Google dark** (`#131314` / stroke `#8E918F` / text `#E3E3E3`): fill 1.02:1 by design
+  with the 1px stroke drawing the button at 5.97:1. Also rejected on sight.
+
+So the remaining move is not a colour swap - it is a rethink of what this screen's one
+action should look like, which is a design task rather than a token fix.
+
+**Constraint for whoever picks it up.** The obvious answer, the app's teal, is not
+available: Google's Sign in with Google branding permits only white, light-grey or black
+surfaces and forbids custom colours. The three official variants are the ones listed
+above. Anything else means not presenting it as a Google button.
+
+**Already true regardless.** The press state was rebuilt during the same pass and kept:
+8% white state layer over the base, no longer a `scale 0.97`. If the surface colour ever
+changes, that layer changes with it - Material puts the layer in white over dark
+surfaces and black over light, so it is derived from the fill, never independent of it.
