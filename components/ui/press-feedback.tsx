@@ -28,7 +28,7 @@ const DIM_DEPTH = 0.4;
  * setting itself and assigns 0 outright, which gives someone who asked for no
  * motion exactly today's behaviour - on, then off.
  */
-export function usePressProgress() {
+function usePressProgress() {
   const progress = useSharedValue(0);
 
   return {

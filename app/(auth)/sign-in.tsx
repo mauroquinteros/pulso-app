@@ -1,17 +1,27 @@
 import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { useEffect, useReducer } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { GoogleG } from "@/components/brand/google-g";
 import { LatidoMark } from "@/components/brand/latido-mark";
-import { AnimatedPressable, usePressProgress } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressSpring } from "@/components/ui/press-feedback";
 import { Duration, Ease } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, Gradients } from "@/constants/theme";
 import { Typography } from "@/constants/typography";
 import { signInWithGoogle } from "@/lib/google-sign-in";
 import { supabase } from "@/lib/supabase";
 import { initialSignInState, signInReducer } from "@/utils/sign-in";
+
+/** `Gradients.avatar` darkened, which is what the design's pressed state is.
+ * A gradient's stops cannot be animated, so the button stacks this one over the
+ * idle one and crossfades its opacity instead. */
+const PRESSED_GRADIENT = ["#00C4AF", "#177F75"] as const;
+
+/** 135deg, the angle the design draws every Pulso gradient at. */
+const GRADIENT_START = { x: 0, y: 0 };
+const GRADIENT_END = { x: 1, y: 1 };
 
 /**
  * A failed exchange is only worth blaming the network for when the request never
@@ -44,13 +54,18 @@ export default function SignInScreen() {
     transform: [{ translateY: (1 - entrance.value) * 10 }],
   }));
 
-  // Neither hook fits: dimming needs contrast to give up and this surface has
-  // 1.25:1 against the screen, and `usePressFill` would REPLACE the button's own
-  // backgroundColor rather than layer over it. 8% white over the base instead,
-  // interpolated rather than named so the two cannot drift.
-  const buttonPress = usePressProgress();
+  const buttonPress = usePressSpring();
+
+  // `shadowOffset` is an object and Reanimated has no path to one, so it holds
+  // the idle 8pt while opacity and radius carry the glow closing in.
   const buttonStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(buttonPress.progress.value * 0.08, [0, 1], [Colors.border, "#FFFFFF"]),
+    transform: [{ scale: 1 - buttonPress.progress.value * 0.03 }],
+    shadowOpacity: 0.25 - buttonPress.progress.value * 0.1,
+    shadowRadius: 24 - buttonPress.progress.value * 14,
+  }));
+
+  const pressedGradientStyle = useAnimatedStyle(() => ({
+    opacity: buttonPress.progress.value,
   }));
 
   const onPress = async () => {
@@ -90,7 +105,7 @@ export default function SignInScreen() {
       {/* Only the block moves. The background stays put, because a fading
           background reads as the app loading rather than the screen arriving. */}
       <Animated.View style={[styles.block, entranceStyle]}>
-        <LatidoMark size={64} />
+        <LatidoMark size={64} disc="gradient" />
 
         <Text style={styles.title}>Entra a Pulso</Text>
         <Text style={styles.supporting}>Tu portafolio de inversión, claro y al día.</Text>
@@ -103,10 +118,20 @@ export default function SignInScreen() {
           accessibilityRole="button"
           accessibilityState={{ disabled: signing, busy: signing }}
         >
+          {/* Declared first so they paint behind the label, and absolute so they
+              stay out of the row that centres it. */}
+          <LinearGradient colors={Gradients.avatar} start={GRADIENT_START} end={GRADIENT_END} style={styles.fill} />
+          <Animated.View style={[StyleSheet.absoluteFill, pressedGradientStyle]}>
+            <LinearGradient colors={PRESSED_GRADIENT} start={GRADIENT_START} end={GRADIENT_END} style={styles.fill} />
+          </Animated.View>
           {/* The spinner replaces the G rather than joining it, at the same 20pt
               in the same slot, so the label does not shift sideways mid-tap. */}
           <View style={styles.glyph}>
-            {signing ? <ActivityIndicator size="small" color={Colors.textPrimary} /> : <GoogleG size={20} />}
+            {signing ? (
+              <ActivityIndicator size="small" color={Colors.avatarText} />
+            ) : (
+              <GoogleG size={20} color={Colors.avatarText} />
+            )}
           </View>
           <Text style={styles.buttonLabel}>{signing ? "Conectando..." : "Continuar con Google"}</Text>
         </AnimatedPressable>
@@ -165,16 +190,31 @@ const styles = StyleSheet.create({
     height: 56,
     marginTop: 40,
     borderRadius: 9999,
-    backgroundColor: Colors.border,
+    // Under the gradients and never seen, but a transparent view casts no
+    // reliable shadow on iOS - this is what the glow is thrown from.
+    backgroundColor: Colors.accent,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 24,
+    shadowOpacity: 0.25,
+    elevation: 8,
+  },
+  /** EVERY gradient carries this, because nothing above them clips: the button
+   * cannot take `overflow: hidden` without iOS clipping the glow it casts, so a
+   * gradient that does not round itself paints square corners over the ones the
+   * button drew. */
+  fill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 9999,
   },
   buttonSigning: {
     opacity: 0.6,
   },
   buttonLabel: {
     ...Typography.cardTitle,
-    fontFamily: "Manrope_700Bold",
-    fontWeight: "700",
-    color: Colors.textPrimary,
+    fontFamily: "Manrope_800ExtraBold",
+    fontWeight: "800",
+    color: Colors.avatarText,
   },
   glyph: {
     width: 20,
