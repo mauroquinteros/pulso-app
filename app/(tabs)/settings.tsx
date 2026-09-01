@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 import { AUTH_STORAGE_KEY, supabase } from "@/lib/supabase";
 import { useSessionStore } from "@/stores/session";
@@ -53,7 +53,7 @@ async function signOut() {
 }
 
 export default function SettingsScreen() {
-  const signOutPress = usePressDim();
+  const signOutPress = usePressScale(0.97);
   const profile = profileFrom(useSessionStore((state) => state.session));
 
   const askSignOut = () =>

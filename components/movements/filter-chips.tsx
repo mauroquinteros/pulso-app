@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text } from "react-native";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementType } from "@/types/models";
@@ -36,7 +36,7 @@ export function FilterChips({ chips, onToggle }: Props) {
 
 function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
   const { bg, color } = MOVEMENT_TYPE_META[chip.type];
-  const press = usePressDim();
+  const press = usePressScale(0.94);
   return (
     <AnimatedPressable
       onPress={onPress}

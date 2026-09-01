@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors, Gradients } from "@/constants/theme";
 
 // Illustration strokes, from the design prototype. Muted enough to read as a
@@ -32,7 +32,7 @@ function EmptyLedger() {
 /** Shown when no movement has ever been recorded. The filter chips are not
  * rendered alongside it — there is nothing to filter. */
 export function EmptyState({ onAddMovement }: { onAddMovement?: () => void }) {
-  const press = usePressDim();
+  const press = usePressScale(0.97);
   return (
     <View style={styles.wrap}>
       <EmptyLedger />

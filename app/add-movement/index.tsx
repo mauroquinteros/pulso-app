@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressDim, usePressScale } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementType } from "@/types/models";
@@ -50,7 +50,7 @@ const EFECTIVO: RowSpec[] = [
 
 function TypeRow({ spec }: { spec: RowSpec }) {
   const meta = MOVEMENT_TYPE_META[spec.type];
-  const press = usePressDim();
+  const press = usePressScale(0.97);
   const inner = (
     <>
       <View style={[styles.rowIcon, { backgroundColor: meta.bg }]}>

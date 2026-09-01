@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 
 /**
@@ -25,7 +25,7 @@ export function SaveButton({
   // same frame: `pending` only reaches this button on the next render, by which
   // time both handlers have already run.
   const pressed = useRef(false);
-  const press = usePressDim();
+  const press = usePressScale(0.97);
 
   const handlePress = async () => {
     if (pressed.current) return;

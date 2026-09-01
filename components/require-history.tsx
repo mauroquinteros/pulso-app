@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, type ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors, Gradients } from "@/constants/theme";
 import { readHistory } from "@/lib/history";
 import { useMovementsStore } from "@/stores/movements";
@@ -67,7 +67,7 @@ function ReadingHistory() {
  * read is never described as *stale* - that word belongs to prices alone.
  */
 function HistoryUnavailable({ onRetry }: { onRetry: () => void }) {
-  const press = usePressDim();
+  const press = usePressScale(0.97);
   return (
     <View style={styles.wrap}>
       <Ionicons

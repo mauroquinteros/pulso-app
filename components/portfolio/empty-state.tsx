@@ -1,4 +1,4 @@
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -9,7 +9,7 @@ type Props = {
 /** Shown when there are no holdings and no cash: a short prompt and a CTA into
  * the add-movement picker, in place of the cards. */
 export function EmptyState({ onAddMovement }: Props) {
-  const press = usePressDim();
+  const press = usePressScale(0.97);
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Tu portafolio está vacío</Text>

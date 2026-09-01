@@ -11,7 +11,7 @@ import { MovementDatePicker } from "@/components/add-movement/movement-date-pick
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
 import { buildSellMovement, summarizeSell } from "@/components/add-movement/sell-view-model";
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressDim, usePressScale } from "@/components/ui/press-feedback";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -44,7 +44,7 @@ export default function SellFormScreen() {
   const datePress = usePressDim();
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
-  const sellAllPress = usePressDim();
+  const sellAllPress = usePressScale(0.97);
 
   // What the user holds today (for the "never owned it" message) vs. what a
   // sell dated `executionDate` may actually take: a backdated sale is limited
