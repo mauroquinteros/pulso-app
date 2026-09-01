@@ -5,9 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
-import { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { useAnimatedStyle } from "react-native-reanimated";
 
-import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { AnimatedPressable, usePressDim, usePressSpring } from "@/components/ui/press-feedback";
 
 const TAB_ICONS: Record<
   string,
@@ -55,19 +55,14 @@ function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFoc
 
 function FabButton() {
   const router = useRouter();
-  const scale = useSharedValue(1);
+  // Travels further than the sign-in button on the same spring, and can afford
+  // to: a 56pt circle moves every edge by the same 2.8pt, where the same ratio
+  // on a full-width pill would drag its sides in six times as far as its top.
+  const press = usePressSpring();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: 1 - press.progress.value * 0.1 }],
   }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.9);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1);
-  };
 
   const handlePress = () => {
     router.push("/add-movement");
@@ -77,11 +72,10 @@ function FabButton() {
     <View style={styles.fabContainer}>
       <AnimatedPressable
         style={[styles.fab, animatedStyle]}
+        {...press.handlers}
         onPress={handlePress}
         accessibilityRole="button"
         accessibilityLabel="Nuevo movimiento"
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
       >
         <Ionicons name="add" size={28} color={Colors.background} />
       </AnimatedPressable>

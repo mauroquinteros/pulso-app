@@ -1,5 +1,5 @@
 import { Pressable } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 
 import { Duration, Ease } from "@/constants/motion";
 
@@ -39,6 +39,40 @@ export function usePressProgress() {
       },
       onPressOut: () => {
         progress.value = withTiming(0, { duration: Duration.press, easing: Ease.exit });
+      },
+    },
+  };
+}
+
+/** Reanimated's default spring is bouncier and slower than an acknowledgement
+ * should be, so this is stated. ~9% overshoot, peaking around 200ms: enough
+ * movement to be seen, not enough to wobble. */
+const PRESS_SPRING = { mass: 0.6, damping: 14, stiffness: 220 };
+
+/**
+ * The same 0 -> 1 as `usePressProgress`, but sprung in BOTH directions - which
+ * is the whole difference, and it exists for one reason: a control that answers
+ * by SCALING cannot take the instant press-in. A fill or a dim arriving in one
+ * frame reads as a state change, which is what it is. A scale arriving in one
+ * frame is not motion at all, it is a jump, and the eye reads it as nothing
+ * having happened.
+ *
+ * Overshoot is left unclamped on purpose. It is what makes the spring feel
+ * alive, and every property it drives here absorbs it harmlessly: opacity above
+ * 1 is clamped by the renderer, and a scale that dips 0.3% past its target is
+ * invisible.
+ */
+export function usePressSpring() {
+  const progress = useSharedValue(0);
+
+  return {
+    progress,
+    handlers: {
+      onPressIn: () => {
+        progress.value = withSpring(1, PRESS_SPRING);
+      },
+      onPressOut: () => {
+        progress.value = withSpring(0, PRESS_SPRING);
       },
     },
   };
