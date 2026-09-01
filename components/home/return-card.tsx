@@ -1,3 +1,4 @@
+import { Duration, Ease } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, useState } from "react";
@@ -12,12 +13,22 @@ import {
   UIManager,
   View,
 } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import type { HomeView, Tone } from "./view-model";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+/** `Presets.easeInEaseOut` rebuilt at `base`, which is the whole reason it is
+ * spelled out: the preset runs 300ms, so the card's height and the chevron above
+ * it used to disagree by 100ms on the same tap. Same create/delete fades. */
+const BREAKDOWN_TRANSITION = {
+  duration: Duration.base,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.easeInEaseOut },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+};
 
 type Props = {
   return: HomeView["return"];
@@ -36,10 +47,17 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
   } | null>(null);
   const anchorRef = useRef<View>(null);
   const rotation = useSharedValue(0);
+  // Only the height change has to ask. `withTiming` consults the system setting
+  // by itself and jumps the chevron straight to its end angle; `LayoutAnimation`
+  // is a legacy RN API with no such wiring, so left alone it would go on
+  // animating the breakdown open for someone who asked for no motion.
+  const reduceMotion = useReducedMotion();
 
   const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    rotation.value = withTiming(open ? 0 : 180, { duration: 200 });
+    if (!reduceMotion) {
+      LayoutAnimation.configureNext(BREAKDOWN_TRANSITION);
+    }
+    rotation.value = withTiming(open ? 0 : 180, { duration: Duration.base, easing: Ease.standard });
     setOpen((o) => !o);
   };
 

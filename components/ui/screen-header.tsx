@@ -1,22 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 
 /** Screen header: back button + screen title. Shared by add-movement forms and movement detail. */
 export function ScreenHeader({ title }: { title: string }) {
+  const press = usePressDim();
   return (
     <View style={styles.header}>
-      <Pressable
-        style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+      <AnimatedPressable
+        style={[styles.backBtn, press.style]}
+        {...press.handlers}
         onPress={() => router.back()}
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel="Atrás"
       >
         <Ionicons name="chevron-back" size={22} color={Colors.accent} />
-      </Pressable>
+      </AnimatedPressable>
       <Text style={styles.headerTitle}>{title}</Text>
     </View>
   );
@@ -40,9 +43,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: "center",
     justifyContent: "center",
-  },
-  backBtnPressed: {
-    opacity: 0.6,
   },
   headerTitle: {
     fontSize: 21,

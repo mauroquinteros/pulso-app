@@ -1,7 +1,9 @@
 import { Colors, HoldingBadge } from "@/constants/theme";
 import { Fragment } from "react";
 import type { HoldingRow, Tone } from "./row";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+
+import { AnimatedPressable, usePressFill } from "@/components/ui/press-feedback";
 
 type Props = {
   holdings: HoldingRow[];
@@ -27,7 +29,9 @@ export function AssetsCard({ holdings, onPressHolding, stat }: Props) {
         {stat !== undefined && (
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{stat.label}</Text>
-            <Text style={[styles.statValue, { color: stat.tone === null ? Colors.textSecondary : toneColor(stat.tone) }]}>
+            <Text
+              style={[styles.statValue, { color: stat.tone === null ? Colors.textSecondary : toneColor(stat.tone) }]}
+            >
               {stat.value}
             </Text>
           </View>
@@ -45,9 +49,11 @@ export function AssetsCard({ holdings, onPressHolding, stat }: Props) {
 
 function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: () => void }) {
   const tone = toneColor(holding.pnlTone);
+  const press = usePressFill();
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+    <AnimatedPressable
+      style={[styles.row, press.style]}
+      {...press.handlers}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={holding.a11yLabel}
@@ -69,7 +75,7 @@ function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: (
           <Text style={[styles.pnlPct, { color: tone }]}>{holding.pnlPct}</Text>
         </View>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -124,11 +130,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -10,
     paddingHorizontal: 10,
     borderRadius: 12,
-  },
-  /** Only a fill, so the row cannot move under the finger. Same value and shape
-   * the Distribucion legend uses for a highlighted row. */
-  rowPressed: {
-    backgroundColor: "rgba(255,255,255,0.05)",
   },
   badge: {
     minWidth: 40,

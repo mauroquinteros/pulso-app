@@ -11,6 +11,7 @@ import { MovementDatePicker } from "@/components/add-movement/movement-date-pick
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
 import { buildSellMovement, summarizeSell } from "@/components/add-movement/sell-view-model";
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -42,6 +43,7 @@ export default function SellFormScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const sellAllPress = usePressDim();
 
   // What the user holds today (for the "never owned it" message) vs. what a
   // sell dated `executionDate` may actually take: a backdated sale is limited
@@ -297,19 +299,16 @@ export default function SellFormScreen() {
               <Text style={styles.errorText}>La comisión y los impuestos superan el monto bruto</Text>
             )}
           </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.sellAll,
-              canSellAll ? styles.sellAllActive : styles.sellAllDisabled,
-              pressed && styles.sellAllPressed,
-            ]}
+          <AnimatedPressable
+            style={[styles.sellAll, canSellAll ? styles.sellAllActive : styles.sellAllDisabled, sellAllPress.style]}
+            {...sellAllPress.handlers}
             onPress={onSellAll}
             disabled={!canSellAll}
             accessibilityRole="button"
             accessibilityLabel={`Vender todo, ${formatShares(availableShares)} acciones`}
           >
             <Text style={[styles.sellAllText, !canSellAll && styles.sellAllTextDisabled]}>Vender todo</Text>
-          </Pressable>
+          </AnimatedPressable>
           {saveFailed && <Text style={styles.saveError}>No pudimos guardar tu venta. Inténtalo de nuevo.</Text>}
           <SaveButton canSave={canSave} pending={saving} onPress={onSave} />
         </View>
@@ -390,9 +389,6 @@ const styles = StyleSheet.create({
   },
   sellAllDisabled: {
     borderColor: Colors.border,
-  },
-  sellAllPressed: {
-    opacity: 0.6,
   },
   sellAllText: {
     fontSize: 15,

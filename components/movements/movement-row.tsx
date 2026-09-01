@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressFill } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementRow as Row } from "./view-model";
@@ -33,9 +34,11 @@ export function MovementRow({
   const meta = MOVEMENT_TYPE_META[row.type];
   const marked = buyTone === "up" || buyTone === "down";
   const markColor = buyTone === "up" ? Colors.positive : Colors.negative;
+  const press = usePressFill();
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+    <AnimatedPressable
+      style={[styles.row, press.style]}
+      {...press.handlers}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={row.a11yLabel}
@@ -56,7 +59,7 @@ export function MovementRow({
           </View>
         )}
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -77,10 +80,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -10,
     paddingHorizontal: 10,
     borderRadius: 12,
-  },
-  /** Only a fill, so the row cannot move under the finger. */
-  rowPressed: {
-    backgroundColor: "rgba(255,255,255,0.05)",
   },
   badge: {
     width: 40,

@@ -4,10 +4,10 @@ import { Typography } from "@/constants/typography";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { StyleSheet, Text, View } from "react-native";
+import { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 
 const TAB_ICONS: Record<
   string,
@@ -36,10 +36,12 @@ function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFoc
   const label = TAB_LABELS[routeName];
   const color = isFocused ? Colors.tint : Colors.tabIconDefault;
   const iconName = isFocused ? icons.active : icons.inactive;
+  const press = usePressDim();
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.tabButton, pressed && styles.tabButtonPressed]}
+    <AnimatedPressable
+      style={[styles.tabButton, press.style]}
+      {...press.handlers}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
@@ -47,7 +49,7 @@ function TabButton({ routeName, isFocused, onPress }: { routeName: string; isFoc
     >
       <Ionicons name={iconName} size={24} color={color} />
       <Text style={[styles.tabLabel, { color }]}>{label}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -144,11 +146,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.xs,
-  },
-  /** The focused colour says *where I am*; this says *I heard you*. Fading the
-   * whole button rather than tinting it keeps those two apart. */
-  tabButtonPressed: {
-    opacity: 0.6,
   },
   tabLabel: {
     fontSize: Typography.tabLabel.fontSize,

@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementType } from "@/types/models";
@@ -49,6 +50,7 @@ const EFECTIVO: RowSpec[] = [
 
 function TypeRow({ spec }: { spec: RowSpec }) {
   const meta = MOVEMENT_TYPE_META[spec.type];
+  const press = usePressDim();
   const inner = (
     <>
       <View style={[styles.rowIcon, { backgroundColor: meta.bg }]}>
@@ -63,30 +65,33 @@ function TypeRow({ spec }: { spec: RowSpec }) {
   );
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+    <AnimatedPressable
+      style={[styles.row, press.style]}
+      {...press.handlers}
       onPress={spec.onPress}
       accessibilityRole="button"
       accessibilityLabel={`${meta.label}. ${spec.subtitle}`}
     >
       {inner}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
 export default function SelectMovementTypeScreen() {
+  const closePress = usePressDim();
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
+        <AnimatedPressable
+          style={[styles.closeBtn, closePress.style]}
+          {...closePress.handlers}
           onPress={() => router.dismiss()}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Cerrar"
         >
           <Ionicons name="close" size={16} color={Colors.textSecondary} />
-        </Pressable>
+        </AnimatedPressable>
         <Text style={styles.headerTitle}>Nuevo movimiento</Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -122,12 +127,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 18,
-  },
-  /** Shared by the five type cards and the close button: each is a whole object
-   * that responds at once, so it dims rather than lighting up. The fill belongs
-   * to rows that must stand out from siblings inside one card. */
-  pressed: {
-    opacity: 0.6,
   },
   closeBtn: {
     width: 34,
