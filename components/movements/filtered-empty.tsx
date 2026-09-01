@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 
 type Props = {
@@ -15,12 +16,13 @@ type Props = {
  * "Todos" chip, which left "tap the active chip again" as the only other way out.
  */
 export function FilteredEmpty({ message, onClear }: Props) {
+  const press = usePressDim();
   return (
     <View style={styles.wrap}>
       <Text style={styles.message}>{message}</Text>
-      <Pressable onPress={onClear} hitSlop={8}>
+      <AnimatedPressable style={press.style} {...press.handlers} onPress={onClear} hitSlop={8}>
         <Text style={styles.clear}>Quitar filtro</Text>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }

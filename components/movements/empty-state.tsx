@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors, Gradients } from "@/constants/theme";
 
 // Illustration strokes, from the design prototype. Muted enough to read as a
@@ -31,16 +32,17 @@ function EmptyLedger() {
 /** Shown when no movement has ever been recorded. The filter chips are not
  * rendered alongside it — there is nothing to filter. */
 export function EmptyState({ onAddMovement }: { onAddMovement?: () => void }) {
+  const press = usePressDim();
   return (
     <View style={styles.wrap}>
       <EmptyLedger />
       <Text style={styles.title}>Todavía no hay movimientos</Text>
       <Text style={styles.body}>Cuando compres, vendas o muevas efectivo, aparecerá acá.</Text>
-      <Pressable onPress={onAddMovement}>
+      <AnimatedPressable style={press.style} {...press.handlers} onPress={onAddMovement}>
         <LinearGradient colors={Gradients.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
           <Text style={styles.ctaText}>Agregar movimiento</Text>
         </LinearGradient>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }

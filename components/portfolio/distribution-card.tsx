@@ -1,7 +1,8 @@
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Donut } from "./donut";
 import { segmentColor } from "./view-model";
 import type { PortfolioView } from "./view-model";
@@ -19,6 +20,7 @@ export function DistributionCard({ distribution }: Props) {
   const [legendOpen, setLegendOpen] = useState(true);
 
   const toggle = (key: string) => setSelectedKey((prev) => (prev === key ? null : key));
+  const legendTogglePress = usePressDim();
 
   // Center: the Total by default; a selected row's tinted label + amount when
   // a segment (or the negative-cash legend row) is selected.
@@ -50,8 +52,9 @@ export function DistributionCard({ distribution }: Props) {
         </Text>
       )}
 
-      <Pressable
-        style={styles.legendToggle}
+      <AnimatedPressable
+        style={[styles.legendToggle, legendTogglePress.style]}
+        {...legendTogglePress.handlers}
         onPress={() => setLegendOpen((o) => !o)}
         accessibilityRole="button"
         accessibilityLabel={legendOpen ? "Ocultar leyenda" : "Ver leyenda"}
@@ -63,24 +66,38 @@ export function DistributionCard({ distribution }: Props) {
           color={Colors.textSecondary}
           style={{ transform: [{ rotate: legendOpen ? "180deg" : "0deg" }] }}
         />
-      </Pressable>
+      </AnimatedPressable>
 
       {legendOpen && (
         <View style={styles.legend}>
           {legend.map((row) => (
-            <Pressable
-              key={row.key}
-              style={[styles.legendRow, selectedKey === row.key && styles.legendRowSelected]}
-              onPress={() => toggle(row.key)}
-            >
-              <View style={[styles.swatch, { backgroundColor: segmentColor(row.colorIndex) }]} />
-              <Text style={styles.legendLabel}>{row.label}</Text>
-              <Text style={[styles.legendPct, row.negative && styles.legendNegative]}>{row.pct ?? row.amount}</Text>
-            </Pressable>
+            <LegendRow key={row.key} row={row} selected={selectedKey === row.key} onPress={() => toggle(row.key)} />
           ))}
         </View>
       )}
     </View>
+  );
+}
+
+type LegendItem = PortfolioView["distribution"]["legend"][number];
+
+/** Dim, where the app's other rows inside a shared card take a fill. The fill is
+ * already spoken for here: `legendRowSelected` is the same rgba(255,255,255,0.05)
+ * `usePressFill` paints, so a press fill would dress an unselected row as
+ * selected for as long as the finger stayed down, and do nothing at all on a row
+ * that already was. */
+function LegendRow({ row, selected, onPress }: { row: LegendItem; selected: boolean; onPress: () => void }) {
+  const press = usePressDim();
+  return (
+    <AnimatedPressable
+      style={[styles.legendRow, selected && styles.legendRowSelected, press.style]}
+      {...press.handlers}
+      onPress={onPress}
+    >
+      <View style={[styles.swatch, { backgroundColor: segmentColor(row.colorIndex) }]} />
+      <Text style={styles.legendLabel}>{row.label}</Text>
+      <Text style={[styles.legendPct, row.negative && styles.legendNegative]}>{row.pct ?? row.amount}</Text>
+    </AnimatedPressable>
   );
 }
 

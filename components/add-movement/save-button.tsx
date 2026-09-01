@@ -1,6 +1,7 @@
 import { useRef } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 
 /**
@@ -24,6 +25,7 @@ export function SaveButton({
   // same frame: `pending` only reaches this button on the next render, by which
   // time both handlers have already run.
   const pressed = useRef(false);
+  const press = usePressDim();
 
   const handlePress = async () => {
     if (pressed.current) return;
@@ -43,8 +45,14 @@ export function SaveButton({
   };
 
   return (
-    <Pressable
-      style={[styles.button, { backgroundColor: canSave ? Colors.accent : "#161B3D" }, canSave && styles.buttonActive]}
+    <AnimatedPressable
+      style={[
+        styles.button,
+        { backgroundColor: canSave ? Colors.accent : "#161B3D" },
+        canSave && styles.buttonActive,
+        press.style,
+      ]}
+      {...press.handlers}
       onPress={handlePress}
       disabled={!canSave || pending}
     >
@@ -56,7 +64,7 @@ export function SaveButton({
           <ActivityIndicator size="small" color="#04211E" />
         </View>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

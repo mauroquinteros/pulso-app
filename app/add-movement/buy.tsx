@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import { baseFormStyles } from "@/components/add-movement/form-styles";
 import { MovementDatePicker } from "@/components/add-movement/movement-date-picker";
 import { defaultMovementDeps } from "@/components/add-movement/movement-deps";
 import { SaveButton } from "@/components/add-movement/save-button";
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -50,6 +50,7 @@ export default function BuyFormScreen() {
   const [touchedAmount, setTouchedAmount] = useState(false);
   const [touchedPrice, setTouchedPrice] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const datePress = usePressDim();
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [symbolCheck, dispatchSymbolCheck] = useReducer(symbolCheckReducer, initialSymbolCheckState);
@@ -223,8 +224,9 @@ export default function BuyFormScreen() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                style={styles.dateBox}
+              <AnimatedPressable
+                style={[styles.dateBox, datePress.style]}
+                {...datePress.handlers}
                 onPress={() => setShowPicker(true)}
                 accessibilityRole="button"
                 accessibilityLabel={`Fecha, ${dateDisplay}`}
@@ -237,7 +239,7 @@ export default function BuyFormScreen() {
                   accessibilityElementsHidden
                   importantForAccessibility="no"
                 />
-              </Pressable>
+              </AnimatedPressable>
             </View>
           </View>
           {tickerErrorMsg && <Text style={styles.errorText}>{tickerErrorMsg}</Text>}

@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
 import { AUTH_STORAGE_KEY, supabase } from "@/lib/supabase";
 import { useSessionStore } from "@/stores/session";
@@ -52,6 +53,7 @@ async function signOut() {
 }
 
 export default function SettingsScreen() {
+  const signOutPress = usePressDim();
   const profile = profileFrom(useSessionStore((state) => state.session));
 
   const askSignOut = () =>
@@ -80,9 +82,9 @@ export default function SettingsScreen() {
       {/* Neutral, not `negative`: in Pulso red means *loss*, and signing out is
           not one - nothing is destroyed, you just log back in. It stays in the
           flow instead of anchored to the bottom, clear of the tab bar. */}
-      <Pressable style={styles.signOut} onPress={askSignOut}>
+      <AnimatedPressable style={[styles.signOut, signOutPress.style]} {...signOutPress.handlers} onPress={askSignOut}>
         <Text style={styles.signOutText}>Cerrar sesión</Text>
-      </Pressable>
+      </AnimatedPressable>
     </SafeAreaView>
   );
 }

@@ -1,5 +1,6 @@
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   onAddMovement?: () => void;
@@ -8,13 +9,14 @@ type Props = {
 /** Shown when there are no holdings and no cash: a short prompt and a CTA into
  * the add-movement picker, in place of the cards. */
 export function EmptyState({ onAddMovement }: Props) {
+  const press = usePressDim();
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Tu portafolio está vacío</Text>
       <Text style={styles.body}>Registra tu primer movimiento para ver cómo se distribuye tu dinero.</Text>
-      <Pressable style={styles.cta} onPress={onAddMovement}>
+      <AnimatedPressable style={[styles.cta, press.style]} {...press.handlers} onPress={onAddMovement}>
         <Text style={styles.ctaText}>Agregar movimiento</Text>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }

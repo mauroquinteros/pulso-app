@@ -1,5 +1,6 @@
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { MovementType } from "@/types/models";
@@ -35,16 +36,18 @@ export function FilterChips({ chips, onToggle }: Props) {
 
 function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
   const { bg, color } = MOVEMENT_TYPE_META[chip.type];
+  const press = usePressDim();
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
       hitSlop={HIT_SLOP}
       accessibilityRole="button"
       accessibilityState={{ selected: chip.selected }}
-      style={[styles.chip, chip.selected ? { backgroundColor: bg, borderColor: color } : styles.chipIdle]}
+      style={[styles.chip, chip.selected ? { backgroundColor: bg, borderColor: color } : styles.chipIdle, press.style]}
+      {...press.handlers}
     >
       <Text style={[styles.label, { color: chip.selected ? color : Colors.textSecondary }]}>{chip.label}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

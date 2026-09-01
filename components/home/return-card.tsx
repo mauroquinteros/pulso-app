@@ -1,3 +1,4 @@
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Duration, Ease } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -52,6 +53,11 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
   // is a legacy RN API with no such wiring, so left alone it would go on
   // animating the breakdown open for someone who asked for no motion.
   const reduceMotion = useReducedMotion();
+  // Dim, not fill: by the app's own rule a fill is for a row that must separate
+  // itself from siblings on one surface, and this header has none - it is a
+  // single object, and the whole of it is the button.
+  const headerPress = usePressDim();
+  const tipPress = usePressDim();
 
   const toggle = () => {
     if (!reduceMotion) {
@@ -81,7 +87,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
 
   return (
     <View style={styles.card}>
-      <Pressable onPress={toggle} style={styles.header}>
+      <AnimatedPressable onPress={toggle} style={[styles.header, headerPress.style]} {...headerPress.handlers}>
         <View>
           <View style={styles.titleRow}>
             <View style={styles.dot} />
@@ -93,17 +99,18 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
             </Text>
             {ret.percent !== null &&
               (ret.percentTooltip ? (
-                <Pressable
+                <AnimatedPressable
                   ref={anchorRef}
                   onPress={openTip}
                   hitSlop={14}
                   accessibilityRole="button"
                   accessibilityLabel="Cómo se calcula el porcentaje"
-                  style={styles.pctTip}
+                  style={[styles.pctTip, tipPress.style]}
+                  {...tipPress.handlers}
                 >
                   <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
                   <Ionicons name="information-circle-outline" size={16} color={totalColor} />
-                </Pressable>
+                </AnimatedPressable>
               ) : (
                 <Text style={[styles.totalPct, { color: totalColor }]}>{ret.percent}</Text>
               ))}
@@ -115,7 +122,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
             <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
           </Animated.View>
         </View>
-      </Pressable>
+      </AnimatedPressable>
 
       <View style={styles.bridge}>
         <View style={styles.bridgeSide}>

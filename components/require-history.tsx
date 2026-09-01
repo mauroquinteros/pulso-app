@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors, Gradients } from "@/constants/theme";
 import { readHistory } from "@/lib/history";
 import { useMovementsStore } from "@/stores/movements";
@@ -66,6 +67,7 @@ function ReadingHistory() {
  * read is never described as *stale* - that word belongs to prices alone.
  */
 function HistoryUnavailable({ onRetry }: { onRetry: () => void }) {
+  const press = usePressDim();
   return (
     <View style={styles.wrap}>
       <Ionicons
@@ -77,11 +79,11 @@ function HistoryUnavailable({ onRetry }: { onRetry: () => void }) {
       />
       <Text style={styles.title}>No pudimos cargar tus movimientos</Text>
       <Text style={styles.body}>Revisa tu conexión e inténtalo de nuevo.</Text>
-      <Pressable onPress={onRetry}>
+      <AnimatedPressable style={press.style} {...press.handlers} onPress={onRetry}>
         <LinearGradient colors={Gradients.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
           <Text style={styles.ctaText}>Reintentar</Text>
         </LinearGradient>
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }
