@@ -1,12 +1,13 @@
 import { Colors, HoldingBadge } from "@/constants/theme";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import type { HoldingRow, Tone } from "./row";
 import { StyleSheet, Text, View } from "react-native";
 
-import Animated, { LinearTransition } from "react-native-reanimated";
+import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { AnimatedPressable, usePressFill } from "@/components/ui/press-feedback";
-import { Duration } from "@/constants/motion";
+import { Duration, Ease } from "@/constants/motion";
+import { useMovementsStore } from "@/stores/movements";
 
 type Props = {
   holdings: HoldingRow[];
@@ -56,6 +57,28 @@ export function AssetsCard({ holdings, onPressHolding, stat }: Props) {
 function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: () => void }) {
   const tone = toneColor(holding.pnlTone);
   const press = usePressFill();
+
+  // The one place a form's save is answered on the screen it lands on. Saving
+  // dismisses onto Inicio, where the figures are simply different and nothing
+  // says which of them moved - so the row that moved says so itself, once.
+  //
+  // `reveal` rather than a shorter tier because this has to survive the modal
+  // dismissing over it: anything quicker is spent before the screen settles.
+  const justSaved = useMovementsStore((st) => st.lastSavedTicker === holding.ticker);
+  const shown = useMovementsStore((st) => st.savedHighlightShown);
+  const highlight = useSharedValue(0);
+
+  useEffect(() => {
+    if (!justSaved) return;
+    shown();
+    highlight.value = 1;
+    highlight.value = withTiming(0, { duration: Duration.reveal, easing: Ease.exit });
+  }, [justSaved, shown, highlight]);
+
+  const highlightStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(0,229,204,${highlight.value * 0.14})`,
+  }));
+
   return (
     <AnimatedPressable
       style={[styles.row, press.style]}
@@ -64,6 +87,9 @@ function HoldingRowView({ holding, onPress }: { holding: HoldingRow; onPress?: (
       accessibilityRole="button"
       accessibilityLabel={holding.a11yLabel}
     >
+      {/* Its own layer rather than the row's own background, which the press
+          fill already owns - so a tap during the highlight shows both. */}
+      <Animated.View style={[styles.highlight, highlightStyle]} pointerEvents="none" />
       <View style={[styles.badge, { backgroundColor: HoldingBadge.bg }]}>
         <Text style={[styles.badgeText, { color: HoldingBadge.color }]}>{holding.ticker}</Text>
       </View>
@@ -135,6 +161,10 @@ const styles = StyleSheet.create({
     // each side. A touch surface flush with its own text reads as a mistake.
     marginHorizontal: -10,
     paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  highlight: {
+    ...StyleSheet.absoluteFillObject,
     borderRadius: 12,
   },
   badge: {

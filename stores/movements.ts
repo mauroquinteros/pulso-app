@@ -9,6 +9,18 @@ interface MovementsState extends HistoryState {
    * `ready`, since there is no History for it to join until one is in hand.
    */
   movementSaved: (movement: Movement) => void;
+  /**
+   * The ticker of the movement just saved, for the row that should announce
+   * itself when the form dismisses onto Inicio. Deliberately NOT part of
+   * `HistoryState`: it is a one-shot UI cue, not history, and the reducer that
+   * owns the History has no business knowing about a highlight.
+   *
+   * `null` for a deposit or a withdrawal - they touch Efectivo, which has no
+   * row of its own to light up.
+   */
+  lastSavedTicker: string | null;
+  /** Consumes the cue, so it plays once and not again on the next mount. */
+  savedHighlightShown: () => void;
   /** Marks a read as begun and hands back its id, to be quoted in the answer. */
   startRead: () => number;
   answerRead: (readId: number, answer: HistoryAnswer) => void;
@@ -32,7 +44,13 @@ interface MovementsState extends HistoryState {
  */
 export const useMovementsStore = create<MovementsState>((set, get) => ({
   ...initialHistoryState,
-  movementSaved: (movement) => set((state) => historyReducer(state, { type: "movementSaved", movement })),
+  lastSavedTicker: null,
+  movementSaved: (movement) =>
+    set((state) => ({
+      ...historyReducer(state, { type: "movementSaved", movement }),
+      lastSavedTicker: "ticker" in movement ? movement.ticker : null,
+    })),
+  savedHighlightShown: () => set({ lastSavedTicker: null }),
   startRead: () => {
     const next = historyReducer(get(), { type: "readStarted" });
     set(next);
