@@ -12,11 +12,6 @@ import type { MovementChip } from "./view-model";
 // The chip reads 36pt tall; hitSlop lifts the effective target to 44pt.
 const HIT_SLOP = { top: 4, bottom: 4, left: 0, right: 0 };
 
-/** The same hue at zero alpha. Interpolating a fill toward `transparent` would
- * slide it through black on the way; toward its own colour it only fades. Every
- * `bg` in MOVEMENT_TYPE_META is an `rgba()`, which is what this relies on. */
-const clear = (rgba: string) => rgba.replace(/[\d.]+\)$/, "0)");
-
 type Props = {
   chips: MovementChip[];
   onToggle: (type: MovementType) => void;
@@ -53,13 +48,17 @@ function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
     selected.value = withTiming(chip.selected ? 1 : 0, { duration: Duration.base, easing: Ease.standard });
   }, [chip.selected, selected]);
 
-  // Resolved here, on the JS thread. `useAnimatedStyle` runs its body as a
-  // worklet on the UI thread, and a plain function called from inside one
-  // throws at runtime - `clear` uses a regex and is not workletized.
-  const bgClear = clear(bg);
+  // The fill is a layer whose opacity moves, not a colour that interpolates.
+  // `bg` is an `rgba()` and its unselected twin would be the same hue at zero
+  // alpha - deriving that meant parsing the string, which is both fragile (a
+  // `bg` written as hex would come back unchanged, killing the transition with
+  // no error) and how this crashed once, by reaching a plain function from
+  // inside a worklet. Fading a statically coloured layer needs neither.
+  const fill = useAnimatedStyle(() => ({ opacity: selected.value }));
 
-  const skin = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(selected.value, [0, 1], [bgClear, bg]),
+  // Safe to interpolate: both ends are opaque, so nothing travels through the
+  // black that a transparent end would drag it toward.
+  const outline = useAnimatedStyle(() => ({
     borderColor: interpolateColor(selected.value, [0, 1], [Colors.border, color]),
   }));
   const labelSkin = useAnimatedStyle(() => ({
@@ -72,9 +71,10 @@ function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
       hitSlop={HIT_SLOP}
       accessibilityRole="button"
       accessibilityState={{ selected: chip.selected }}
-      style={[styles.chip, skin, press.style]}
+      style={[styles.chip, outline, press.style]}
       {...press.handlers}
     >
+      <Animated.View style={[styles.fill, { backgroundColor: bg }, fill]} pointerEvents="none" />
       <Animated.Text style={[styles.label, labelSkin]}>{chip.label}</Animated.Text>
     </AnimatedPressable>
   );
@@ -96,6 +96,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  fill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 9999,
   },
   label: {
     fontSize: 13,
