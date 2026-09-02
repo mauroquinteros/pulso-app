@@ -1,6 +1,8 @@
 import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
+import { useExpandChevron } from "@/hooks/use-expand-chevron";
 import { Ionicons } from "@expo/vector-icons";
+import Animated from "react-native-reanimated";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Donut } from "./donut";
@@ -21,6 +23,7 @@ export function DistributionCard({ distribution }: Props) {
 
   const toggle = (key: string) => setSelectedKey((prev) => (prev === key ? null : key));
   const legendTogglePress = usePressDim();
+  const chevron = useExpandChevron(legendOpen);
 
   // Center: the Total by default; a selected row's tinted label + amount when
   // a segment (or the negative-cash legend row) is selected.
@@ -55,17 +58,17 @@ export function DistributionCard({ distribution }: Props) {
       <AnimatedPressable
         style={[styles.legendToggle, legendTogglePress.style]}
         {...legendTogglePress.handlers}
-        onPress={() => setLegendOpen((o) => !o)}
+        onPress={() => {
+          chevron.animate();
+          setLegendOpen((o) => !o);
+        }}
         accessibilityRole="button"
         accessibilityLabel={legendOpen ? "Ocultar leyenda" : "Ver leyenda"}
       >
         <Text style={styles.legendToggleText}>{legendOpen ? "Ocultar leyenda" : "Ver leyenda"}</Text>
-        <Ionicons
-          name="chevron-down"
-          size={12}
-          color={Colors.textSecondary}
-          style={{ transform: [{ rotate: legendOpen ? "180deg" : "0deg" }] }}
-        />
+        <Animated.View style={chevron.style}>
+          <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
+        </Animated.View>
       </AnimatedPressable>
 
       {legendOpen && (

@@ -1,35 +1,11 @@
 import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
-import { Duration, Ease } from "@/constants/motion";
+import { useExpandChevron } from "@/hooks/use-expand-chevron";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, useState } from "react";
-import {
-  Dimensions,
-  LayoutAnimation,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  UIManager,
-  View,
-} from "react-native";
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import type { HomeView, Tone } from "./view-model";
-
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-/** `Presets.easeInEaseOut` rebuilt at `base`, which is the whole reason it is
- * spelled out: the preset runs 300ms, so the card's height and the chevron above
- * it used to disagree by 100ms on the same tap. Same create/delete fades. */
-const BREAKDOWN_TRANSITION = {
-  duration: Duration.base,
-  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-  update: { type: LayoutAnimation.Types.easeInEaseOut },
-  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-};
 
 type Props = {
   return: HomeView["return"];
@@ -47,12 +23,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
     width: number;
   } | null>(null);
   const anchorRef = useRef<View>(null);
-  const rotation = useSharedValue(0);
-  // Only the height change has to ask. `withTiming` consults the system setting
-  // by itself and jumps the chevron straight to its end angle; `LayoutAnimation`
-  // is a legacy RN API with no such wiring, so left alone it would go on
-  // animating the breakdown open for someone who asked for no motion.
-  const reduceMotion = useReducedMotion();
+  const chevron = useExpandChevron(open);
   // Dim, not fill: by the app's own rule a fill is for a row that must separate
   // itself from siblings on one surface, and this header has none - it is a
   // single object, and the whole of it is the button.
@@ -60,10 +31,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
   const tipPress = usePressDim();
 
   const toggle = () => {
-    if (!reduceMotion) {
-      LayoutAnimation.configureNext(BREAKDOWN_TRANSITION);
-    }
-    rotation.value = withTiming(open ? 0 : 180, { duration: Duration.base, easing: Ease.standard });
+    chevron.animate();
     setOpen((o) => !o);
   };
 
@@ -77,10 +45,6 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
       setTip({ top: y + height + 8, left, width: bubbleWidth });
     });
   };
-
-  const chevronStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
 
   // A withheld figure carries no tone: there is no gain or loss to color.
   const totalColor = ret.total === null ? Colors.textSecondary : toneColor(ret.tone);
@@ -118,7 +82,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
         </View>
         <View style={styles.toggle}>
           <Text style={styles.toggleLabel}>{open ? "Ocultar" : "Ver desglose"}</Text>
-          <Animated.View style={chevronStyle}>
+          <Animated.View style={chevron.style}>
             <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
           </Animated.View>
         </View>
