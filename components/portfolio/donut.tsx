@@ -1,3 +1,7 @@
+import { useEffect } from "react";
+import Animated, { useAnimatedProps, useSharedValue, withTiming } from "react-native-reanimated";
+
+import { Duration, Ease } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import type { GestureResponderEvent } from "react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -38,6 +42,59 @@ function arcPath(startDeg: number, endDeg: number): string {
   const end = polar(endDeg);
   const largeArc = endDeg - startDeg > 180 ? 1 : 0;
   return `M ${start.x} ${start.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+}
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+type ArcSpec = {
+  key: string;
+  color: string;
+  startDeg: number;
+  sweepDeg: number;
+  full: boolean;
+  selected: boolean;
+  dimmed: boolean;
+};
+
+/**
+ * One arc and the two states it moves between. Selecting used to change three
+ * things in a single frame - this arc thickening by 5, every other arc dropping
+ * to 0.28, and the centre readout swapping - which reads as the ring being
+ * redrawn rather than as it answering.
+ *
+ * Two values rather than one because there are three states, not two: an arc
+ * can be selected, dimmed by someone else's selection, or neither.
+ */
+function Arc({ arc }: { arc: ArcSpec }) {
+  const selected = useSharedValue(arc.selected ? 1 : 0);
+  const dimmed = useSharedValue(arc.dimmed ? 1 : 0);
+
+  useEffect(() => {
+    selected.value = withTiming(arc.selected ? 1 : 0, { duration: Duration.base, easing: Ease.standard });
+    dimmed.value = withTiming(arc.dimmed ? 1 : 0, { duration: Duration.base, easing: Ease.standard });
+  }, [arc.selected, arc.dimmed, selected, dimmed]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeWidth: THICKNESS + selected.value * SELECTED_EXTRA,
+    opacity: 1 - dimmed.value * (1 - DIM_OPACITY),
+  }));
+
+  if (arc.full) {
+    return (
+      <AnimatedCircle cx={CENTER} cy={CENTER} r={RADIUS} fill="none" stroke={arc.color} animatedProps={animatedProps} />
+    );
+  }
+
+  const inset = Math.min(GAP_DEG / 2, arc.sweepDeg / 2 - 0.01);
+  return (
+    <AnimatedPath
+      d={arcPath(arc.startDeg + inset, arc.startDeg + arc.sweepDeg - inset)}
+      fill="none"
+      stroke={arc.color}
+      animatedProps={animatedProps}
+    />
+  );
 }
 
 type Props = {
@@ -97,35 +154,9 @@ export function Donut({ segments, selectedKey, onSelect, centerTop, centerTopCol
     <View style={styles.wrap}>
       <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
         {/* Visible arcs, inset by half the gap on each side. */}
-        {arcs.map((arc) => {
-          const width = arc.selected ? THICKNESS + SELECTED_EXTRA : THICKNESS;
-          const opacity = arc.dimmed ? DIM_OPACITY : 1;
-          if (arc.full) {
-            return (
-              <Circle
-                key={arc.key}
-                cx={CENTER}
-                cy={CENTER}
-                r={RADIUS}
-                fill="none"
-                stroke={arc.color}
-                strokeWidth={width}
-                opacity={opacity}
-              />
-            );
-          }
-          const inset = Math.min(GAP_DEG / 2, arc.sweepDeg / 2 - 0.01);
-          return (
-            <Path
-              key={arc.key}
-              d={arcPath(arc.startDeg + inset, arc.startDeg + arc.sweepDeg - inset)}
-              fill="none"
-              stroke={arc.color}
-              strokeWidth={width}
-              opacity={opacity}
-            />
-          );
-        })}
+        {arcs.map((arc) => (
+          <Arc key={arc.key} arc={arc} />
+        ))}
       </Svg>
       <View style={styles.center} pointerEvents="none">
         <View style={styles.centerInner}>
