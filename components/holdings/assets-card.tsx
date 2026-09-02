@@ -3,7 +3,10 @@ import { Fragment } from "react";
 import type { HoldingRow, Tone } from "./row";
 import { StyleSheet, Text, View } from "react-native";
 
+import Animated, { LinearTransition } from "react-native-reanimated";
+
 import { AnimatedPressable, usePressFill } from "@/components/ui/press-feedback";
+import { Duration } from "@/constants/motion";
 
 type Props = {
   holdings: HoldingRow[];
@@ -23,7 +26,10 @@ const toneColor = (tone: Tone) => (tone === "negative" ? Colors.negative : Color
  * last (the view-models order them). Cash never appears here. */
 export function AssetsCard({ holdings, onPressHolding, stat }: Props) {
   return (
-    <View style={styles.card}>
+    // Sits under both expanding cards - Rendimiento total on Inicio and
+    // Distribucion on Portafolio - so without this it snaps down the height they
+    // just spent 200ms growing.
+    <Animated.View style={styles.card} layout={LinearTransition.duration(Duration.base)}>
       <View style={styles.header}>
         <Text style={styles.title}>Mis Activos</Text>
         {stat !== undefined && (
@@ -43,7 +49,7 @@ export function AssetsCard({ holdings, onPressHolding, stat }: Props) {
           <HoldingRowView holding={h} onPress={() => onPressHolding?.(h.ticker)} />
         </Fragment>
       ))}
-    </View>
+    </Animated.View>
   );
 }
 

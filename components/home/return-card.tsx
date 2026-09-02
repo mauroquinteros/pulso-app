@@ -1,10 +1,11 @@
 import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { Duration } from "@/constants/motion";
 import { useExpandChevron } from "@/hooks/use-expand-chevron";
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, useState } from "react";
 import { Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import type { HomeView, Tone } from "./view-model";
 
 type Props = {
@@ -50,8 +51,10 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
   const totalColor = ret.total === null ? Colors.textSecondary : toneColor(ret.tone);
 
   return (
-    <View style={styles.card}>
-      <AnimatedPressable onPress={toggle} style={[styles.header, headerPress.style]} {...headerPress.handlers}>
+    // `layout` is what actually animates the expansion: the card's own height
+    // changes when the breakdown mounts, and nothing else was moving it.
+    <Animated.View style={styles.card} layout={LinearTransition.duration(Duration.base)}>
+      <AnimatedPressable onPress={toggle} style={styles.header} {...headerPress.handlers}>
         <View>
           <View style={styles.titleRow}>
             <View style={styles.dot} />
@@ -80,12 +83,15 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
               ))}
           </View>
         </View>
-        <View style={styles.toggle}>
+        {/* The whole header stays the target - it is a large, easy one - but only
+            this dims. Fading the hero figure to acknowledge a tap costs more
+            than the acknowledgement is worth. */}
+        <Animated.View style={[styles.toggle, headerPress.style]}>
           <Text style={styles.toggleLabel}>{open ? "Ocultar" : "Ver desglose"}</Text>
           <Animated.View style={chevron.style}>
             <Ionicons name="chevron-down" size={12} color={Colors.textSecondary} />
           </Animated.View>
-        </View>
+        </Animated.View>
       </AnimatedPressable>
 
       <View style={styles.bridge}>
@@ -103,7 +109,11 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
       </View>
 
       {open && (
-        <View style={styles.breakdown}>
+        <Animated.View
+          style={styles.breakdown}
+          entering={FadeIn.duration(Duration.base)}
+          exiting={FadeOut.duration(Duration.press)}
+        >
           {ret.components.map((c) => {
             const color = c.value === null ? Colors.textSecondary : toneColor(c.tone);
             return (
@@ -130,7 +140,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
             );
           })}
           <Text style={styles.footnote}>Los componentes suman el rendimiento total</Text>
-        </View>
+        </Animated.View>
       )}
 
       <Modal transparent visible={!!tip} animationType="fade" onRequestClose={() => setTip(null)}>
@@ -142,7 +152,7 @@ export function ReturnCard({ return: ret, withheldLabel }: Props) {
           )}
         </Pressable>
       </Modal>
-    </View>
+    </Animated.View>
   );
 }
 

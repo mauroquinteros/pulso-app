@@ -1,8 +1,9 @@
 import { AnimatedPressable, usePressDim } from "@/components/ui/press-feedback";
+import { Duration } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { useExpandChevron } from "@/hooks/use-expand-chevron";
 import { Ionicons } from "@expo/vector-icons";
-import Animated from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Donut } from "./donut";
@@ -33,7 +34,7 @@ export function DistributionCard({ distribution }: Props) {
   const centerBottom = selectedRow ? selectedRow.amount : "Total";
 
   return (
-    <View style={styles.card}>
+    <Animated.View style={styles.card} layout={LinearTransition.duration(Duration.base)}>
       <Text style={styles.title}>Distribución</Text>
 
       <View style={styles.donutWrap}>
@@ -72,13 +73,17 @@ export function DistributionCard({ distribution }: Props) {
       </AnimatedPressable>
 
       {legendOpen && (
-        <View style={styles.legend}>
+        <Animated.View
+          style={styles.legend}
+          entering={FadeIn.duration(Duration.base)}
+          exiting={FadeOut.duration(Duration.press)}
+        >
           {legend.map((row) => (
             <LegendRow key={row.key} row={row} selected={selectedKey === row.key} onPress={() => toggle(row.key)} />
           ))}
-        </View>
+        </Animated.View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
