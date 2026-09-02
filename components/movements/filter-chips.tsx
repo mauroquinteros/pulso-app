@@ -53,8 +53,13 @@ function Chip({ chip, onPress }: { chip: MovementChip; onPress: () => void }) {
     selected.value = withTiming(chip.selected ? 1 : 0, { duration: Duration.base, easing: Ease.standard });
   }, [chip.selected, selected]);
 
+  // Resolved here, on the JS thread. `useAnimatedStyle` runs its body as a
+  // worklet on the UI thread, and a plain function called from inside one
+  // throws at runtime - `clear` uses a regex and is not workletized.
+  const bgClear = clear(bg);
+
   const skin = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(selected.value, [0, 1], [clear(bg), bg]),
+    backgroundColor: interpolateColor(selected.value, [0, 1], [bgClear, bg]),
     borderColor: interpolateColor(selected.value, [0, 1], [Colors.border, color]),
   }));
   const labelSkin = useAnimatedStyle(() => ({
