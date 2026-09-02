@@ -1,6 +1,9 @@
 import { Colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
+import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
+
+import { Duration } from "@/constants/motion";
 
 /**
  * Inicio's banner for a Quote refresh that failed: the prices stay on screen and
@@ -30,7 +33,14 @@ import { StyleSheet, Text, View } from "react-native";
  */
 export function RefreshFailedBanner() {
   return (
-    <View style={styles.banner}>
+    // Both are up-side animations, which is the symmetry this wants: it arrives
+    // from the edge it lives against and leaves the same way. Neither asks about
+    // reduce motion - Reanimated's builders default to `ReduceMotion.System`.
+    <Animated.View
+      style={styles.banner}
+      entering={FadeInUp.duration(Duration.enter)}
+      exiting={FadeOutUp.duration(Duration.base)}
+    >
       <Ionicons
         name="cloud-offline-outline"
         size={15}
@@ -39,7 +49,7 @@ export function RefreshFailedBanner() {
         importantForAccessibility="no"
       />
       <Text style={styles.text}>No pudimos actualizar los precios</Text>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -4,11 +4,13 @@ import { RefreshFailedBanner } from "@/components/home/refresh-failed-banner";
 import { ReturnCard } from "@/components/home/return-card";
 import { buildHomeView, showsRefreshFailed } from "@/components/home/view-model";
 import { WorthCard } from "@/components/home/worth-card";
+import { Duration } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStocksStore } from "@/stores/stocks";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -29,9 +31,15 @@ export default function HomeScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HomeHeader />
         {refreshFailed && <RefreshFailedBanner />}
-        <WorthCard worth={view.worth} note={view.priceNote} withheldLabel={view.withheldLabel} />
-        <ReturnCard return={view.return} withheldLabel={view.withheldLabel} />
-        {/* The label is deliberately the breakdown row's vocabulary, not this
+        {/* One wrapper rather than `layout` on each card, because only one thing
+            moves: the banner mounting shifts this whole block down by its own
+            height, and without a layout transition the three cards jumped the
+            46pt in a single frame. The wrapper carries no style, so it changes
+            nothing about how the cards sit. */}
+        <Animated.View layout={LinearTransition.duration(Duration.enter)}>
+          <WorthCard worth={view.worth} note={view.priceNote} withheldLabel={view.withheldLabel} />
+          <ReturnCard return={view.return} withheldLabel={view.withheldLabel} />
+          {/* The label is deliberately the breakdown row's vocabulary, not this
             card's: the same figure prints as "No realizado" one card above, and
             sharing the noun is what makes the two read as one object. It is
             spelled out in full here because, unlike the breakdown, this card has
@@ -41,15 +49,16 @@ export default function HomeScreen() {
             Rendimiento total's is Peak Contributions, so printing both invited a
             part-bigger-than-whole reading with nothing on screen to resolve it.
             The rows keep their percentage, which is self-contained. */}
-        <AssetsCard
-          holdings={view.assets.holdings}
-          onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
-          stat={{
-            label: "Rendimiento no realizado",
-            value: view.assets.netPnl ?? view.withheldLabel,
-            tone: view.assets.netPnl === null ? null : view.assets.netPnlTone,
-          }}
-        />
+          <AssetsCard
+            holdings={view.assets.holdings}
+            onPressHolding={(ticker) => router.push(`/stock/${ticker}`)}
+            stat={{
+              label: "Rendimiento no realizado",
+              value: view.assets.netPnl ?? view.withheldLabel,
+              tone: view.assets.netPnl === null ? null : view.assets.netPnlTone,
+            }}
+          />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
