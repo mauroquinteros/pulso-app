@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/movements/empty-state";
@@ -8,6 +9,7 @@ import { FilterChips } from "@/components/movements/filter-chips";
 import { FilteredEmpty } from "@/components/movements/filtered-empty";
 import { MovementRow, MovementSeparator } from "@/components/movements/movement-row";
 import { buildMovementsView } from "@/components/movements/view-model";
+import { Duration } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { useMovementsStore } from "@/stores/movements";
 import type { MovementType } from "@/types/models";
@@ -38,7 +40,12 @@ export default function MovementsScreen() {
 
       {view.state === "ready" && (
         // Virtualized: movements grow without bound, unlike holdings.
-        <FlatList
+        <Animated.FlatList
+          // The rows slide to their new places instead of the list being
+          // replaced under the finger. Chosen over remounting the list on the
+          // filter, which would have cost the scroll position and flashed the
+          // card empty between the two sets.
+          itemLayoutAnimation={LinearTransition.duration(Duration.base)}
           style={styles.list}
           contentContainerStyle={styles.card}
           data={view.rows}
