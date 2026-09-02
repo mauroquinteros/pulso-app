@@ -1,7 +1,13 @@
+import { Duration } from "@/constants/motion";
 import { Colors, Gradients } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { StyleSheet, Text, View } from "react-native";
 import type { HomeView } from "./view-model";
+
+/** Its root is a gradient, so it cannot take `layout` the way the other cards
+ * do - they are plain Views. */
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 type Props = {
   worth: HomeView["worth"];
@@ -14,7 +20,13 @@ type Props = {
 
 export function WorthCard({ worth, note, withheldLabel }: Props) {
   return (
-    <LinearGradient colors={Gradients.card} start={{ x: 0.37, y: 0.02 }} end={{ x: 0.63, y: 0.98 }} style={styles.card}>
+    <AnimatedLinearGradient
+      colors={Gradients.card}
+      start={{ x: 0.37, y: 0.02 }}
+      end={{ x: 0.63, y: 0.98 }}
+      style={styles.card}
+      layout={LinearTransition.duration(Duration.base)}
+    >
       <Text style={styles.label}>Valor total</Text>
       <Text style={[styles.value, worth.total === null && styles.valueWithheld, note !== null && styles.valueTight]}>
         {worth.total ?? withheldLabel}
@@ -49,7 +61,7 @@ export function WorthCard({ worth, note, withheldLabel }: Props) {
         </View>
         <Text style={[styles.amount, { color: Colors.accent }]}>{worth.cash.amount}</Text>
       </View>
-    </LinearGradient>
+    </AnimatedLinearGradient>
   );
 }
 
