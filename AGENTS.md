@@ -75,15 +75,15 @@ This applies to subagents too. An agent you spawn inherits this rule, and you ma
 
 **Not covered:** anything that lives in the repo. A dependency added to `package.json`, or an `npm install` of something already declared there, is an ordinary code change — it shows up in the diff and gets reviewed like everything else.
 
-Why the split: a `brew install` appears in no diff, passes through no review, and is not undone by `git checkout`. The repo can be inspected at any time; the machine cannot. So the cost of a wrong call is borne by the user, silently, long after the task is finished.
-
 A legitimate need is still not authorization. `deno` was once installed to type-check the Edge Functions, which `tsc` genuinely cannot do (see the `exclude` note in `tsconfig.json`). The reasoning was sound and the tool was the only option — and it was still the user's call to make, not the agent's.
 
 ## 6. Check the Backlog Before Reporting a Bug
 
 **Known debt is not a discovery.**
 
-Before you report a bug, propose a fix, or add a "while I was here" finding to a review, read `.scratch/tech-debt/backlog.md`. Several of this app's rough edges are already found, diagnosed and deliberately deferred, with the reasoning and the intended approach written down. Re-raising one as new costs the user the same conversation a second time, and it buries the entries that really are unresolved.
+Read `docs/tech-debt/backlog.md` **before the sentence leaves your mouth** — not before you file the entry. By the time the user has read "I found a problem with X" and answered "save that", the duplicate conversation has already happened, and finding the entry afterwards does not give it back. The same applies to proposing a fix, or adding a "while I was here" finding to a review.
+
+This bites hardest on an **incidental** find — a bug noticed while doing something else, which is exactly when stopping to check feels like a detour. Check anyway. Several of this app's rough edges are already found, diagnosed and deliberately deferred, with the reasoning and the intended approach written down. Re-raising one as new costs the user the same conversation a second time, and it buries the entries that really are unresolved.
 
 - **Already there?** Reference the entry. Do not restate its argument — say which one it is and move on.
 - **Fixing one?** Tick its box in the file's _Open items_ index and update its `Status:` line, in the same commit as the fix.
@@ -128,7 +128,7 @@ Reopen this only when a second write path appears — an edit screen, a bulk imp
 
 ### Issue tracker
 
-Issues and PRDs live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+Issues and PRDs live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`. **PRDs are written by the `to-prd` skill, not by hand**. Same for `to-issues` and issues. Knowing where the file goes is not the same as knowing what belongs in it; the skill holds the second half.
 
 ### Triage labels
 
