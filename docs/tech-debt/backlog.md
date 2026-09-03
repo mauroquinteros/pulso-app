@@ -19,6 +19,7 @@ the box is the at-a-glance answer to "is this still true?".
 - [x] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
 - [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
 - [ ] [The sign-in button is painted with the divider token](#the-sign-in-button-is-painted-with-the-divider-token) - design (visual hierarchy)
+- [ ] [A dividend can be saved for a symbol nobody confirmed](#a-dividend-can-be-saved-for-a-symbol-nobody-confirmed) - design (unenforced assumption)
 
 ---
 
@@ -332,3 +333,37 @@ above. Anything else means not presenting it as a Google button.
 8% white state layer over the base, no longer a `scale 0.97`. If the surface colour ever
 changes, that layer changes with it - Material puts the layer in white over dark
 surfaces and black over light, so it is derived from the fill, never independent of it.
+
+---
+
+## A dividend can be saved for a symbol nobody confirmed
+
+**Type:** design (unenforced assumption) · **Status:** backlog · **Raised:** 2026-09-02
+
+**Problem.** Three documents state that a dividend's ticker was already confirmed by an
+earlier buy — ADR 0009 scopes confirmation to buys, `resolve-stock`'s header says a
+dividend "presupposes the buy that already confirmed the symbol, so it does not call
+this", and `CONTEXT.md` deliberately declines to gate a dividend against a **Holding**.
+Nothing enforces the premise. The form's only symbol check is that the field is
+non-empty (`dividend-view-model.ts`), so `APPL` — or any string — saves. The other two
+forms do gate: a buy on a confirmed symbol status, a sell on available shares.
+
+**What it costs.** Not a wrong total. The money is real and lands correctly: **Cash**
+rises, **Net Dividends** counts it, and the portfolio's **Total Return** is right. The
+damage is attribution. The typo'd ticker derives no **Holding** (`shares` is 0, so the
+valuation skips it), which by the terms of *A fully exited position disappears from the
+app* makes it unreachable in the UI — while the ticker it was meant for is now short
+that dividend in its **Total Return of a stock**, with nothing on screen accounting for
+the gap.
+
+**Why it was deferred.** Found while designing `user_stocks` (ADR 0015), not while
+working on dividends. It also decided something there and should be read alongside it:
+the membership trigger skips a ticker it cannot find in `stocks` **silently**, and this
+form is the reason that path is reachable at all rather than theoretical.
+
+**Approach (when picked up).** Do **not** call `resolve-stock` from this form. The right
+gate needs no network call: a dividend can only belong to a ticker the **Perfil** has
+movements in, and `CONTEXT.md` already fixes the rule as *ever traded*, not *currently
+held* — "one can land for a ticker already sold in full, so nothing gates it against a
+Holding". That set is exactly what `user_stocks` holds, and it is already in the store
+by the time the form renders.
