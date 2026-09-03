@@ -233,7 +233,7 @@ From the user's perspective:
   "Guardar y agregar otro" is deliberately not built (see Out of Scope).
 - **The save lifecycle is copied, not shared — deliberately.** This is its third copy, and the
   buy slice said the third form was where a shared module should earn its place. Deferred so
-  this slice touches no working form, and recorded in `.scratch/tech-debt/backlog.md`, whose
+  this slice touches no working form, and recorded in `docs/tech-debt/backlog.md`, whose
   trigger is the next form after this one. That entry, not a closed issue, is now the standing
   record.
 

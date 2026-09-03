@@ -124,7 +124,7 @@ título de tab suelto sobre el fondo).
 - Nombre: **21px**, peso fuerte, `textPrimary` — el tamaño del `ScreenHeader`.
 - Correo: **13px**, `textSecondary` — el tamaño del `searchText` del Home.
 - **No se introduce ningún `fontSize` nuevo**, por la deuda de type-scale sprawl
-  ya registrada en `.scratch/tech-debt/backlog.md`.
+  ya registrada en `docs/tech-debt/backlog.md`.
 
 ### El botón "Cerrar sesión"
 

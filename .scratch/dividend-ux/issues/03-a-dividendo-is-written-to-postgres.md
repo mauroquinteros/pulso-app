@@ -47,7 +47,7 @@ shared movement deps.
 planned, and recorded in the ADR 0009 amendment. The form's one gate remains tax <= gross.
 
 **This is the third copy of the save lifecycle, and sharing it is deliberately deferred** so
-this slice touches no working form. The standing record is in `.scratch/tech-debt/backlog.md`,
+this slice touches no working form. The standing record is in `docs/tech-debt/backlog.md`,
 whose trigger is the next form after this one.
 
 ## Acceptance criteria

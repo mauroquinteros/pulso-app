@@ -125,7 +125,7 @@ La jerarquia (grande/primario arriba, chico/apagado abajo) ya comunica la relaci
 **Tamanos:** se reusan los que ya existen — 21px del `ScreenHeader`
 (`components/ui/screen-header.tsx`) y 13px del `searchText` del Home
 (`components/home/home-header.tsx`). **Cero `fontSize` nuevos**, por la deuda de
-type-scale sprawl anotada en `.scratch/tech-debt/backlog.md`.
+type-scale sprawl anotada en `docs/tech-debt/backlog.md`.
 
 ### 3.3 Boton "Cerrar sesion"
 

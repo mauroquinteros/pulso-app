@@ -52,7 +52,7 @@ arriba, chico/apagado abajo) ya comunica la relación.
 Los tres tamaños ya existen en el repo: el 28/800/-0.6 del título es el de los
 otros tabs, el 21 del nombre es el del `ScreenHeader`, el 13 del correo es el del
 buscador del Home. **No se introduce ningún `fontSize` nuevo** — la deuda de
-type-scale sprawl ya está registrada en `.scratch/tech-debt/backlog.md`.
+type-scale sprawl ya está registrada en `docs/tech-debt/backlog.md`.
 
 ### El botón "Cerrar sesión"
 

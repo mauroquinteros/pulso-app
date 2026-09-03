@@ -45,7 +45,7 @@ export function cashImpact(movement: Movement): number {
  * What this does NOT reconcile: an impact landing on an exact half-cent. `round2`
  * rounds those toward +Infinity while the display rounds them away from zero, so
  * the row and the ledger can still differ by a cent there. Pre-existing, tracked in
- * .scratch/tech-debt/backlog.md.
+ * docs/tech-debt/backlog.md.
  */
 export function computeCash(movements: Movement[]): number {
   return round2(movements.reduce((sum, m) => sum + round2(cashImpact(m)), 0));
