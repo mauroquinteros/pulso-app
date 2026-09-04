@@ -65,6 +65,12 @@ interface StockRow {
   quoted_at: string;
 }
 
+/** A `user_stocks` row with its Stock nested - how PostgREST returns a to-one
+ * embed, and an object rather than an array because `stock_id` points at one. */
+interface StockLinkRow {
+  stocks: StockRow;
+}
+
 /** Why the select did not arrive. Carried so one fault can be told from another:
  * a 401 is a session that has gone bad and a 0 is a request that never left the
  * phone. Nothing renders it - it exists so a fault has a name. */
@@ -80,12 +86,17 @@ export interface StocksFailure {
 export type StocksAnswer = { ok: true; stocks: Record<string, Stock> } | { ok: false; failure: StocksFailure };
 
 /**
- * Every Stock the database can price, whoever is asking.
+ * Every Stock this Perfil has Movements in, priced.
  *
- * No ticker filter, deliberately: held tickers are derived from the History, so
- * filtering to them would make this read wait for that one, and a failed History
- * would cost the prices too (ADR 0011). A Stock is shared and the RLS policy
- * already says so - `using (true)`, with no owner column to scope by.
+ * The scoping is the join and not a ticker list: `user_stocks` is written by the
+ * database as a Movement is saved (ADR 0015), so Postgres does the filtering and
+ * the read stays one request that waits for nothing - in particular it does not
+ * wait for the History, which is the cost ADR 0011 refused to pay for a filter. A
+ * Stock is still shared and owned by nobody; membership records which Stocks a
+ * Perfil needs priced.
+ *
+ * A Perfil who has recorded nothing gets an empty map, which is an ordinary first
+ * session rather than a failure.
  *
  * The filter is on the price, and it is what makes a Quote non-optional above
  * this line. An unpriced Stock is not an error and not a special case: it is
@@ -117,9 +128,9 @@ function settled(answer: StocksAnswer): StocksAnswer {
 /** One pass at the table. */
 async function attemptRead(): Promise<StocksAnswer> {
   const { data, error, status } = await supabase
-    .from("stocks")
-    .select("ticker, name, price, quoted_at")
-    .not("price", "is", null);
+    .from("user_stocks")
+    .select("stocks!inner(ticker, name, price, quoted_at)")
+    .not("stocks.price", "is", null);
 
   if (error) {
     const failure = { status, code: error.code ?? null, message: error.message };
@@ -133,7 +144,7 @@ async function attemptRead(): Promise<StocksAnswer> {
   }
 
   const stocks: Record<string, Stock> = {};
-  for (const row of data) stocks[row.ticker] = mapStockRow(row);
+  for (const row of data as unknown as StockLinkRow[]) stocks[row.stocks.ticker] = mapStockRow(row.stocks);
 
   trace("read ok:", { priced: data.length });
 

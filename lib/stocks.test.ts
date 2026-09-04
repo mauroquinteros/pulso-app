@@ -40,7 +40,7 @@ vi.mock("@/lib/supabase", () => ({
 const appleRow = { ticker: "AAPL", name: "Apple Inc.", price: 313.33, quoted_at: "2026-08-07T20:00:00Z" };
 const vooRow = { ticker: "VOO", name: "Vanguard S&P 500 ETF", price: 710.71, quoted_at: "2026-08-07T20:00:00Z" };
 
-const ok = (rows: unknown[]): Result => ({ data: rows, error: null, status: 200 });
+const ok = (rows: unknown[]): Result => ({ data: rows.map((s) => ({ stocks: s })), error: null, status: 200 });
 const clockSkew: Result = { data: null, error: { message: "JWT issued at future", code: "PGRST303" }, status: 401 };
 const revoked: Result = { data: null, error: { message: "JWT expired", code: "PGRST301" }, status: 401 };
 
