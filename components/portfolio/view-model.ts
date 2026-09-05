@@ -1,8 +1,7 @@
-import { byMarketValueDesc, buildHoldingRow, toneOf, type HoldingRow, type Tone } from "@/components/holdings/row";
+import { buildHoldingRow, byMarketValueDesc, type HoldingRow } from "@/components/holdings/row";
 import { Colors, HoldingBadgePalette } from "@/constants/theme";
 import type { Portfolio, ValuedHolding } from "@/types/models";
 import { formatSignedUSD, formatUSD } from "@/utils/format";
-
 
 /** Links a segment to its legend row by color: a segment's position index into
  * the palette, or one of the two reserved colors. */
@@ -35,7 +34,6 @@ export interface LegendRow {
   amount: string; // center readout when selected via the legend
   negative: boolean; // red treatment for a negative-cash row
 }
-
 
 export interface PortfolioView {
   state: "empty" | "ready"; // empty → CTA screen, no cards
