@@ -43,7 +43,6 @@
           "backgroundColor": "#0A0E27"
         }
       ],
-      "expo-secure-store",
       "@react-native-community/datetimepicker",
       [
         "@react-native-google-signin/google-signin",
