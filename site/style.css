@@ -1,0 +1,475 @@
+/* Palette, type and radii are the app's own, lifted from constants/theme.ts and
+   app/_layout.tsx. Dark only, because app.json pins userInterfaceStyle to dark:
+   a light mode here would be a face the product does not have. */
+:root {
+  color-scheme: dark;
+
+  --bg: #0a0e27;
+  --surface: #111638;
+  --border: #1c224d;
+  --card-top: #141a42;
+  --card-bottom: #0f1433;
+
+  --accent: #00e5cc;
+  --accent-bright: #4fe9d6;
+  --accent-ink: #04211e;
+
+  --text: #ffffff;
+  --text-bright: #e8eaf2;
+  --text-light: #c5c9da;
+  --text-secondary: #8e8e93;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    "Manrope",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-bright);
+}
+
+/* The landing page is one screenful: the hero takes the slack so the closing
+   wave sits on the fold rather than just past it. */
+.home {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.home .hero {
+  flex-grow: 1;
+}
+
+.home .wave {
+  margin-top: auto;
+}
+
+/* Nav ---------------------------------------------------------------- */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 64px;
+}
+
+.nav--ruled {
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+}
+
+.brand img {
+  width: 34px;
+  height: 34px;
+}
+
+.brand span {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-light);
+}
+
+/* Hero --------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 62px 24px 0;
+}
+
+/* One restrained glow behind the headline, the accent at low alpha. */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -340px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1100px, 160vw);
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 229, 204, 0.13), rgba(0, 229, 204, 0));
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 15px 7px 12px;
+  border: 1px solid rgba(0, 229, 204, 0.28);
+  border-radius: 999px;
+  background: rgba(0, 229, 204, 0.07);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+
+.pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.hero h1 {
+  margin: 30px 0 0;
+  max-width: 900px;
+  font-size: clamp(2.375rem, 5.4vw, 4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+}
+
+.lead {
+  margin: 26px 0 0;
+  max-width: 660px;
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  line-height: 1.68;
+  color: var(--text-light);
+  text-wrap: pretty;
+}
+
+.sub {
+  margin: 18px 0 0;
+  max-width: 620px;
+  font-size: clamp(0.9375rem, 1.2vw, 1rem);
+  line-height: 1.65;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 38px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  background: var(--accent-bright);
+  color: var(--accent-ink);
+}
+
+.btn-ghost {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-bright);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--text-bright);
+}
+
+.note {
+  margin: 26px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* The mark's own waveform, stretched into a closing band. */
+.wave {
+  display: block;
+  width: 100%;
+  /* Scales with the viewport so the band lands on the fold instead of just
+     past it; preserveAspectRatio="none" lets it stretch. */
+  height: clamp(88px, 14vh, 180px);
+  margin-top: 56px;
+  flex-shrink: 0;
+}
+
+/* Policy page -------------------------------------------------------- */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 24px 96px;
+}
+
+.page h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.meta {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.page h2 {
+  margin: 52px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page p {
+  margin: 18px 0 0;
+  font-size: 17px;
+  line-height: 1.72;
+  color: var(--text-light);
+  text-wrap: pretty;
+}
+
+.page .intro {
+  margin-top: 40px;
+  font-size: 18px;
+}
+
+/* Table -------------------------------------------------------------- */
+
+.table-wrap {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(165deg, var(--card-top), var(--card-bottom));
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+}
+
+th {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 229, 204, 0.05);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+}
+
+td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-light);
+  vertical-align: top;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td:first-child {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* "Que no hacemos" cards --------------------------------------------- */
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-light);
+}
+
+.facts svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.facts strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Contact, lifted out of the run of sections: it is the one thing on the
+   policy page a reader may need to act on. */
+.contact {
+  margin-top: 56px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--card-top), var(--card-bottom));
+}
+
+.contact h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.contact p {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.contact a {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Footer ------------------------------------------------------------- */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 64px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.footer a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+}
+
+.footer a:hover {
+  color: var(--text-light);
+}
+
+/* Narrow screens ----------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .nav,
+  .footer {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .nav {
+    padding-top: 22px;
+    padding-bottom: 22px;
+  }
+
+  .nav-links {
+    gap: 20px;
+  }
+
+  .hero {
+    align-items: flex-start;
+    text-align: left;
+    padding: 40px 22px 0;
+  }
+
+  .actions {
+    justify-content: stretch;
+    width: 100%;
+    margin-top: 30px;
+  }
+
+  .actions .btn {
+    flex-grow: 1;
+  }
+
+  .page {
+    padding: 48px 22px 72px;
+  }
+
+  .contact {
+    padding: 24px;
+  }
+
+  .wave {
+    margin-top: 40px;
+  }
+}
