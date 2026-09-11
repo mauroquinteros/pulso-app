@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.mauroquinteros.pulso",
       "appleTeamId": "297MPWT757",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
