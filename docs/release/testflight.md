@@ -1,6 +1,6 @@
 # Shipping an iOS build to TestFlight
 
-How a build of this app gets from a clean checkout to a tester's phone. Written after doing it for the first time on 2026-09-05, so it records the traps that cost time, not just the happy path.
+How a build of this app gets from a clean checkout to a tester's phone. Written after doing it for the first time on 2026-09-05, so it records the traps that cost time, not just the happy path. Extended on 2026-09-10, when the first public link went out and the Google consent screen turned out to be a release of its own.
 
 **The route is a local Xcode archive, not EAS Build.** That choice matters more than it looks, and the reason is the environment variables - see
 [Environment variables](#environment-variables). If someone later moves this to EAS or to CI, most of this document still applies, but that section and [Code signing](#3-code-signing-and-why-a-physical-device-is-needed) change completely.
@@ -157,15 +157,58 @@ Also in this section: **Privacy Policy URL** is required, **User Privacy Choices
 
 **Internal** - up to 100 App Store Connect users, no Apple review, available as soon as the build finishes processing. TestFlight -> INTERNAL TESTING -> **+**, create a group, add testers, attach the build. Email invitations only; there is no shareable link.
 
-**External** - up to 10,000 testers, and the only path to a **public link**.
-Requires a _Beta App Description_ (Apple's one required Test Information field), then Beta App Review, then the group's Public Link can be enabled. A build expires 90 days after upload.
+**External** - up to 10,000 testers, and the only path to a **public link**. A group's type is fixed when it is created and cannot be converted, so the external group is a _second_ group beside the internal one, not a setting on it. The same build can sit in both, which is the useful arrangement: the internal group works the moment processing ends, and a build only reaches the external group - and therefore Beta App Review - once it is worth someone else's time.
+
+### Test Information
+
+Filled once under TestFlight -> Test Information, and shared by every external build.
+
+**Beta App Description** is the field App Store Connect marks required, but for external testing the **Sign-In Information** fields become required too. The description is shown to testers _and_ read by Beta App Review; write it for the reviewer, in English even though the UI is Spanish, and say so in it - a reviewer who is not expecting Spanish wastes time or files a confused rejection. Say plainly that the app connects to no bank or broker and moves no money, because a finance app that does not say so invites questions about its regulatory status.
+
+**Sign-In Information** is not optional here. Google is the only login, and a reviewer who cannot get past `app/(auth)/sign-in.tsx` rejects with "unable to review". Apple's own tooltip covers the case: _"If users sign in using social media, provide information for an account we can use."_
+
+That account wants care, because it is a real Google login performed from Apple's network:
+
+- **Dedicated, never personal** - the password goes to Apple as plain text in a form.
+- **Seeded with movements of every type.** A reviewer who lands on an empty home screen cannot find the features the description promises.
+
+### The public link
+
+EXTERNAL TESTING -> **+** to create the group, then its Builds tab -> **+** to attach the build, which is what submits it to Beta App Review. Once a build in the group is approved, the group's **Public Link** section yields `https://testflight.apple.com/join/<code>`. The tester limit shown there is the one set when the link was enabled, and raises to 10,000 under _Manage_.
+
+A build expires **90 days after upload**. The link itself survives; installs stop working, because nothing valid sits behind it.
+
+## The sign-in screen is a second release
+
+The part with no warning signs, and the reason this document grew. A build can be approved, the public link live and the app installable, while every tester still stalls at the login - because the Google consent screen has its own publishing state, in a different console, that nothing in App Store Connect mentions.
+
+`console.cloud.google.com/auth/audience` carries a **Publishing status** of _Testing_ or _In production_. In Testing, only addresses on that page's own **Test users** list get past the consent screen; everyone else is refused with `Access blocked`. Survivable while the testers are people you can list by hand. A public link is by definition people you cannot, so it requires _In production_.
+
+That list is the _whole_ of what publishing buys here. Testing mode also expires Google refresh tokens after seven days, and most accounts of it warn that testers will be silently logged out every week - which is not true of this app and is not a reason to publish.
+
+### What publishing requires
+
+Google will not publish a consent screen whose **Branding** page is incomplete, and complete includes a **privacy policy link** - the screen faces the public, so the public is told where the policy is. That link's domain has to be listed in **Authorized domains**, and a domain gets there only once Google Search Console says you control it. Otherwise an app could display a bank's domain on a screen carrying Google's name.
+
+This looks solved when it is not: the Supabase domain is _already_ in Authorized domains, because Google adds the domain of an OAuth client's redirect URI automatically. The first domain added by hand is the one that teaches you about Search Console.
+
+Verifying it: add the site as a **URL prefix** property and choose the **HTML tag** method, then put the tag in the page's `<head>`. Prefer the tag to the file - the file Google hands you is a single line of plain text under an `.html` name, which any formatter in the repo will cheerfully rewrite. The tag stays in the page permanently; Google re-checks, and an unverified domain takes the consent screen down with it.
+
+The policy for this app lives in its own repo, deployed at `https://pulso-finances.vercel.app`, with the policy at `/privacy`. Separate from this repo because it is an Astro site.
+
+### Verification, and why the logo is not worth it
+
+Non-sensitive scopes need no verification, and this app only has those: `lib/google-sign-in.ts` configures `iosClientId` and nothing else, so it gets the library defaults, `email` and `profile`. An unverified app on those scopes runs in production normally, with no interstitial.
+
+Uploading a **logo** to the Branding page is what puts the project into brand verification, independently of scopes. And brand verification asks a different question from Search Console - not who controls the site, but who the domain is **registered** to. `vercel.app` is registered to Vercel, so it answers _"The website of your home page URL is not registered to you"_, and no amount of Search Console verification changes that. The only fixes are to drop the logo or to buy a domain.
+
+Nothing breaks in the meantime. The Audience page keeps a yellow _"Your app requires verification"_ banner, sign-in works, testers are unaffected. The banner governs whether the logo is displayed, not whether the app runs.
 
 ## Still open
 
 - **Guideline 4.8.** `app/(auth)/sign-in.tsx` offers Google as the only sign-in. Apple requires an equivalent privacy-preserving option - in practice Sign in with Apple - for apps using third-party login. Does not block internal testing; can surface in Beta App Review; **does** block App Store release.
-- **Google Cloud consent screen.** If the OAuth consent screen is still in _Testing_ mode, only listed test users can sign in. Testers would install the build and stall at the login. Check before inviting anyone.
-- **Beta App Review sign-in credentials.** With Google as the only login, the reviewer needs working credentials in _Sign-in required_. Google frequently blocks logins from unfamiliar locations, which fails the review. Same root cause as Guideline 4.8.
-- **Privacy policy URL.** Needed for App Privacy and for release. Must be publicly reachable without a login.
+- **In-app account deletion.** Guideline 5.1.1(v): an app that lets accounts be created must let them be deleted from inside it. `app/(tabs)/settings.tsx` offers only "Cerrar sesión", whose own comment is explicit that nothing is destroyed. Not a TestFlight blocker; an automatic App Store rejection, and reviewers check it directly. The schema keeps it small - every user-owned table is `ON DELETE CASCADE` from `auth.users`, so deleting the auth user empties the Perfil - which makes the work one Edge Function holding `service_role` to call `auth.admin.deleteUser`, shaped like `resolve-stock`, plus a destructive entry in Ajustes.
+- **Beta App Review sign-in credentials.** A dedicated review account now exists, but the fragility does not go away: Google can challenge a login from an unfamiliar location, and there is nothing to do about it from this side when it happens.
 
 ## Verification commands
 
