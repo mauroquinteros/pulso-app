@@ -70,6 +70,31 @@ describe("useStocksStore", () => {
     expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
   });
 
+  it("a read answering after a confirmation keeps the Stock it confirmed", () => {
+    // The race the merge exists for. The read fires on the tabs mounting and a
+    // símbolo can be confirmed while it is still in flight; its answer cannot
+    // carry that Stock, because `user_stocks` links a ticker only when its
+    // Movement is inserted (ADR 0015). Replacing the map deleted the Quote the
+    // app had just fetched and the new Holding read "sin precio".
+    useStocksStore.getState().stockConfirmed(voo);
+
+    stocksInHand({ AAPL: apple });
+
+    expect(useStocksStore.getState().status).toBe("ready");
+    expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple, VOO: voo });
+  });
+
+  it("a read wins over what is held for every ticker it does carry", () => {
+    // Merging must not make the map stale: the read is authoritative for the
+    // Stocks it returns, and only fills in around the ones it does not.
+    const stale: Stock = { ...apple, quote: { price: 100.0, quotedAt: "2026-02-01T21:00:00Z" } };
+    useStocksStore.getState().stockConfirmed(stale);
+
+    stocksInHand({ AAPL: apple });
+
+    expect(useStocksStore.getState().stocks).toEqual({ AAPL: apple });
+  });
+
   it("a confirmed Stock joins the map without displacing the ones already held", () => {
     stocksInHand({ AAPL: apple });
 

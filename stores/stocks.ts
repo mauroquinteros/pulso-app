@@ -65,8 +65,7 @@ export const initialStocksState: StocksData = { status: "unread", stocks: {} };
 export const useStocksStore = create<StocksState>((set) => ({
   ...initialStocksState,
 
-  // The only thing that moves the status, and the only thing that replaces the
-  // map wholesale. A failed read keeps the Stocks, and
+  // The only thing that moves the status. A failed read keeps the Stocks, and
   // that is the whole of "a failed refresh is not an absence": the app holds
   // Quotes and could not find out whether newer ones exist. Hiding them would
   // report a fault as an absence. Saying nothing would present them as current,
@@ -77,7 +76,23 @@ export const useStocksStore = create<StocksState>((set) => ({
   // wrong, so it is thrown away before it is re-read, while a map of Quotes is
   // simply a map of Quotes. Here that costs no code at all: nothing runs when a
   // read starts.
-  answerRead: (answer) => set(answer.ok ? { status: "ready", stocks: answer.stocks } : { status: "failed" }),
+  //
+  // A successful read MERGES rather than replaces, and the reason is a race it
+  // used to lose. The read fires on the tabs mounting, a confirmation puts a
+  // Stock straight into the map (ADR 0013), and a slow read answering after one
+  // carried a map that could not contain it - `user_stocks` links a ticker only
+  // when its Movement is inserted (ADR 0015), so a symbol confirmed and not yet
+  // saved is absent by construction. Replacing therefore deleted the Quote the
+  // app had just fetched, and the buy it was fetched for read "Sin precio".
+  //
+  // Merging cannot keep a Quote that should have gone: a read omits a held
+  // ticker only if its link disappeared or its price went null, and neither is
+  // reachable - nothing deletes a link, and both writers skip rather than blank
+  // a price. The read still wins for every ticker it does carry.
+  answerRead: (answer) =>
+    set((state) =>
+      answer.ok ? { status: "ready", stocks: { ...state.stocks, ...answer.stocks } } : { status: "failed" },
+    ),
 
   // Adds one Stock and deliberately does NOT touch `status`. The guarantee above
   // - that nothing can unsay a failure before another answer lands - is what
