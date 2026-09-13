@@ -1,0 +1,37 @@
+{
+  "name": "screenshots",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.523",
+    "@remotion/google-fonts": "4.0.523",
+    "@remotion/media": "4.0.523",
+    "@remotion/tailwind-v4": "4.0.523",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.523",
+    "tailwindcss": "4.0.0"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.523",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc",
+    "screenshots": "remotion still inicio out/01-inicio.png && remotion still portafolio out/02-portafolio.png && remotion still detalle out/03-detalle.png && remotion still movimientos out/04-movimientos.png && remotion still nuevo out/05-nuevo.png",
+    "promo": "remotion render promo out/promo.mp4"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}
