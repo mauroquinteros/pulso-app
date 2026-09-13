@@ -25,6 +25,12 @@
       "skillPath": "skills/react-native-best-practices/SKILL.md",
       "computedHash": "15bd57b18d9ad0dcd003bd2c7ec6ed17d813cc671dd4d423e1d904d2a7b9d2bb"
     },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion-best-practices/SKILL.md",
+      "computedHash": "84a509cf9b8c4ea6a42acd4b7bb71d68a23a3a4343457da31b8446d941b379e0"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
