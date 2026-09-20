@@ -8,7 +8,7 @@ import type {
   WithdrawalMovement,
 } from "@/types/models";
 import { describe, expect, it } from "vitest";
-import { buildMovementsView } from "./view-model";
+import { buildMovementsView, movementConfirmLine } from "./view-model";
 
 let seq = 0;
 const base = (executionDate: string, createdAt?: string) => ({
@@ -209,5 +209,38 @@ describe("buildMovementsView", () => {
   it("reads a row as one sentence, in the order the layout stacks it", () => {
     const view = buildMovementsView([buy("AAPL", 100, 4.4786, 0, "2025-01-15")], null);
     expect(view.rows[0].a11yLabel).toBe("Compra AAPL, 15 ene 2025, $447.86");
+  });
+
+  it("marks only the row whose delete is in flight", () => {
+    const first = buy("AAPL", 100, 4.4786, 0, "2025-01-15");
+    const second = withdrawal(500, 1, "2026-01-08");
+
+    const view = buildMovementsView([first, second], null, first.id);
+
+    expect(view.rows.map((r) => ({ id: r.id, deleting: r.deleting }))).toEqual([
+      { id: second.id, deleting: false },
+      { id: first.id, deleting: true },
+    ]);
+  });
+
+  it("marks no row when nothing is being deleted", () => {
+    const view = buildMovementsView([buy("AAPL", 100, 4.4786), withdrawal(500, 1)], null);
+    expect(view.rows.every((r) => !r.deleting)).toBe(true);
+  });
+});
+
+describe("movementConfirmLine", () => {
+  it("names the movement the alert is about to destroy", () => {
+    expect(movementConfirmLine(buy("AAPL", 100, 4.4786, 0, "2025-01-15"))).toBe("Compra AAPL - 15 ene 2025 - $447.86");
+  });
+
+  it("names a cash movement without a phantom ticker", () => {
+    expect(movementConfirmLine(withdrawal(500, 1, "2026-01-08"))).toBe("Retiro - 8 ene 2026 - $500.00");
+  });
+
+  it("separates with ASCII hyphens, never a lookalike", () => {
+    const line = movementConfirmLine(withdrawal(500, 1, "2026-01-08"));
+    expect(line).not.toContain("\u2212"); // U+2212
+    expect(line).not.toContain("\u2014"); // U+2014
   });
 });

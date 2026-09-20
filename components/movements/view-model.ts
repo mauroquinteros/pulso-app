@@ -19,6 +19,19 @@ export interface MovementRow {
   a11yLabel: string;
 }
 
+/**
+ * A row of the Movimientos tab: a `MovementRow` plus the one fact only this
+ * screen has, which is whether this row's delete is in flight.
+ *
+ * It is a flag on the data rather than a comparison in the component on purpose.
+ * "Dimmed, spinner instead of the amount, and not touchable" is a description of
+ * a row, so the view-model is where it is decided; a component that derived it
+ * from an id it was handed would be holding a rule nothing tests.
+ */
+export interface MovementsRow extends MovementRow {
+  deleting: boolean;
+}
+
 export interface MovementsView {
   /** `empty` = no movements at all (CTA screen). `filtered-empty` = there are
    * movements, none of the selected type. Conflating the two is the classic
@@ -26,7 +39,7 @@ export interface MovementsView {
   state: "empty" | "filtered-empty" | "ready";
   chips: MovementChip[]; // [] when state is "empty" — nothing to filter
   filteredEmptyMessage: string | null; // "No tienes retiros"
-  rows: MovementRow[];
+  rows: MovementsRow[];
 }
 
 /** Newest first: `executionDate` desc, `createdAt` desc to break same-day ties.
@@ -81,7 +94,12 @@ export const movementConfirmLine = (movement: Movement): string =>
  * derivable from the type, and green/red in Pulso mean gain/loss — a buy is
  * neither.
  */
-export function buildMovementsView(movements: Movement[], selectedType: MovementType | null): MovementsView {
+export function buildMovementsView(
+  movements: Movement[],
+  selectedType: MovementType | null,
+  /** The id whose delete is waiting on the database, if any. */
+  deletingId: string | null = null,
+): MovementsView {
   if (movements.length === 0) {
     return { state: "empty", chips: [], filteredEmptyMessage: null, rows: [] };
   }
@@ -117,7 +135,7 @@ export function buildMovementsView(movements: Movement[], selectedType: Movement
         amount: formatUSD(Math.abs(cashImpact(movement))),
         type: movement.type,
       };
-      return { ...row, a11yLabel: movementA11yLabel(row) };
+      return { ...row, a11yLabel: movementA11yLabel(row), deleting: movement.id === deletingId };
     }),
   };
 }

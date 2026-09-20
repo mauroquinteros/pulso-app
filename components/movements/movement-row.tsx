@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { AnimatedPressable, usePressFill } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
@@ -19,17 +19,25 @@ import type { MovementRow as Row } from "./view-model";
  *   line, under the amount: the arrow qualifies the price it compares, not the
  *   money, and the two figures share a right edge so they read as a column
  *   against the price at the top of the screen. The tab passes neither.
+ *
+ * `deleting` runs the other way - the tab passes it and the stock detail never
+ * does, because only the tab can delete. While it is set the row stays exactly
+ * where it is, dimmed and untouchable, and the spinner takes the amount's place
+ * rather than sitting beside it: a figure and a progress indicator in one row
+ * would say the delete is both done and not done.
  */
 export function MovementRow({
   row,
   onPress,
   buyTone,
   price,
+  deleting,
 }: {
   row: Row;
   onPress?: () => void;
   buyTone?: "up" | "down" | "neutral" | null;
   price?: string | null;
+  deleting?: boolean;
 }) {
   const meta = MOVEMENT_TYPE_META[row.type];
   const marked = buyTone === "up" || buyTone === "down";
@@ -37,11 +45,13 @@ export function MovementRow({
   const press = usePressFill();
   return (
     <AnimatedPressable
-      style={[styles.row, press.style]}
+      style={[styles.row, press.style, deleting && styles.deleting]}
       {...press.handlers}
       onPress={onPress}
+      disabled={deleting}
       accessibilityRole="button"
       accessibilityLabel={row.a11yLabel}
+      accessibilityState={{ disabled: deleting, busy: deleting }}
     >
       <View style={[styles.badge, { backgroundColor: meta.bg }]}>
         <Ionicons name={meta.icon} size={18} color={meta.color} />
@@ -51,7 +61,11 @@ export function MovementRow({
         <Text style={styles.date}>{row.dateLabel}</Text>
       </View>
       <View style={styles.right}>
-        <Text style={styles.amount}>{row.amount}</Text>
+        {deleting ? (
+          <ActivityIndicator size="small" color={Colors.negative} accessibilityLabel="Eliminando movimiento" />
+        ) : (
+          <Text style={styles.amount}>{row.amount}</Text>
+        )}
         {price !== null && price !== undefined && (
           <View style={styles.priceRow}>
             {marked && <Text style={[styles.arrow, { color: markColor }]}>{buyTone === "up" ? "↑" : "↓"}</Text>}
@@ -80,6 +94,9 @@ const styles = StyleSheet.create({
     marginHorizontal: -10,
     paddingHorizontal: 10,
     borderRadius: 12,
+  },
+  deleting: {
+    opacity: 0.45,
   },
   badge: {
     width: 40,
