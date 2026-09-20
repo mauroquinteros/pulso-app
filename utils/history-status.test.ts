@@ -83,6 +83,45 @@ describe("historyReducer", () => {
     }
   });
 
+  it("a deleted Movement leaves the History in hand", () => {
+    const ready = read(initialHistoryState, [deposit, savedDeposit]);
+
+    const removed = historyReducer(ready, { type: "movementDeleted", id: deposit.id });
+
+    expect(removed).toEqual({ status: "ready", readId: 1, movements: [savedDeposit] });
+    // Immutably, for the same reason the save's append is: the array the engine
+    // already derived a Portfolio from is not rewritten underneath it.
+    expect(removed.movements).not.toBe(ready.movements);
+    expect(ready.movements).toEqual([deposit, savedDeposit]);
+  });
+
+  it("drops a deleted Movement in any status but ready", () => {
+    for (const state of [initialHistoryState, reading, failed()]) {
+      expect(historyReducer(state, { type: "movementDeleted", id: deposit.id })).toBe(state);
+    }
+  });
+
+  it("deleting an id the History does not hold changes nothing at all", () => {
+    // `toBe`, not `toEqual`: the observable difference between "ignored" and
+    // "recomputed to the same thing" is identity, and a rebuilt array is a new
+    // input for the engine to derive a Portfolio from.
+    const ready = read();
+
+    expect(historyReducer(ready, { type: "movementDeleted", id: savedDeposit.id })).toBe(ready);
+  });
+
+  it("deleting the only Movement leaves a ready, empty History rather than a fault", () => {
+    // The same distinction the reducer already defends for a Perfil who has
+    // recorded nothing: an empty History is a legitimate History.
+    const ready = read();
+
+    expect(historyReducer(ready, { type: "movementDeleted", id: deposit.id })).toEqual({
+      status: "ready",
+      readId: 1,
+      movements: [],
+    });
+  });
+
   it("Reintentar returns to unread, which is what starts a fresh read", () => {
     const retried = historyReducer(failed(), { type: "forgotten" });
 

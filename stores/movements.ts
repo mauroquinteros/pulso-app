@@ -21,6 +21,12 @@ interface MovementsState extends HistoryState {
   lastSavedTicker: string | null;
   /** Consumes the cue, so it plays once and not again on the next mount. */
   savedHighlightShown: () => void;
+  /**
+   * A Movement Postgres has deleted leaves the History. Same guard as its
+   * sibling above, and never optimistic: this is called once the database has
+   * answered, not when the user confirms (ADR 0010).
+   */
+  movementDeleted: (id: string) => void;
   /** Marks a read as begun and hands back its id, to be quoted in the answer. */
   startRead: () => number;
   answerRead: (readId: number, answer: HistoryAnswer) => void;
@@ -51,6 +57,7 @@ export const useMovementsStore = create<MovementsState>((set, get) => ({
       lastSavedTicker: "ticker" in movement ? movement.ticker : null,
     })),
   savedHighlightShown: () => set({ lastSavedTicker: null }),
+  movementDeleted: (id) => set((state) => historyReducer(state, { type: "movementDeleted", id })),
   startRead: () => {
     const next = historyReducer(get(), { type: "readStarted" });
     set(next);

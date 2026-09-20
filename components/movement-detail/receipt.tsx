@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { MOVEMENT_TYPE_META } from "@/constants/movement-type";
 import { Colors } from "@/constants/theme";
 import type { DetailLine, MovementDetailView } from "./view-model";
@@ -59,6 +60,51 @@ export function Receipt({
         <Text style={styles.totalLabel}>{total.label}</Text>
         <Text style={styles.totalAmount}>{total.amount}</Text>
       </View>
+    </View>
+  );
+}
+
+/**
+ * The receipt's destructive control. It hangs BELOW the total rather than beside
+ * it: the total is the receipt's conclusion and stays anchored to the bottom of
+ * the screen, so the one thing that can undo the whole document sits under its
+ * own rule, outside the figures.
+ *
+ * Deliberately not an icon in the header. A trash glyph up there is one
+ * mis-aimed tap away from the back button, and it would say nothing about what
+ * it deletes; a labelled button says both.
+ *
+ * While the delete is in flight the label answers and the spinner takes the
+ * icon's place - they never share the row, so the control has one meaning at a
+ * time - and the button stops accepting taps rather than queueing a second
+ * delete behind the first.
+ */
+export function DeleteMovementButton({ deleting, onPress }: { deleting: boolean; onPress: () => void }) {
+  const press = usePressScale(0.97);
+  return (
+    <View style={styles.deleteWrap}>
+      <AnimatedPressable
+        style={[styles.deleteButton, press.style, deleting && styles.deleting]}
+        {...press.handlers}
+        onPress={onPress}
+        disabled={deleting}
+        accessibilityRole="button"
+        accessibilityLabel="Eliminar movimiento"
+        accessibilityState={{ disabled: deleting }}
+      >
+        {deleting ? (
+          <ActivityIndicator size="small" color={Colors.negative} />
+        ) : (
+          <Ionicons
+            name="trash-outline"
+            size={19}
+            color={Colors.negative}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+        )}
+        <Text style={styles.deleteLabel}>{deleting ? "Eliminando..." : "Eliminar movimiento"}</Text>
+      </AnimatedPressable>
     </View>
   );
 }
@@ -144,6 +190,33 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.textPrimary,
     fontVariant: ["tabular-nums"],
+  },
+  /** Its own rule, quieter than the total's: this is a footer under the receipt,
+   * not another line of it. */
+  deleteWrap: {
+    marginTop: 12,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#12173A",
+  },
+  deleteButton: {
+    height: 52, // comfortably past the 44pt minimum, at full width
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    backgroundColor: "rgba(255,82,82,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,82,82,0.34)",
+  },
+  deleting: {
+    opacity: 0.55,
+  },
+  deleteLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.negative,
   },
   notFound: {
     flex: 1,

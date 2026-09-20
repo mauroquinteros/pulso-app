@@ -7,8 +7,8 @@ import {
   type TradeRow,
 } from "@/lib/movement-rows";
 import { supabase } from "@/lib/supabase";
-import type { Movement, NewMovement } from "@/types/models";
-import type { HistoryAnswer, SaveAnswer } from "@/utils/history-status";
+import type { Movement, MovementType, NewMovement } from "@/types/models";
+import type { DeleteAnswer, HistoryAnswer, SaveAnswer } from "@/utils/history-status";
 
 /**
  * The only file that reads and writes the movement tables. It hides the database
@@ -81,6 +81,20 @@ interface Destination {
   table: TableName;
   row: Record<string, string | number>;
   map: RowMapper;
+}
+
+/**
+ * Which of the three tables holds a Movement of this type - the whole of ADR
+ * 0006's storage split, and nothing else.
+ *
+ * Split out of `destinationFor` below because a delete needs the table and
+ * nothing more: it has no row to write and no answer to map back, so asking for
+ * a whole `Destination` would mean building a row Postgres will never see.
+ */
+function tableFor(type: MovementType): TableName {
+  if (type === "buy" || type === "sell") return "movement_trades";
+  if (type === "dividend") return "movement_dividends";
+  return "movement_cash";
 }
 
 /**
@@ -232,7 +246,7 @@ function settledSave(answer: SaveAnswer): SaveAnswer {
 function destinationFor(movement: NewMovement): Destination {
   if (movement.type === "buy") {
     return {
-      table: "movement_trades",
+      table: tableFor(movement.type),
       row: {
         id: movement.id,
         type: movement.type,
@@ -252,7 +266,7 @@ function destinationFor(movement: NewMovement): Destination {
 
   if (movement.type === "sell") {
     return {
-      table: "movement_trades",
+      table: tableFor(movement.type),
       row: {
         id: movement.id,
         type: movement.type,
@@ -277,7 +291,7 @@ function destinationFor(movement: NewMovement): Destination {
 
   if (movement.type === "dividend") {
     return {
-      table: "movement_dividends",
+      table: tableFor(movement.type),
       row: {
         id: movement.id,
         // No `type` column, deliberately. That table holds one kind of Movement
@@ -297,7 +311,7 @@ function destinationFor(movement: NewMovement): Destination {
   }
 
   return {
-    table: "movement_cash",
+    table: tableFor(movement.type),
     row: {
       id: movement.id,
       type: movement.type,
@@ -378,4 +392,67 @@ async function readSavedMovement(id: string, table: TableName, map: RowMapper): 
   trace("read back the row already stored:", { id: saved.id, createdAt: saved.createdAt });
 
   return { ok: true, movement: saved };
+}
+
+/**
+ * Removes one Movement, permanently. The mirror of `saveMovement`: one function
+ * for all five types, with the type -> table decision inside it beside the
+ * mappers that already encode it (ADR 0006).
+ *
+ * The resulting History is not revalidated, here or anywhere above. Deleting the
+ * deposit that funded a buy leaves Cash negative and that is accepted - the
+ * record is the account the user keeps of their own money (ADR 0007).
+ *
+ * Retried once on a newborn token for the same reason a save is, and safely: the
+ * rule below makes a repeat of a delete that already landed answer `ok` rather
+ * than inventing a failure out of a row that is gone precisely because the first
+ * attempt worked.
+ */
+export async function deleteMovement(movement: Movement): Promise<DeleteAnswer> {
+  const first = await attemptDelete(movement);
+
+  if (first.ok || first.failure.code !== CLOCK_DISAGREEMENT) return settledDelete(first);
+
+  trace("token dated ahead of the server's clock, deleting again:", { after: RETRY_AFTER_MS });
+  await pause(RETRY_AFTER_MS);
+
+  return settledDelete(await attemptDelete(movement));
+}
+
+/** The delete's half of `settled`, for the same reason. */
+function settledDelete(answer: DeleteAnswer): DeleteAnswer {
+  if (!answer.ok) fault("delete failed:", answer.failure);
+  return answer;
+}
+
+/** One pass at the delete. */
+async function attemptDelete(movement: Movement): Promise<DeleteAnswer> {
+  const table = tableFor(movement.type);
+
+  // Deleting a row that is no longer there is a success, not a failure - the
+  // sibling of the duplicate-id branch in `attemptSave`. It arrived in the same
+  // world a delete that removed something does: the Movement does not exist.
+  //
+  // The rule is kept by what is NOT asked for. PostgREST reports no error for a
+  // statement that matched nothing, so as long as nothing here counts the rows
+  // removed, a second delete and a first one are one answer. Asking for a count
+  // and refusing on 0 would invite the user to retry over nothing, and to doubt a
+  // delete that did happen.
+  const { error, status } = await supabase.from(table).delete().eq("id", movement.id);
+
+  if (error) {
+    // Every reason travels with the refusal, exactly as it does for a read and a
+    // save: a policy refusal and a dropped packet must not arrive as one value.
+    const failure = { table, status, code: error.code ?? null, message: error.message };
+
+    // Traced rather than faulted: the caller above decides whether this attempt
+    // was the final answer.
+    trace("delete attempt failed:", failure);
+
+    return { ok: false, failure };
+  }
+
+  trace("deleted:", { id: movement.id, type: movement.type, table });
+
+  return { ok: true };
 }

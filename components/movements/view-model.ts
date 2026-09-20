@@ -58,6 +58,18 @@ export const movementA11yLabel = (
 ): string => [parts.title, parts.dateLabel, parts.amount, mark].filter(Boolean).join(", ");
 
 /**
+ * What the destructive alert names, so the user can see which Movement they are
+ * about to delete for good: "Compra AAPL - 15 ene 2025 - $447.86".
+ *
+ * The same three fields as the row, joined by ASCII hyphens rather than commas,
+ * and shared for the same reason: both places that can delete a Movement open
+ * this alert, and two copies of a sentence naming what is about to be destroyed
+ * is two chances for them to name it differently.
+ */
+export const movementConfirmLine = (movement: Movement): string =>
+  [titleOf(movement), formatDate(movement.executionDate), formatUSD(Math.abs(cashImpact(movement)))].join(" - ");
+
+/**
  * Pure view-model for the Movements screen: turns the raw Movement list into a
  * display-ready view — ordered, filtered, formatted, with every degenerate
  * state as declarative data. The components render this verbatim and hold no

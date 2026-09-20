@@ -66,6 +66,15 @@ export type HistoryAnswer = { ok: true; movements: Movement[] } | { ok: false; f
  */
 export type SaveAnswer = { ok: true; movement: Movement } | { ok: false; failure: HistoryFailure };
 
+/**
+ * What a delete can come back as. The success carries nothing, which is the one
+ * place it departs from `SaveAnswer`: a save hands back the Movement that joins
+ * the History, and a delete has no object to hand back at all - the caller
+ * already holds the id it asked to remove. One failure, since a delete touches
+ * one table.
+ */
+export type DeleteAnswer = { ok: true } | { ok: false; failure: HistoryFailure };
+
 export interface HistoryState {
   status: HistoryStatus;
   /**
@@ -84,6 +93,7 @@ export type HistoryEvent =
   | { type: "readStarted" }
   | { type: "answered"; readId: number; answer: HistoryAnswer }
   | { type: "movementSaved"; movement: Movement }
+  | { type: "movementDeleted"; id: string }
   | { type: "forgotten" };
 
 export const initialHistoryState: HistoryState = { status: "unread", readId: 0, movements: [] };
@@ -115,6 +125,20 @@ export function historyReducer(state: HistoryState, event: HistoryEvent): Histor
       if (state.status !== "ready") return state;
 
       return { ...state, movements: [...state.movements, event.movement] };
+
+    case "movementDeleted":
+      // The mirror of the rule above, and it is here for the same reason: this
+      // reducer is the only writer of `movements`. Outside `ready` there is no
+      // History to remove anything from, and a removal during `reading` would be
+      // overwritten by the answer already in flight.
+      if (state.status !== "ready") return state;
+
+      // An id that is not in hand is a no-op returning the *same* state, not a
+      // rebuilt one holding an equal array: `filter` would hand the engine a new
+      // array to derive a Portfolio from for a History that did not change.
+      if (!state.movements.some((m) => m.id === event.id)) return state;
+
+      return { ...state, movements: state.movements.filter((m) => m.id !== event.id) };
 
     case "forgotten":
       // One event for two callers, because they ask for the same thing: throw
