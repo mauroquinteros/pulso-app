@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    ::-webkit-scrollbar{width:0;height:0;}
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+    .chipsRow::-webkit-scrollbar{display:none;}
+    a{color:#4FE9D6;}
+    a:hover{color:#7BF0E1;}
+    @keyframes bannerIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes alertIn{from{opacity:0;transform:scale(1.08);}to{opacity:1;transform:scale(1);}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</helmet>
+<div style="min-height:100vh;width:100%;background:#070A1C;display:flex;align-items:center;justify-content:center;padding:48px;font-family:'Manrope',system-ui,sans-serif;">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+    <div onClick="{{ onBackdropTap }}" style="min-height:874px;background:#0A0E27;padding:56px 0 36px;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+
+      <!-- SCREEN TITLE -->
+      <div style="padding:12px 20px 14px;">
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.6px;">Movimientos</div>
+      </div>
+
+      <!-- CHIPS ROW -->
+      <sc-if value="{{ showChips }}" hint-placeholder-val="{{ true }}">
+      <div class="chipsRow" style="display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+          <div onClick="{{ c.onClick }}" role="button" aria-label="{{ c.label }}" style="flex:none;height:36px;padding:0 16px;border-radius:9999px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;font-size:13px;font-weight:700;white-space:nowrap;background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }};transition:background .15s,color .15s,border-color .15s;">{{ c.label }}</div>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <!-- LIST AREA -->
+      <div onScroll="{{ onListScroll }}" style="flex:1;padding:0 16px;display:flex;flex-direction:column;overflow-y:auto;">
+
+        <!-- REAL EMPTY -->
+        <sc-if value="{{ isRealEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 20px 60px;animation:fadeUp .26s ease-out;">
+          <svg width="112" height="112" viewBox="0 0 120 120" fill="none" style="margin-bottom:18px;">
+            <rect x="30" y="18" width="60" height="84" rx="10" stroke="#2A3163" stroke-width="2.5"></rect>
+            <path d="M42 40h36M42 54h36M42 68h24" stroke="#2A3163" stroke-width="2.5" stroke-linecap="round"></path>
+            <circle cx="90" cy="90" r="16" fill="#111638" stroke="#3B4380" stroke-width="2.5"></circle>
+            <path d="M90 83v14M83 90h14" stroke="#4FE9D6" stroke-width="2.5" stroke-linecap="round"></path>
+          </svg>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;">Todavía no hay movimientos</div>
+          <div style="font-size:13px;color:#8E8E93;line-height:1.5;max-width:240px;margin-bottom:20px;">Cuando compres, vendas o muevas efectivo, aparecerá acá.</div>
+          <div onClick="{{ goAddMovement }}" style="height:44px;padding:0 22px;border-radius:9999px;background:linear-gradient(135deg,#00E5CC,#1C9C8F);color:#04211E;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;">Agregar movimiento</div>
+        </div>
+        </sc-if>
+
+        <!-- FILTERED EMPTY -->
+        <sc-if value="{{ isFilteredEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 20px 60px;animation:fadeUp .26s ease-out;">
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;">{{ filteredEmptyMessage }}</div>
+          <div onClick="{{ clearFilter }}" style="margin-top:6px;font-size:14px;font-weight:700;color:#4FE9D6;cursor:pointer;">Quitar filtro</div>
+        </div>
+        </sc-if>
+
+        <!-- READY LIST -->
+        <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#111638;border:1px solid #1C224D;border-radius:20px;padding:4px 0;margin-bottom:16px;overflow:hidden;">
+          <sc-for list="{{ rows }}" as="m" hint-placeholder-count="5">
+            <div style="position:relative;overflow:hidden;max-height:{{ m.maxH }};opacity:{{ m.rowOpacity }};transition:max-height .2s ease-out,opacity .16s ease-out;">
+
+              <!-- DESTRUCTIVE PANEL (lives inside the card, clipped by radius 20) -->
+              <div onClick="{{ m.onAskDelete }}" role="button" aria-label="Eliminar movimiento" style="position:absolute;top:0;right:0;bottom:0;width:88px;background:#FF5252;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#0A0E27;cursor:pointer;user-select:none;">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9.5 7V4.9a.9.9 0 0 1 .9-.9h3.2a.9.9 0 0 1 .9.9V7"></path><path d="M6.6 7l.85 12.15a1 1 0 0 0 1 .85h7.1a1 1 0 0 0 1-.85L17.4 7"></path><path d="M10.4 11v6M13.6 11v6"></path></svg>
+                <span style="font-size:11px;font-weight:800;letter-spacing:0.2px;">Eliminar</span>
+              </div>
+
+              <!-- ROW CONTENT (slides left) -->
+              <div onPointerDown="{{ m.onDown }}" onPointerMove="{{ m.onMove }}" onPointerUp="{{ m.onUp }}" onPointerCancel="{{ m.onUp }}" style="position:relative;background:#111638;padding:0 18px;transform:translateX({{ m.tx }}px);transition:{{ m.txTransition }};touch-action:pan-y;">
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:{{ m.borderTop }};cursor:pointer;opacity:{{ m.contentOpacity }};transition:opacity .18s ease-out;">
+                  <div style="width:40px;height:40px;border-radius:12px;background:{{ m.badgeBg }};display:flex;align-items:center;justify-content:center;color:{{ m.badgeColor }};flex:none;">
+                    <sc-if value="{{ m.isBuy }}" hint-placeholder-val="{{ false }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                    </sc-if>
+                    <sc-if value="{{ m.isSell }}" hint-placeholder-val="{{ false }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+                    </sc-if>
+                    <sc-if value="{{ m.isDividend }}" hint-placeholder-val="{{ false }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle></svg>
+                    </sc-if>
+                    <sc-if value="{{ m.isDeposit }}" hint-placeholder-val="{{ false }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>
+                    </sc-if>
+                    <sc-if value="{{ m.isWithdrawal }}" hint-placeholder-val="{{ false }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path></svg>
+                    </sc-if>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:15px;font-weight:700;color:#fff;">{{ m.title }}</div>
+                    <div style="font-size:12px;color:#8E8E93;margin-top:2px;">{{ m.dateLabel }}</div>
+                  </div>
+                  <sc-if value="{{ m.isDeleting }}" hint-placeholder-val="{{ false }}">
+                    <div role="status" aria-label="Eliminando movimiento" style="width:18px;height:18px;border-radius:9999px;border:2px solid rgba(255,82,82,0.25);border-top-color:#FF5252;animation:spin .7s linear infinite;flex:none;"></div>
+                  </sc-if>
+                  <sc-if value="{{ m.showAmount }}" hint-placeholder-val="{{ true }}">
+                    <div class="mono" style="font-size:15px;font-weight:700;color:#E8EAF2;flex:none;">{{ m.amount }}</div>
+                  </sc-if>
+                </div>
+              </div>
+
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+      </div>
+
+      <!-- ERROR BANNER (same language as refresh-failed-banner) -->
+      <sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:16px;right:16px;top:60px;background:rgba(255,82,82,0.14);border:1px solid rgba(255,82,82,0.42);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;animation:bannerIn .22s ease-out;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF5252" stroke-width="1.8" stroke-linecap="round" style="flex:none;"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v6M12 16.5h.01"></path></svg>
+        <span style="font-size:13px;font-weight:700;color:#FF8A8A;">No se pudo eliminar. Intenta de nuevo.</span>
+      </div>
+      </sc-if>
+
+      <!-- NATIVE iOS ALERT -->
+      <sc-if value="{{ showAlert }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;">
+        <div role="alertdialog" style="width:270px;border-radius:14px;background:rgba(40,40,44,0.94);backdrop-filter:blur(20px);overflow:hidden;animation:alertIn .18s ease-out;">
+          <div style="padding:19px 16px 15px;text-align:center;">
+            <div style="font-size:17px;font-weight:600;color:#fff;letter-spacing:-0.2px;">¿Eliminar este movimiento?</div>
+            <sc-if value="{{ alertHasBody }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:13px;font-weight:400;color:#fff;margin-top:5px;line-height:1.35;">{{ alertBody }}</div>
+            </sc-if>
+          </div>
+          <div style="display:flex;border-top:0.5px solid rgba(84,84,88,0.65);">
+            <div onClick="{{ onCancelDelete }}" role="button" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#0A84FF;cursor:pointer;border-right:0.5px solid rgba(84,84,88,0.65);">Cancelar</div>
+            <div onClick="{{ onConfirmDelete }}" role="button" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:400;color:#FF453A;cursor:pointer;">Eliminar</div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;demoState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Fila deslizada&quot;,&quot;options&quot;:[&quot;Fila cerrada&quot;,&quot;Fila deslizada&quot;,&quot;Confirmando&quot;,&quot;Eliminando&quot;,&quot;Error al eliminar&quot;,&quot;Ultimo movimiento eliminado&quot;,&quot;Ultimo de su tipo eliminado&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;alertVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Con cuerpo&quot;,&quot;options&quot;:[&quot;Con cuerpo&quot;,&quot;Solo titulo&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Confirmación&quot;}}">
+class Component extends DCLogic {
+  state = { selectedType:null, openId:null, dragId:null, dx:0, dragging:false,
+            phase:'idle', targetId:null, deleted:[], collapsing:null };
+
+  MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  TYPE_META = {
+    buy:        { label:'Compra',    labelPlural:'Compras',    bg:'rgba(120,160,255,0.16)', color:'#9DB8FF' },
+    sell:       { label:'Venta',     labelPlural:'Ventas',     bg:'rgba(255,140,140,0.14)', color:'#FF9D9D' },
+    dividend:   { label:'Dividendo', labelPlural:'Dividendos', bg:'rgba(0,229,204,0.12)',   color:'#4FE9D6' },
+    deposit:    { label:'Depósito',  labelPlural:'Depósitos',  bg:'rgba(0,200,83,0.16)',    color:'#7DE8AA' },
+    withdrawal: { label:'Retiro',    labelPlural:'Retiros',    bg:'rgba(142,142,147,0.14)', color:'#B8BCCB' },
+  };
+
+  TYPE_ORDER = ['buy','sell','dividend','deposit','withdrawal'];
+
+  BASE_MOVEMENTS = [
+    { id:'m1',  type:'dividend',   ticker:'AAPL', date:'2026-06-02', amount:14.10 },
+    { id:'m2',  type:'buy',        ticker:'VOO',  date:'2026-05-20', amount:610.40 },
+    { id:'m3',  type:'dividend',   ticker:'AAPL', date:'2026-04-02', amount:13.75 },
+    { id:'m4',  type:'sell',       ticker:'AAPL', date:'2026-02-14', amount:892.14 },
+    { id:'m5',  type:'deposit',    ticker:null,   date:'2026-01-05', amount:1500.00 },
+    { id:'m6',  type:'dividend',   ticker:'AAPL', date:'2025-11-15', amount:12.95 },
+    { id:'m7',  type:'withdrawal', ticker:null,   date:'2025-10-01', amount:500.00 },
+    { id:'m8',  type:'sell',       ticker:'VOO',  date:'2025-09-09', amount:586.32 },
+    { id:'m9',  type:'buy',        ticker:'AAPL', date:'2025-01-15', amount:447.86 },
+    { id:'m10', type:'buy',        ticker:'VOO',  date:'2025-03-12', amount:705.20 },
+    { id:'m11', type:'deposit',    ticker:null,   date:'2025-01-10', amount:3000.00 },
+  ];
+
+  PANEL = 88;
+  DEMO_TARGET = 'm9';
+
+  componentDidMount(){ this._applyDemo(this.props.demoState); }
+  componentDidUpdate(prev){ if (prev.demoState !== this.props.demoState) this._applyDemo(this.props.demoState); }
+  componentWillUnmount(){ clearTimeout(this._t1); clearTimeout(this._t2); }
+
+  _applyDemo(demoState){
+    clearTimeout(this._t1); clearTimeout(this._t2);
+    const base = { selectedType:null, openId:null, dragId:null, dx:0, dragging:false,
+                   phase:'idle', targetId:null, deleted:[], collapsing:null };
+    const t = this.DEMO_TARGET;
+    const patch = {
+      'Fila cerrada':                  {},
+      'Fila deslizada':                { openId:t },
+      'Confirmando':                   { openId:t, phase:'confirm', targetId:t },
+      'Eliminando':                    { phase:'deleting', targetId:t },
+      'Error al eliminar':             { phase:'error', targetId:t },
+      'Ultimo movimiento eliminado':   { deleted: this.BASE_MOVEMENTS.map(m => m.id) },
+      'Ultimo de su tipo eliminado':   { selectedType:'withdrawal', deleted:['m7'] },
+    }[demoState] || {};
+    this.setState({ ...base, ...patch });
+  }
+
+  usd(n){ return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  dateLabel(iso){ const [y,m,d] = iso.split('-').map(Number); return d + ' ' + this.MONTHS_ES[m-1] + ' ' + y; }
+
+  movementLine(m){
+    const meta = this.TYPE_META[m.type];
+    const hasTicker = m.type === 'buy' || m.type === 'sell' || m.type === 'dividend';
+    const title = hasTicker ? (meta.label + ' ' + m.ticker) : meta.label;
+    return title + ' - ' + this.dateLabel(m.date) + ' - ' + this.usd(m.amount);
+  }
+
+  toggleType(type){ this.setState(s => ({ selectedType: s.selectedType === type ? null : type, openId:null })); }
+
+  // --- gesture: right-to-left reveal only, 8px threshold so vertical scroll wins
+  onDown(id, e){
+    if (this.state.phase !== 'idle') return;
+    this._drag = { id, x:e.clientX, y:e.clientY, base: this.state.openId === id ? -this.PANEL : 0, engaged:false };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch(_){}
+  }
+  onMove(id, e){
+    const d = this._drag;
+    if (!d || d.id !== id) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.engaged){
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+      d.engaged = true;
+      this.setState({ dragId:id, dragging:true, dx:d.base });
+    }
+    let t = d.base + dx;
+    if (t > 0) t = t * 0.2;
+    if (t < -this.PANEL) t = -this.PANEL + (t + this.PANEL) * 0.16;
+    this.setState({ dx:t });
+  }
+  onUp(id, e){
+    const d = this._drag; this._drag = null;
+    if (!d || d.id !== id) return;
+    if (!d.engaged){
+      if (this.state.openId) this.setState({ openId:null });
+      return;
+    }
+    this._lastDrag = Date.now();
+    const open = this.state.dx < -this.PANEL / 2;
+    this.setState({ dragging:false, dragId:null, dx:0, openId: open ? id : null });
+  }
+
+  askDelete(id, e){ if (e) e.stopPropagation(); this.setState({ phase:'confirm', targetId:id }); }
+  cancelDelete(e){ if (e) e.stopPropagation(); this.setState({ phase:'idle' }); }
+  confirmDelete(e){
+    if (e) e.stopPropagation();
+    const id = this.state.targetId;
+    // ADR-0010: no optimistic delete. Row stays until the database answers.
+    this.setState({ phase:'deleting', openId:null });
+    this._t1 = setTimeout(() => {
+      this.setState({ phase:'idle', collapsing:id });
+      this._t2 = setTimeout(() => this.setState(s => ({
+        deleted:[...s.deleted, id], collapsing:null, targetId:null,
+      })), 200);
+    }, 1400);
+  }
+
+  renderVals(){
+    const st = this.state;
+    const alertVariant = this.props.alertVariant ?? 'Con cuerpo';
+    const sorted = [...this.BASE_MOVEMENTS].sort((a,b) => a.date < b.date ? 1 : -1);
+    const alive = sorted.filter(m => st.deleted.indexOf(m.id) === -1);
+    const filtered = st.selectedType ? alive.filter(m => m.type === st.selectedType) : alive;
+
+    const hasAny = alive.length > 0;
+    const isFilteredEmpty = hasAny && !!st.selectedType && filtered.length === 0;
+    const isRealEmpty = !hasAny;
+
+    const chips = this.TYPE_ORDER.map(type => {
+      const meta = this.TYPE_META[type];
+      const active = st.selectedType === type;
+      return { key:type, label:meta.labelPlural,
+        bg: active ? meta.bg : 'transparent',
+        color: active ? meta.color : '#8E8E93',
+        border: active ? meta.color : '#1C224D',
+        onClick: () => this.toggleType(type) };
+    });
+
+    const rows = filtered.map((m, i) => {
+      const meta = this.TYPE_META[m.type];
+      const hasTicker = m.type === 'buy' || m.type === 'sell' || m.type === 'dividend';
+      const dragging = st.dragging && st.dragId === m.id;
+      const deleting = st.phase === 'deleting' && st.targetId === m.id;
+      const collapsing = st.collapsing === m.id;
+      const tx = dragging ? st.dx : (st.openId === m.id ? -this.PANEL : 0);
+      return {
+        key: m.id,
+        title: hasTicker ? (meta.label + ' ' + m.ticker) : meta.label,
+        dateLabel: this.dateLabel(m.date),
+        amount: this.usd(m.amount),
+        badgeBg: meta.bg,
+        badgeColor: meta.color,
+        borderTop: i === 0 ? 'none' : '1px solid #1C224D',
+        isBuy: m.type === 'buy',
+        isSell: m.type === 'sell',
+        isDividend: m.type === 'dividend',
+        isDeposit: m.type === 'deposit',
+        isWithdrawal: m.type === 'withdrawal',
+        tx,
+        txTransition: dragging ? 'none' : 'transform .22s cubic-bezier(.2,.8,.2,1)',
+        maxH: collapsing ? '0px' : '70px',
+        rowOpacity: collapsing ? 0 : 1,
+        contentOpacity: deleting ? 0.45 : 1,
+        isDeleting: deleting,
+        showAmount: !deleting,
+        onDown: (e) => this.onDown(m.id, e),
+        onMove: (e) => this.onMove(m.id, e),
+        onUp:   (e) => this.onUp(m.id, e),
+        onAskDelete: (e) => this.askDelete(m.id, e),
+      };
+    });
+
+    const target = this.BASE_MOVEMENTS.find(m => m.id === st.targetId);
+
+    return {
+      showChips: hasAny,
+      chips,
+      isRealEmpty,
+      isFilteredEmpty,
+      isReady: hasAny && !isFilteredEmpty,
+      filteredEmptyMessage: st.selectedType ? ('No tienes ' + this.TYPE_META[st.selectedType].labelPlural.toLowerCase()) : '',
+      clearFilter: () => this.setState({ selectedType:null }),
+      goAddMovement: () => {},
+      rows,
+      showAlert: st.phase === 'confirm',
+      alertHasBody: alertVariant === 'Con cuerpo',
+      alertBody: target ? this.movementLine(target) : '',
+      showBanner: st.phase === 'error',
+      onCancelDelete: (e) => this.cancelDelete(e),
+      onConfirmDelete: (e) => this.confirmDelete(e),
+      onListScroll: () => { if (this.state.openId) this.setState({ openId:null }); },
+      onBackdropTap: () => {
+        if (this._lastDrag && Date.now() - this._lastDrag < 350) return;
+        if (this.state.openId && this.state.phase === 'idle') this.setState({ openId:null });
+      },
+    };
+  }
+}
+
+</script>
+</body>
+</html>
