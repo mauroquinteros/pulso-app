@@ -1,0 +1,67 @@
+/* Pulso - theme compartido de sketches
+ *
+ * NO es una paleta inventada para explorar: son los tokens REALES de
+ * constants/theme.ts. La direccion visual de Pulso esta cerrada (12 prototipos
+ * en .scratch/), asi que los sketches comparan geometria y semantica, nunca
+ * la paleta.
+ *
+ * Dark mode only: la app no tiene paleta clara ni conmutacion de tema.
+ */
+
+:root {
+  /* --- Tokens reales (constants/theme.ts) --- */
+  --color-bg: #0A0E27;          /* background */
+  --color-surface: #111638;     /* surface - la card de la lista */
+  --color-border: #1C224D;      /* border - separadores de 1px */
+  --color-accent: #00E5CC;      /* accent */
+  --color-positive: #00C853;    /* positive - GANANCIA */
+  --color-negative: #FF5252;    /* negative - PERDIDA (ojo: no es "peligro") */
+
+  --color-text: #FFFFFF;        /* textPrimary */
+  --color-text-muted: #8E8E93;  /* textMuted - fechas */
+  --color-text-bright: #E8EAF2; /* textBright - montos */
+
+  /* --- Badges por tipo de movimiento (constants/movement-type.ts) --- */
+  --badge-buy-bg: rgba(120,160,255,0.16);
+  --badge-buy-fg: #9DB8FF;
+  --badge-sell-bg: rgba(255,140,140,0.14);
+  --badge-sell-fg: #FF9D9D;
+  --badge-dividend-bg: rgba(0,229,204,0.12);
+  --badge-dividend-fg: #4FE9D6;
+  --badge-deposit-bg: rgba(0,200,83,0.16);
+  --badge-deposit-fg: #7DE8AA;
+  --badge-withdrawal-bg: rgba(142,142,147,0.14);
+  --badge-withdrawal-fg: #B8BCCB;
+
+  /* --- CANDIDATOS a color destructivo (esto es lo que el sketch 002 decide) ---
+   * No son tokens de la app todavia. Ninguno existe en constants/theme.ts.
+   */
+  --danger-reuse: #FF5252;      /* (a) reusar negative, aceptando la sobrecarga */
+  --danger-new: #E5484D;        /* (b) token danger propio: crimson, mas lejos del rojo P&L */
+  --danger-neutral: #2A3163;    /* (c) accion neutra, el peso lo lleva el icono */
+  --danger-neutral-fg: #E8EAF2;
+
+  /* --- Geometria real de la fila (components/movements/movement-row.tsx) --- */
+  --card-radius: 20px;
+  --card-pad-x: 18px;
+  --row-pad-y: 14px;
+  --badge-size: 40px;
+  --badge-radius: 12px;
+  --hairline: 1px;
+
+  /* --- Tipografia --- */
+  --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --text-date: 12px;
+  --text-row: 15px;
+  --text-title: 28px;
+
+  /* --- Movimiento (constants/motion.ts) --- */
+  --dur-press: 120ms;
+  --dur-base: 180ms;
+  --dur-enter: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* --- Device frame --- */
+  --frame-w: 402px;
+  --frame-h: 874px;
+}

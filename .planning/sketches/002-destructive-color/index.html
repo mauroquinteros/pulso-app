@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 002 - Color de la accion destructiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#05060f;color:var(--color-text);font-family:var(--font-sans);padding-top:56px;}
+
+  #variant-nav{
+    position:fixed;top:0;left:0;right:0;z-index:9998;
+    background:#0d1020;border-bottom:1px solid var(--color-border);
+    padding:9px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  }
+  #variant-nav .lbl{font-size:12px;color:var(--color-text-muted);margin-right:4px;font-weight:700;}
+  .variant-tab{
+    font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+    background:transparent;color:var(--color-text-muted);
+    border:1px solid var(--color-border);border-radius:9999px;padding:6px 13px;transition:all .15s ease;
+  }
+  .variant-tab:hover{color:var(--color-text);border-color:#2A3163;}
+  .variant-tab.active{background:var(--color-accent);color:#04211E;border-color:var(--color-accent);}
+  .variant{display:none;} .variant.active{display:block;}
+
+  .stage{display:flex;flex-direction:column;align-items:center;padding:24px 16px 90px;}
+  .caption{max-width:1120px;width:100%;margin:0 0 18px;font-size:13px;line-height:1.55;color:#A6ACC4;}
+  .caption b{color:var(--color-text);}
+  .verdict{
+    max-width:1120px;width:100%;margin:16px 0 0;padding:12px 14px;
+    border-radius:10px;font-size:12.5px;line-height:1.55;
+    background:rgba(255,255,255,.03);border:1px solid var(--color-border);color:#A6ACC4;
+  }
+  .verdict b{color:var(--color-text);}
+
+  /* side-by-side comparison grid */
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;max-width:1120px;width:100%;align-items:start;}
+  .col h3{
+    font-size:12px;font-weight:800;margin:0 0 9px;letter-spacing:.3px;
+    color:var(--color-text);text-transform:uppercase;
+  }
+  /* min-height para que las 3 cards arranquen a la misma altura: comparar color
+     con bloques desalineados mete ruido en la comparacion */
+  .col .sub{font-size:11px;color:var(--color-text-muted);margin:-5px 0 10px;line-height:1.45;min-height:32px;}
+
+  .card{
+    background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--card-radius);overflow:hidden;
+  }
+  .rowline{position:relative;overflow:hidden;}
+  .rowline + .rowline .content{border-top:var(--hairline) solid var(--color-border);}
+  /* La fila abierta NO se traduce: en este sketch se compara COLOR, y un texto
+     recortado a media pantalla es ruido. Se reserva el ancho del panel con
+     padding-right y se deja el contenido legible. La geometria real del gesto
+     (translate + clipeo) se compara en el sketch 001. */
+  .content{
+    display:flex;align-items:center;gap:10px;
+    padding:var(--row-pad-y) 100px var(--row-pad-y) var(--card-pad-x);
+    background:transparent;position:relative;z-index:2;
+  }
+  .rowline.closed .content{padding-right:var(--card-pad-x);}
+  .rowline.closed .action{display:none;}
+  .badge{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .mid{flex:1;min-width:0;}
+  .ttl{font-size:13.5px;font-weight:700;}
+  .dt{font-size:11px;color:var(--color-text-muted);margin-top:2px;}
+  .amt{font-size:13.5px;font-weight:700;color:var(--color-text-bright);font-variant-numeric:tabular-nums;}
+  .action{
+    position:absolute;top:0;bottom:0;right:0;width:88px;z-index:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-size:11px;font-weight:800;cursor:pointer;user-select:none;
+  }
+
+  /* --- the three candidates --- */
+  .k-reuse   .action{background:var(--danger-reuse);color:#fff;}
+  .k-new     .action{background:var(--danger-new);color:#fff;}
+  .k-neutral .action{background:var(--danger-neutral);color:var(--danger-neutral-fg);}
+  .k-neutral .action .lbl{color:#FF9D9D;}
+
+  /* --- the P&L collision panel --- */
+  .pnl{
+    max-width:1120px;width:100%;margin-top:8px;
+    background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:16px;padding:16px 18px;
+  }
+  .pnl .h{font-size:11px;font-weight:800;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;}
+  .pnlrow{display:flex;align-items:baseline;justify-content:space-between;padding:7px 0;}
+  .pnlrow + .pnlrow{border-top:1px solid var(--color-border);}
+  .pnlk{font-size:13px;color:#C7CCE0;}
+  .pnlv{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .loss{color:var(--color-negative);}
+  .gain{color:var(--color-positive);}
+
+  .swatches{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .sw{display:flex;align-items:center;gap:7px;font-size:11px;color:#A6ACC4;}
+  .dot{width:15px;height:15px;border-radius:5px;border:1px solid rgba(255,255,255,.14);}
+
+  #sketch-tools{
+    position:fixed;bottom:12px;right:12px;z-index:9999;font-family:system-ui;font-size:12px;
+    background:rgba(0,0,0,.78);color:#fff;padding:8px 12px;border-radius:8px;
+    opacity:.4;transition:opacity .2s;display:flex;gap:10px;align-items:center;
+  }
+  #sketch-tools select,#sketch-tools button{
+    font-family:inherit;font-size:11px;background:#222;color:#fff;
+    border:1px solid #444;border-radius:5px;padding:3px 7px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="variant-nav">
+  <span class="lbl">002 - Color destructivo</span>
+  <button class="variant-tab active" onclick="showVariant('compare',this)">Los 3 lado a lado</button>
+  <button class="variant-tab" onclick="showVariant('collision',this)">La colision con P&amp;L</button>
+</div>
+
+<!-- ============ LADO A LADO ============ -->
+<div id="variant-compare" class="variant active">
+  <div class="stage">
+    <div class="caption">
+      <b>En Pulso el rojo ya significa perdida.</b> <code>negative #FF5252</code> se usa para P&amp;L
+      negativo y errores de validacion, y <code>movements-ux/UX.md</code> prohibe verde y rojo en
+      esta pantalla porque "aqui no hay ganancias ni perdidas".
+      <br><br>
+      Pero el precedente mas cercano no dice lo que parece: Settings pinta "Cerrar sesion" en
+      neutro <b>porque cerrar sesion no destruye nada</b> - no por ser una accion peligrosa.
+      Eliminar si destruye. Asi que la pregunta real es si <b>perdida de dinero</b> y
+      <b>destruccion de un registro</b> merecen el mismo pigmento.
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <h3>A: Reusar negative &#9733; Elegida</h3>
+        <div class="sub">#FF5252 - el token que ya existe. Cero tokens nuevos.</div>
+        <div class="card k-reuse" id="c-reuse"></div>
+      </div>
+      <div class="col">
+        <h3>B: Token danger nuevo</h3>
+        <div class="sub">#E5484D - crimson, deliberadamente lejos del rojo de P&amp;L.</div>
+        <div class="card k-new" id="c-new"></div>
+      </div>
+      <div class="col">
+        <h3>C: Neutro + icono</h3>
+        <div class="sub">#2A3163 - el peso lo lleva el icono, no el color.</div>
+        <div class="card k-neutral" id="c-neutral"></div>
+      </div>
+    </div>
+
+    <div class="swatches">
+      <div class="sw"><span class="dot" style="background:#FF5252"></span> #FF5252 negative (perdida)</div>
+      <div class="sw"><span class="dot" style="background:#E5484D"></span> #E5484D danger (propuesto)</div>
+      <div class="sw"><span class="dot" style="background:#2A3163"></span> #2A3163 neutro</div>
+    </div>
+
+    <div class="verdict">
+      <b>Ojo con B.</b> #E5484D y #FF5252 se parecen mucho mas en pantalla que en un swatch.
+      Si no los distingues aca, el token nuevo no compra nada y paga con un token extra:
+      en ese caso gana A por simplicidad, o C por claridad.
+      <br><br>
+      <b>Ojo con C.</b> Un panel destructivo en gris azulado no comunica peligro por si solo,
+      y la guia <code>destructive-emphasis</code> pide color semantico. C solo funciona si el
+      icono de basurero carga todo el significado - miralo entrecerrando los ojos.
+    </div>
+  </div>
+</div>
+
+<!-- ============ COLISION ============ -->
+<div id="variant-collision" class="variant">
+  <div class="stage">
+    <div class="caption">
+      <b>Esta es la prueba que importa.</b> El usuario no ve el boton aislado: lo ve minutos despues
+      de mirar su P&amp;L en rojo. Si los dos rojos son el mismo, el cerebro tiene que aprender que
+      el rojo significa dos cosas distintas segun donde este.
+      <br><br>
+      Arriba el rojo de <b>perdida</b>. Abajo, el mismo rojo como <b>accion destructiva</b>.
+    </div>
+
+    <div class="pnl">
+      <div class="h">Inicio - asi se usa el rojo hoy</div>
+      <div class="pnlrow"><span class="pnlk">Valor total</span><span class="pnlv">$12,480.55</span></div>
+      <div class="pnlrow"><span class="pnlk">Ganancia / perdida</span><span class="pnlv loss">-$1,204.18</span></div>
+      <div class="pnlrow"><span class="pnlk">Rendimiento total</span><span class="pnlv loss">-8.79%</span></div>
+      <div class="pnlrow"><span class="pnlk">Dividendos netos</span><span class="pnlv gain">+$142.90</span></div>
+    </div>
+
+    <div style="max-width:1120px;width:100%;margin-top:20px;">
+      <h3 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin:0 0 9px;">
+        A: mismo rojo para eliminar
+      </h3>
+      <div class="card k-reuse" id="x-reuse"></div>
+      <h3 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin:18px 0 9px;">
+        B: rojo distinto para eliminar
+      </h3>
+      <div class="card k-new" id="x-new"></div>
+      <h3 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin:18px 0 9px;">
+        C: neutro para eliminar
+      </h3>
+      <div class="card k-neutral" id="x-neutral"></div>
+    </div>
+
+    <div class="verdict">
+      <b>La pregunta a contestar:</b> con el bloque de P&amp;L a la vista, ¿el rojo de A se lee como
+      "peligro" o como "estas perdiendo plata"? Si dudas, el token nuevo (B) se justifica solo.
+      <br><br>
+      Y un contraargumento honesto a favor de A: un <b>icono de basurero sobre un panel revelado por
+      un gesto</b> es un contexto que ninguna cifra de P&amp;L comparte. El color puede estar
+      sobrecargado sin ser ambiguo.
+    </div>
+  </div>
+</div>
+
+<div id="sketch-tools"
+     onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">
+  <select onchange="document.querySelector('link[href*=themes]').href='../themes/'+this.value+'.css'">
+    <option value="default">Default</option>
+  </select>
+  <button onclick="toggleLabels()">Icono solo / con texto</button>
+  <button onclick="toggleClosed()">Abrir / cerrar filas</button>
+</div>
+
+<script>
+const TYPE_META = {
+  buy:{label:'Compra',bg:'var(--badge-buy-bg)',fg:'var(--badge-buy-fg)'},
+  sell:{label:'Venta',bg:'var(--badge-sell-bg)',fg:'var(--badge-sell-fg)'},
+  dividend:{label:'Dividendo',bg:'var(--badge-dividend-bg)',fg:'var(--badge-dividend-fg)'},
+  deposit:{label:'Deposito',bg:'var(--badge-deposit-bg)',fg:'var(--badge-deposit-fg)'},
+};
+const ICONS = {
+  buy:'<path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>',
+  sell:'<path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle>',
+  dividend:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle>',
+  deposit:'<circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path>',
+};
+const ROWS = [
+  {type:'sell',    ticker:'AAPL', date:'14 feb 2026', amount:'$892.14', open:true},
+  {type:'buy',     ticker:'VOO',  date:'20 may 2026', amount:'$610.40', open:false},
+  {type:'dividend',ticker:'AAPL', date:'2 jun 2026',  amount:'$14.10',  open:false},
+];
+const TRASH = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>';
+
+function rowHTML(r){
+  const m = TYPE_META[r.type];
+  const title = r.ticker ? m.label+' '+r.ticker : m.label;
+  return `
+  <div class="rowline ${r.open?'':'closed'}">
+    <div class="action">${TRASH}<span class="lbl">Eliminar</span></div>
+    <div class="content">
+      <div class="badge" style="background:${m.bg};color:${m.fg}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS[r.type]}</svg>
+      </div>
+      <div class="mid"><div class="ttl">${title}</div><div class="dt">${r.date}</div></div>
+      <div class="amt">${r.amount}</div>
+    </div>
+  </div>`;
+}
+['c-reuse','c-new','c-neutral','x-reuse','x-new','x-neutral'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.innerHTML = ROWS.map(rowHTML).join('');
+});
+
+let labels = true;
+function toggleLabels(){
+  labels = !labels;
+  document.querySelectorAll('.action .lbl').forEach(l=>l.style.display = labels?'':'none');
+}
+let closed = false;
+function toggleClosed(){
+  closed = !closed;
+  document.querySelectorAll('.rowline').forEach((r,i)=>{
+    r.classList.toggle('closed', closed ? true : (i%3!==0));
+  });
+}
+function showVariant(id,btn){
+  document.querySelectorAll('.variant').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.variant-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('variant-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

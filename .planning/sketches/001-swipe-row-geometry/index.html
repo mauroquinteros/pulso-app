@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch 001 - Geometria del swipe-to-delete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../themes/default.css">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#05060f;color:var(--color-text);font-family:var(--font-sans);
+    padding-top:56px;min-height:100vh;
+  }
+
+  /* ---- variant nav ---- */
+  #variant-nav{
+    position:fixed;top:0;left:0;right:0;z-index:9998;
+    background:#0d1020;border-bottom:1px solid var(--color-border);
+    padding:9px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  }
+  #variant-nav .lbl{font-size:12px;color:var(--color-text-muted);margin-right:4px;font-weight:700;}
+  .variant-tab{
+    font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+    background:transparent;color:var(--color-text-muted);
+    border:1px solid var(--color-border);border-radius:9999px;padding:6px 13px;
+    transition:all .15s ease;
+  }
+  .variant-tab:hover{color:var(--color-text);border-color:#2A3163;}
+  .variant-tab.active{background:var(--color-accent);color:#04211E;border-color:var(--color-accent);}
+
+  .variant{display:none;}
+  .variant.active{display:block;}
+
+  /* ---- stage ---- */
+  .stage{display:flex;flex-direction:column;align-items:center;padding:28px 16px 80px;}
+  .caption{
+    max-width:var(--frame-w);width:100%;margin:0 0 14px;
+    font-size:13px;line-height:1.55;color:#A6ACC4;
+  }
+  .caption b{color:var(--color-text);}
+  .caption .tag{
+    display:inline-block;font-size:10px;font-weight:800;letter-spacing:.4px;
+    padding:3px 8px;border-radius:9999px;margin-bottom:8px;text-transform:uppercase;
+  }
+  .tag-easy{background:rgba(0,229,204,0.14);color:var(--color-accent);}
+  .tag-mid{background:rgba(255,193,90,0.14);color:#FFC15A;}
+  .tag-hard{background:rgba(255,140,140,0.14);color:#FF9D9D;}
+
+  /* ---- iphone frame ---- */
+  .frame{
+    width:var(--frame-w);height:var(--frame-h);
+    background:var(--color-bg);border-radius:44px;
+    border:1px solid #232a55;box-shadow:0 30px 80px rgba(0,0,0,.6);
+    overflow:hidden;position:relative;
+    display:flex;flex-direction:column;padding:56px 0 36px;
+  }
+  .notch{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    width:118px;height:30px;background:#000;border-radius:9999px;z-index:5;
+  }
+  .screen-title{padding:12px 20px 14px;font-size:var(--text-title);font-weight:800;letter-spacing:-.6px;}
+  .chips{display:flex;gap:8px;padding:0 16px 14px;overflow-x:auto;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none;height:36px;padding:0 16px;border-radius:9999px;display:flex;align-items:center;
+    font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;
+    background:rgba(255,255,255,0.04);color:var(--color-text-muted);border:1px solid var(--color-border);
+  }
+  .list-area{flex:1;padding:0 16px;overflow:hidden;}
+
+  /* ---- the card ---- */
+  .card{
+    background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--card-radius);
+  }
+
+  /* ---- row internals (shared) ---- */
+  .rowline{position:relative;overflow:hidden;}
+  .rowline + .rowline .content{border-top:var(--hairline) solid var(--color-border);}
+  .content{
+    display:flex;align-items:center;gap:12px;
+    padding:var(--row-pad-y) 0;
+    background:var(--color-surface);
+    position:relative;z-index:2;
+    will-change:transform;
+    touch-action:pan-y;cursor:grab;
+  }
+  .content:active{cursor:grabbing;}
+  .badge{
+    width:var(--badge-size);height:var(--badge-size);border-radius:var(--badge-radius);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .mid{flex:1;min-width:0;}
+  .ttl{font-size:var(--text-row);font-weight:700;color:var(--color-text);}
+  .dt{font-size:var(--text-date);color:var(--color-text-muted);margin-top:2px;}
+  .amt{
+    font-size:var(--text-row);font-weight:700;color:var(--color-text-bright);flex:none;
+    font-variant-numeric:tabular-nums;font-feature-settings:"tnum";
+  }
+
+  /* ---- the destructive action panel ---- */
+  .action{
+    position:absolute;top:0;bottom:0;right:0;z-index:1;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--danger-new);
+    color:#fff;font-size:12px;font-weight:800;gap:5px;flex-direction:column;
+    cursor:pointer;user-select:none;
+  }
+  .action svg{display:block;}
+
+  /* ===== VARIANT A: dentro de la card, clipeado por el radio ===== */
+  #variant-a .card{overflow:hidden;}
+  #variant-a .content{padding-left:var(--card-pad-x);padding-right:var(--card-pad-x);}
+  #variant-a .action{width:88px;}
+
+  /* ===== VARIANT B: fila full-bleed al deslizar ===== */
+  #variant-b .card{overflow:hidden;}
+  #variant-b .content{padding-left:var(--card-pad-x);padding-right:var(--card-pad-x);}
+  #variant-b .action{width:104px;}
+  /* el panel sangra hasta el borde de la card, la fila abierta pierde su inset */
+
+  /* ===== VARIANT C: la card entera es el riel ===== */
+  #variant-c .list-area{padding:0 16px;}
+  #variant-c .cardwrap{position:relative;overflow:hidden;border-radius:var(--card-radius);}
+  #variant-c .card{border-radius:var(--card-radius);position:relative;z-index:2;will-change:transform;cursor:grab;}
+  #variant-c .content{padding-left:var(--card-pad-x);padding-right:var(--card-pad-x);}
+  #variant-c .action{
+    width:104px;border-radius:0 var(--card-radius) var(--card-radius) 0;
+    top:0;bottom:0;
+  }
+
+  /* ---- controls under the frame ---- */
+  .controls{
+    display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center;
+    max-width:var(--frame-w);
+  }
+  .ctl{
+    font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;
+    background:#151a35;color:#C7CCE0;border:1px solid var(--color-border);
+    border-radius:8px;padding:7px 11px;transition:all .15s ease;
+  }
+  .ctl:hover{background:#1d2344;color:#fff;}
+  .hint{
+    max-width:var(--frame-w);margin-top:12px;font-size:11.5px;line-height:1.5;
+    color:#7b83a0;text-align:center;
+  }
+
+  /* ---- annotations ---- */
+  body.annotate .content{outline:1px dashed rgba(0,229,204,.45);outline-offset:-1px;}
+  body.annotate .card{outline:1px dashed rgba(255,193,90,.6);}
+  body.annotate .action{outline:1px dashed rgba(255,255,255,.5);outline-offset:-2px;}
+  .anno{
+    display:none;position:absolute;right:6px;top:4px;z-index:9;
+    font-size:9px;font-weight:800;color:#04211E;background:var(--color-accent);
+    padding:1px 5px;border-radius:4px;pointer-events:none;
+  }
+  body.annotate .anno{display:block;}
+
+  /* ---- sketch toolbar ---- */
+  #sketch-tools{
+    position:fixed;bottom:12px;right:12px;z-index:9999;font-family:system-ui;font-size:12px;
+    background:rgba(0,0,0,.78);color:#fff;padding:8px 12px;border-radius:8px;
+    opacity:.4;transition:opacity .2s;display:flex;gap:10px;align-items:center;
+  }
+  #sketch-tools select,#sketch-tools button{
+    font-family:inherit;font-size:11px;background:#222;color:#fff;
+    border:1px solid #444;border-radius:5px;padding:3px 7px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="variant-nav">
+  <span class="lbl">001 - Geometria del swipe</span>
+  <button class="variant-tab active" onclick="showVariant('a',this)">A: Dentro de la card &#9733; Elegida</button>
+  <button class="variant-tab" onclick="showVariant('b',this)">B: Fila full-bleed</button>
+  <button class="variant-tab" onclick="showVariant('c',this)">C: La card se desliza</button>
+</div>
+
+<!-- ============ VARIANT A ============ -->
+<div id="variant-a" class="variant active">
+  <div class="stage">
+    <div class="caption">
+      <span class="tag tag-easy">Camino de menor resistencia</span><br>
+      <b>A: la accion vive dentro de la card.</b> El panel se revela adentro y lo recorta el radio 20.
+      Es lo que <code>ReanimatedSwipeable</code> hace <b>solo</b>: su contenedor ya trae
+      <code>overflow:hidden</code>, asi que con <code>borderRadius</code> el clipeo sale gratis.
+      Costo: la card come 18px por lado, asi que el boton queda angosto.
+    </div>
+    <div class="frame">
+      <div class="notch"></div>
+      <div class="screen-title">Movimientos</div>
+      <div class="chips" id="chips-a"></div>
+      <div class="list-area"><div class="card" id="list-a"></div></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" onclick="openRow('a',0)">Abrir 1a fila (toca el radio)</button>
+      <button class="ctl" onclick="openRow('a',4)">Abrir ultima fila (toca el radio)</button>
+      <button class="ctl" onclick="openRow('a',2)">Abrir fila del medio</button>
+      <button class="ctl" onclick="closeAll('a')">Cerrar</button>
+    </div>
+    <div class="hint">Arrastra cualquier fila de derecha a izquierda con el mouse.</div>
+  </div>
+</div>
+
+<!-- ============ VARIANT B ============ -->
+<div id="variant-b" class="variant">
+  <div class="stage">
+    <div class="caption">
+      <span class="tag tag-mid">Costo medio</span><br>
+      <b>B: la fila rompe el inset al deslizar.</b> El contenido se desliza mas alla del padding de
+      18px y el panel llega al borde de la card. Mas parecido al patron nativo y el boton respira.
+      Costo: la fila abierta deja de compartir el inset con sus vecinas, asi que durante el gesto
+      la card se ve "rota" por dentro.
+    </div>
+    <div class="frame">
+      <div class="notch"></div>
+      <div class="screen-title">Movimientos</div>
+      <div class="chips" id="chips-b"></div>
+      <div class="list-area"><div class="card" id="list-b"></div></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" onclick="openRow('b',0)">Abrir 1a fila (toca el radio)</button>
+      <button class="ctl" onclick="openRow('b',4)">Abrir ultima fila (toca el radio)</button>
+      <button class="ctl" onclick="openRow('b',2)">Abrir fila del medio</button>
+      <button class="ctl" onclick="closeAll('b')">Cerrar</button>
+    </div>
+    <div class="hint">Arrastra cualquier fila de derecha a izquierda con el mouse.</div>
+  </div>
+</div>
+
+<!-- ============ VARIANT C ============ -->
+<div id="variant-c" class="variant">
+  <div class="stage">
+    <div class="caption">
+      <span class="tag tag-hard">Costo alto</span><br>
+      <b>C: la card entera es el riel.</b> No se desliza una fila sino toda la card, revelando la
+      accion por fuera. El radio nunca estorba porque el panel vive afuera.
+      Costo grave: <b>no hay forma de saber que fila vas a borrar.</b> Se muestra para cerrar
+      la pregunta, no porque compita.
+    </div>
+    <div class="frame">
+      <div class="notch"></div>
+      <div class="screen-title">Movimientos</div>
+      <div class="chips" id="chips-c"></div>
+      <div class="list-area">
+        <div class="cardwrap" id="wrap-c">
+          <div class="action" onclick="fakeDelete()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>
+            <span>Eliminar</span>
+          </div>
+          <div class="card" id="list-c"></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctl" onclick="openCardC()">Deslizar la card</button>
+      <button class="ctl" onclick="closeCardC()">Cerrar</button>
+    </div>
+    <div class="hint">Arrastra la card de derecha a izquierda con el mouse.</div>
+  </div>
+</div>
+
+<div id="sketch-tools"
+     onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'">
+  <select onchange="document.querySelector('link[href*=themes]').href='../themes/'+this.value+'.css'">
+    <option value="default">Default</option>
+  </select>
+  <button onclick="setW(375)">375</button>
+  <button onclick="setW(402)">402</button>
+  <button onclick="document.body.classList.toggle('annotate')">Anotar</button>
+</div>
+
+<script>
+/* ---------------- data: movimientos reales del prototipo ---------------- */
+const TYPE_META = {
+  buy:        {label:'Compra',    bg:'var(--badge-buy-bg)',        fg:'var(--badge-buy-fg)'},
+  sell:       {label:'Venta',     bg:'var(--badge-sell-bg)',       fg:'var(--badge-sell-fg)'},
+  dividend:   {label:'Dividendo', bg:'var(--badge-dividend-bg)',   fg:'var(--badge-dividend-fg)'},
+  deposit:    {label:'Deposito',  bg:'var(--badge-deposit-bg)',    fg:'var(--badge-deposit-fg)'},
+  withdrawal: {label:'Retiro',    bg:'var(--badge-withdrawal-bg)', fg:'var(--badge-withdrawal-fg)'},
+};
+const ICONS = {
+  buy:'<path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.4a1 1 0 0 0 1-.8L20 8H6"></path><circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none"></circle><circle cx="17" cy="20" r="1.4" fill="currentColor" stroke="none"></circle>',
+  sell:'<path d="M11 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-.3.7l-8 8a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4l8-8a1 1 0 0 1 .7-.3z"></path><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"></circle>',
+  dividend:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"></rect><circle cx="12" cy="12" r="3"></circle>',
+  deposit:'<circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path>',
+  withdrawal:'<circle cx="12" cy="12" r="9"></circle><path d="M8 12h8"></path>',
+};
+const ROWS = [
+  {type:'dividend',   ticker:'AAPL', date:'2 jun 2026',  amount:'$14.10'},
+  {type:'buy',        ticker:'VOO',  date:'20 may 2026', amount:'$610.40'},
+  {type:'sell',       ticker:'AAPL', date:'14 feb 2026', amount:'$892.14'},
+  {type:'deposit',    ticker:null,   date:'5 ene 2026',  amount:'$1,500.00'},
+  {type:'withdrawal', ticker:null,   date:'1 oct 2025',  amount:'$500.00'},
+];
+const CHIPS = ['Compras','Ventas','Dividendos','Depositos','Retiros'];
+
+const TRASH = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6"></path><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg>';
+
+function rowHTML(r){
+  const m = TYPE_META[r.type];
+  const title = r.ticker ? m.label+' '+r.ticker : m.label;
+  return `
+    <div class="rowline">
+      <div class="action" onclick="fakeDelete()">${TRASH}<span>Eliminar</span></div>
+      <div class="content">
+        <span class="anno">14px</span>
+        <div class="badge" style="background:${m.bg};color:${m.fg}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${ICONS[r.type]}</svg>
+        </div>
+        <div class="mid"><div class="ttl">${title}</div><div class="dt">${r.date}</div></div>
+        <div class="amt">${r.amount}</div>
+      </div>
+    </div>`;
+}
+
+['a','b','c'].forEach(v=>{
+  document.getElementById('list-'+v).innerHTML = ROWS.map(rowHTML).join('');
+  const ch = document.getElementById('chips-'+v);
+  if(ch) ch.innerHTML = CHIPS.map(c=>`<div class="chip">${c}</div>`).join('');
+});
+
+/* ---------------- swipe mechanics (mirrors ReanimatedSwipeable) ----------------
+   dragOffsetFromRightEdge default = 10  -> DRAG_THRESHOLD
+   rightThreshold default = half panel   -> SNAP_AT
+   overshootFriction                     -> resistance past the panel width      */
+const DRAG_THRESHOLD = 10;
+const OVERSHOOT_FRICTION = 8;
+
+function panelW(el){
+  const a = el.parentElement.querySelector('.action');
+  return a ? a.getBoundingClientRect().width : 88;
+}
+
+function makeSwipeable(content){
+  let startX=0, startT=0, cur=0, dragging=false, armed=false;
+  const W = ()=>panelW(content);
+
+  const set = (x,animate)=>{
+    cur = x;
+    content.style.transition = animate ? 'transform var(--dur-base) var(--ease-standard)' : 'none';
+    content.style.transform = `translateX(${x}px)`;
+  };
+  content._set = set;
+  content._isOpen = ()=> cur < -2;
+
+  content.addEventListener('pointerdown', e=>{
+    if(e.button!==0) return;
+    dragging=true; armed=false; startX=e.clientX; startT=cur;
+    content.setPointerCapture(e.pointerId);
+  });
+  content.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX;
+    if(!armed){
+      if(Math.abs(dx) < DRAG_THRESHOLD) return;   // umbral: el scroll vertical gana
+      armed = true; startX = e.clientX;
+      closeOthers(content);
+      return;
+    }
+    let next = startT + (e.clientX - startX);
+    if(next > 0) next = 0;                         // no se abre hacia la derecha
+    const w = W();
+    if(next < -w){                                 // overshoot con friccion
+      next = -w - (-w - next)/OVERSHOOT_FRICTION;
+    }
+    set(next,false);
+  });
+  const end = ()=>{
+    if(!dragging) return;
+    dragging=false;
+    const w = W();
+    set(cur < -w/2 ? -w : 0, true);                // rightThreshold = mitad del panel
+  };
+  content.addEventListener('pointerup', end);
+  content.addEventListener('pointercancel', end);
+
+  content.addEventListener('click', e=>{
+    if(content._isOpen()){ e.stopPropagation(); set(0,true); }  // 1er tap cierra
+  });
+  set(0,false);
+}
+
+function allContents(v){
+  return Array.from(document.querySelectorAll('#variant-'+v+' .content'));
+}
+function closeOthers(except){
+  document.querySelectorAll('.content').forEach(c=>{
+    if(c!==except && c._set && c._isOpen()) c._set(0,true);
+  });
+}
+function openRow(v,i){
+  const cs = allContents(v);
+  closeOthers(cs[i]);
+  const w = panelW(cs[i]);
+  cs[i]._set(-w,true);
+}
+function closeAll(v){ allContents(v).forEach(c=>c._set&&c._set(0,true)); }
+
+document.querySelectorAll('#variant-a .content, #variant-b .content').forEach(makeSwipeable);
+
+/* variant C: the whole card is the rail */
+const cardC = document.getElementById('list-c');
+makeSwipeable(cardC);
+function openCardC(){ cardC._set(-104,true); }
+function closeCardC(){ cardC._set(0,true); }
+
+/* ---------------- ui ---------------- */
+function showVariant(id,btn){
+  document.querySelectorAll('.variant').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.variant-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('variant-'+id).classList.add('active');
+  btn.classList.add('active');
+  document.querySelectorAll('.content').forEach(c=>c._set&&c._set(0,false));
+}
+function setW(px){ document.documentElement.style.setProperty('--frame-w',px+'px'); }
+function fakeDelete(){
+  alert('Aqui se abriria el Alert nativo:\n\n"Eliminar este movimiento?"\n[Cancelar]  [Eliminar]\n\n(el dialogo y los estados de borrado los cubre el prototipo de Claude Design, no este sketch)');
+}
+</script>
+</body>
+</html>
