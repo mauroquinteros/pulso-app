@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { initialSignInState, signInReducer, type SignInState } from "./sign-in";
 
-const signing: SignInState = { status: "signing" };
+const signing: SignInState = { status: "signing", provider: "google" };
 
 describe("signInReducer", () => {
   it("starts idle", () => {
@@ -10,12 +10,15 @@ describe("signInReducer", () => {
   });
 
   it("a tap from idle starts signing", () => {
-    expect(signInReducer(initialSignInState, { type: "tapped" })).toEqual({ status: "signing" });
+    expect(signInReducer(initialSignInState, { type: "tapped", provider: "google" })).toEqual({
+      status: "signing",
+      provider: "google",
+    });
   });
 
   it("ignores a tap while already signing", () => {
     // Never two sign-ins: the second tap must not start a second sheet.
-    expect(signInReducer(signing, { type: "tapped" })).toBe(signing);
+    expect(signInReducer(signing, { type: "tapped", provider: "apple" })).toBe(signing);
   });
 
   it("returns to idle on cancel, with no message", () => {
@@ -37,7 +40,10 @@ describe("signInReducer", () => {
   it("a tap from failed clears the previous message", () => {
     const failed = signInReducer(signing, { type: "failed", reason: "offline" });
 
-    expect(signInReducer(failed, { type: "tapped" })).toEqual({ status: "signing" });
+    expect(signInReducer(failed, { type: "tapped", provider: "apple" })).toEqual({
+      status: "signing",
+      provider: "apple",
+    });
   });
 
   it("ignores outcomes that arrive outside a sign-in", () => {

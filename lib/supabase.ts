@@ -7,8 +7,8 @@ import { AppState } from "react-native";
  * the session - a second instance would be a second owner of the same fact.
  *
  * `detectSessionInUrl` is off because that flag exists for web redirect flows,
- * where the session arrives in the URL fragment. The native Google sheet hands
- * back an id token directly, so there is no URL to read.
+ * where the session arrives in the URL fragment. The native Google and Apple
+ * sheets hand back id tokens directly, so there is no URL to read.
  */
 /**
  * Where the persisted session lives in AsyncStorage. Declared rather than left

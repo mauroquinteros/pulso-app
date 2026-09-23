@@ -1,7 +1,8 @@
 import { isAuthRetryableFetchError } from "@supabase/supabase-js";
-import { useEffect, useReducer } from "react";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { LinearGradient } from "expo-linear-gradient";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useEffect, useReducer, useState } from "react";
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { GoogleG } from "@/components/brand/google-g";
@@ -10,6 +11,8 @@ import { AnimatedPressable, usePressSpring } from "@/components/ui/press-feedbac
 import { Duration, Ease } from "@/constants/motion";
 import { Colors, Gradients } from "@/constants/theme";
 import { Typography } from "@/constants/typography";
+import { syncAppleProfileNameAfterSignIn } from "@/lib/apple-profile-name";
+import { signInWithApple } from "@/lib/apple-sign-in";
 import { signInWithGoogle } from "@/lib/google-sign-in";
 import { supabase } from "@/lib/supabase";
 import { initialSignInState, signInReducer } from "@/utils/sign-in";
@@ -35,7 +38,26 @@ function isOffline(error: unknown): boolean {
 
 export default function SignInScreen() {
   const [state, dispatch] = useReducer(signInReducer, initialSignInState);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const signing = state.status === "signing";
+  const signingProvider = state.status === "signing" ? state.provider : null;
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+
+    let mounted = true;
+    void AppleAuthentication.isAvailableAsync()
+      .then((available) => {
+        if (mounted) setAppleAvailable(available);
+      })
+      .catch(() => {
+        if (mounted) setAppleAvailable(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // 0 -> 1 drives both halves of the entrance: fade in, and rise the last 10px.
   const entrance = useSharedValue(0);
@@ -68,13 +90,13 @@ export default function SignInScreen() {
     opacity: buttonPress.progress.value,
   }));
 
-  const onPress = async () => {
+  const onGooglePress = async () => {
     // The machine ignores this while signing, but the sheet should not be asked
     // to open twice either.
     if (signing) {
       return;
     }
-    dispatch({ type: "tapped" });
+    dispatch({ type: "tapped", provider: "google" });
 
     const result = await signInWithGoogle();
 
@@ -100,6 +122,36 @@ export default function SignInScreen() {
     }
   };
 
+  const onApplePress = async () => {
+    if (signing) {
+      return;
+    }
+    dispatch({ type: "tapped", provider: "apple" });
+
+    const result = await signInWithApple();
+
+    if (result.outcome === "cancelled") {
+      dispatch({ type: "cancelled" });
+      return;
+    }
+
+    if (result.outcome !== "token") {
+      dispatch({ type: "failed", reason: result.outcome === "offline" ? "offline" : "other" });
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: result.idToken });
+
+    if (error) {
+      dispatch({ type: "failed", reason: isOffline(error) ? "offline" : "other" });
+      return;
+    }
+
+    if (result.fullName && data.user) {
+      await syncAppleProfileNameAfterSignIn(data.user, result.fullName);
+    }
+  };
+
   return (
     <View style={styles.screen}>
       {/* Only the block moves. The background stays put, because a fading
@@ -113,7 +165,7 @@ export default function SignInScreen() {
         <AnimatedPressable
           style={[styles.button, signing && styles.buttonSigning, buttonStyle]}
           {...buttonPress.handlers}
-          onPress={onPress}
+          onPress={onGooglePress}
           disabled={signing}
           accessibilityRole="button"
           accessibilityState={{ disabled: signing, busy: signing }}
@@ -127,14 +179,43 @@ export default function SignInScreen() {
           {/* The spinner replaces the G rather than joining it, at the same 20pt
               in the same slot, so the label does not shift sideways mid-tap. */}
           <View style={styles.glyph}>
-            {signing ? (
+            {signingProvider === "google" ? (
               <ActivityIndicator size="small" color={Colors.avatarText} />
             ) : (
-              <GoogleG size={20} color={Colors.avatarText} />
+              <GoogleG size={16} color={Colors.avatarText} />
             )}
           </View>
-          <Text style={styles.buttonLabel}>{signing ? "Conectando..." : "Continuar con Google"}</Text>
+          <Text style={styles.buttonLabel}>
+            {signingProvider === "google" ? "Conectando..." : "Continuar con Google"}
+          </Text>
         </AnimatedPressable>
+
+        {Platform.OS === "ios" ? (
+          <View
+            style={[styles.appleButtonSlot, signingProvider === "google" && styles.appleButtonDisabled]}
+            pointerEvents={signing ? "none" : "auto"}
+          >
+            {signingProvider === "apple" ? (
+              <View
+                style={styles.appleLoading}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: true, busy: true }}
+              >
+                <ActivityIndicator size="small" color="#000000" />
+                <Text style={styles.appleLoadingLabel}>Conectando...</Text>
+              </View>
+            ) : appleAvailable ? (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                cornerRadius={28}
+                style={styles.appleButton}
+                onPress={onApplePress}
+                accessibilityState={{ disabled: signing }}
+              />
+            ) : null}
+          </View>
+        ) : null}
 
         {/* Reserved whether or not it holds anything: a message that appears has
             to arrive without shoving the button out from under a finger. */}
@@ -212,16 +293,45 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     ...Typography.cardTitle,
-    fontFamily: "Manrope_800ExtraBold",
-    fontWeight: "800",
+    fontSize: 21,
+    fontFamily: Platform.select({ ios: "System", default: "Manrope_600SemiBold" }),
+    fontWeight: "600",
     color: Colors.avatarText,
   },
   glyph: {
     width: 20,
     height: 20,
-    marginRight: 12,
+    marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
+  },
+  appleButtonSlot: {
+    alignSelf: "stretch",
+    height: 56,
+    marginTop: 12,
+  },
+  appleButton: {
+    width: "100%",
+    height: 56,
+  },
+  appleButtonDisabled: {
+    opacity: 0.6,
+  },
+  appleLoading: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  appleLoadingLabel: {
+    ...Typography.cardTitle,
+    fontSize: 19,
+    fontFamily: "System",
+    fontWeight: "600",
+    color: "#000000",
   },
   errorSlot: {
     height: 36,

@@ -13,6 +13,12 @@
       "appleTeamId": "297MPWT757",
       "buildNumber": "3",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": false,
+        "CFBundleDevelopmentRegion": "es",
+        "CFBundleLocalizations": ["es"]
+      },
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -34,6 +40,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {

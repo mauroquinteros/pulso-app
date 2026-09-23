@@ -13,10 +13,17 @@
 
 /** Why a sign-in failed, as far as the screen needs to care. */
 export type FailureReason = "offline" | "other";
+export type SignInProvider = "apple" | "google";
 
-export type SignInState = { status: "idle" } | { status: "signing" } | { status: "failed"; message: string };
+export type SignInState =
+  | { status: "idle" }
+  | { status: "signing"; provider: SignInProvider }
+  | { status: "failed"; message: string };
 
-export type SignInEvent = { type: "tapped" } | { type: "cancelled" } | { type: "failed"; reason: FailureReason };
+export type SignInEvent =
+  | { type: "tapped"; provider: SignInProvider }
+  | { type: "cancelled" }
+  | { type: "failed"; reason: FailureReason };
 
 /**
  * Two failures, two sentences. "Vuelve a intentar" in both, because both are
@@ -37,7 +44,7 @@ export function signInReducer(state: SignInState, event: SignInEvent): SignInSta
       // Never two sign-ins at once: a tap while the sheet is already up is
       // ignored. From `failed` this is also what clears the old message - the
       // screen must not show a stale error next to a running attempt.
-      return state.status === "signing" ? state : { status: "signing" };
+      return state.status === "signing" ? state : { status: "signing", provider: event.provider };
 
     case "cancelled":
       // Backing out of the sheet is not an error. The human decided not to sign

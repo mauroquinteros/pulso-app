@@ -11,9 +11,10 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { AppState, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { retryPendingAppleProfileName } from "@/lib/apple-profile-name";
 import { applyManropeDefaultFont } from "@/lib/manrope-font";
 import { useSessionStore } from "@/stores/session";
 
@@ -47,6 +48,22 @@ export default function RootLayout() {
   // where a protected screen can flash before the guard redirects.
   const sessionPending = session === undefined;
   const isSignedIn = !!session;
+
+  useEffect(() => {
+    const user = session?.user;
+    if (!user) return;
+
+    const retryPendingName = () => {
+      void retryPendingAppleProfileName(user);
+    };
+
+    retryPendingName();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") retryPendingName();
+    });
+
+    return () => subscription.remove();
+  }, [session]);
 
   useEffect(() => {
     if (loaded && !sessionPending) {
