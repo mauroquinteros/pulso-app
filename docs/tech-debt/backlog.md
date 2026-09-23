@@ -18,7 +18,7 @@ the box is the at-a-glance answer to "is this still true?".
 - [ ] [`round2` and `formatUSD` disagree on an exact half-cent](#round2-and-formatusd-disagree-on-an-exact-half-cent-and-there-are-six-round2s) - bug (minor)
 - [x] [Stock detail prints Comisiones unsigned](#stock-detail-prints-comisiones-unsigned-so-a-subtracted-fee-reads-as-added) - bug (minor, presentation)
 - [ ] [The save lifecycle is copied per form](#the-save-lifecycle-is-copied-per-form-and-each-copy-carries-adr-0010) - design (duplication, correctness-sensitive)
-- [ ] [The sign-in button is painted with the divider token](#the-sign-in-button-is-painted-with-the-divider-token) - design (visual hierarchy)
+- [x] [The sign-in button is painted with the divider token](#the-sign-in-button-is-painted-with-the-divider-token) - design (visual hierarchy)
 - [ ] [A dividend can be saved for a symbol nobody confirmed](#a-dividend-can-be-saved-for-a-symbol-nobody-confirmed) - design (unenforced assumption)
 
 ---
@@ -298,7 +298,7 @@ copies today), `components/add-movement/movement-deps.ts`, and
 
 ## The sign-in button is painted with the divider token
 
-**Type:** design (visual hierarchy) · **Status:** backlog · **Raised:** 2026-08-31
+**Type:** design (visual hierarchy) · **Status:** fixed - 2026-08-31, `8cc278f` · **Raised:** 2026-08-31
 
 **Problem.** `app/(auth)/sign-in.tsx` fills its "Continuar con Google" button with
 `Colors.border` (`#1C224D`). That token is the app's **divider** colour: of the eight
@@ -333,6 +333,24 @@ above. Anything else means not presenting it as a Google button.
 8% white state layer over the base, no longer a `scale 0.97`. If the surface colour ever
 changes, that layer changes with it - Material puts the layer in white over dark
 surfaces and black over light, so it is derived from the fill, never independent of it.
+
+**Fixed 2026-08-31, `8cc278f`** - one hour and forty minutes after this entry was
+written, which is why everything above reads as though nothing had happened. The button
+became the app's teal CTA (`Gradients.avatar` at 135deg, with the mark in the same ink),
+so the 1.25:1 complaint is gone: it is the same CTA as Reintentar, Agregar movimiento and
+Guardar movimiento.
+
+**The constraint above was not satisfied - it was traded.** Google permits no custom
+fill, and this is one. The trade is deliberate and recorded where it is visible:
+`components/brand/google-g.tsx` says so in its header, and `8cc278f`'s message says it at
+length. It is not an oversight to be tidied up.
+
+**Reviewed 2026-09-17, when Sign in with Apple joined the screen,** and kept -
+deliberately asymmetric: Apple's button goes official, Google's stays teal. The reason is
+who enforces which. Apple reviews its own button and gates the release on it; Google's
+only lever is OAuth brand verification, which this project does not enter (see
+`docs/release/testflight.md`, "why the logo is not worth it"). So the screen carries one
+official button beside one knowingly custom one, and that asymmetry is the decision.
 
 ---
 
