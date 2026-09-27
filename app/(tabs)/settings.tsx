@@ -1,66 +1,58 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AnimatedPressable, usePressScale } from "@/components/ui/press-feedback";
 import { Colors } from "@/constants/theme";
-import { AUTH_STORAGE_KEY, supabase } from "@/lib/supabase";
+import { deleteCurrentPerfil } from "@/lib/delete-perfil";
+import { signOutFromThisDevice } from "@/lib/sign-out";
 import { useSessionStore } from "@/stores/session";
 import { profileFrom } from "@/utils/profile";
 
-/**
- * Ends the session on this phone, and nowhere else.
- *
- * `scope: "local"` because closing a session here must not close the Perfil's
- * sessions on its other devices - "Cerrar sesión" is about this phone.
- *
- * No navigation, deliberately. Dropping the session fires `SIGNED_OUT`, the
- * mirror in `useSessionStore` goes null, the guard in `app/_layout.tsx` inverts,
- * and Expo Router takes `(tabs)` out of the tree and clears the history itself.
- * A `router.replace` here would be a second, competing answer to "where am I".
- *
- * No clearing of the Perfil's data here either, for the same reason: dropping
- * the session is what empties the stores, in the auth listener in
- * `stores/session.ts`. Doing it from this button would only cover the sessions
- * that end by being tapped away.
- */
-async function signOut() {
-  // Grab the token before the session goes, because revoking it needs it.
-  const { data } = await supabase.auth.getSession();
-  const jwt = data.session?.access_token;
-
-  // Leaving must not wait on the network, and calling `signOut()` first would
-  // make it: auth-js POSTs /logout to revoke the refresh token *before* it
-  // touches local storage, with no timeout, and `_removeSession()` - the only
-  // thing that fires `SIGNED_OUT` - runs after that request settles. So a slow
-  // connection buys seconds of a screen where nothing happens, and a dead one
-  // returns early and leaves you signed in. (Verified in @supabase/auth-js
-  // 2.98.0: `GoTrueClient._signOut` and `GoTrueAdminApi.signOut`.)
-  //
-  // Dropping the persisted entry first inverts that. The call below then finds
-  // no token to revoke, skips the network entirely, and fires `SIGNED_OUT` in
-  // milliseconds - on a plane exactly as fast as on wifi.
-  await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-  await supabase.auth.signOut({ scope: "local" });
-
-  // Revoke on the way out, unawaited and unchecked. The human has already left;
-  // whether the server heard about it changes nothing they can see. If this
-  // fails the refresh token simply expires on its own, which is what local
-  // scope leaves behind in any case.
-  if (jwt) {
-    void supabase.auth.admin.signOut(jwt, "local").catch(() => {});
-  }
-}
-
 export default function SettingsScreen() {
   const signOutPress = usePressScale(0.97);
-  const profile = profileFrom(useSessionStore((state) => state.session));
+  const deletePress = usePressScale(0.97);
+  const [deleting, setDeleting] = useState(false);
+  const session = useSessionStore((state) => state.session);
+  const profile = profileFrom(session);
 
   const askSignOut = () =>
     Alert.alert("¿Cerrar sesión?", undefined, [
       { text: "Cancelar", style: "cancel" },
-      { text: "Cerrar sesión", style: "destructive", onPress: signOut },
+      { text: "Cerrar sesión", style: "destructive", onPress: signOutFromThisDevice },
     ]);
+
+  const deletePerfil = async () => {
+    const user = session?.user;
+    if (!user) return;
+
+    setDeleting(true);
+    try {
+      const result = await deleteCurrentPerfil(user);
+      if (result === "deletedLocalCleanupFailed") {
+        Alert.alert(
+          "Tu perfil fue eliminado",
+          "No pudimos cerrar la sesión en este dispositivo. Intenta cerrar sesión nuevamente.",
+        );
+      } else if (result === "failed") {
+        Alert.alert("No pudimos eliminar tu perfil", "Inténtalo nuevamente.");
+      }
+    } catch {
+      Alert.alert("No pudimos eliminar tu perfil", "Inténtalo nuevamente.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const askDeletePerfil = () =>
+    Alert.alert(
+      "¿Eliminar tu perfil?",
+      "Se eliminarán permanentemente tu perfil y todos tus movimientos. Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar perfil", style: "destructive", onPress: deletePerfil },
+      ],
+    );
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -82,8 +74,26 @@ export default function SettingsScreen() {
       {/* Neutral, not `negative`: in Pulso red means *loss*, and signing out is
           not one - nothing is destroyed, you just log back in. It stays in the
           flow instead of anchored to the bottom, clear of the tab bar. */}
-      <AnimatedPressable style={[styles.signOut, signOutPress.style]} {...signOutPress.handlers} onPress={askSignOut}>
+      <AnimatedPressable
+        style={[styles.signOut, signOutPress.style, deleting && styles.disabled]}
+        {...signOutPress.handlers}
+        onPress={askSignOut}
+        disabled={deleting}
+      >
         <Text style={styles.signOutText}>Cerrar sesión</Text>
+      </AnimatedPressable>
+
+      <AnimatedPressable
+        style={[styles.deletePerfil, deletePress.style, deleting && styles.disabled]}
+        {...deletePress.handlers}
+        onPress={askDeletePerfil}
+        disabled={deleting}
+        accessibilityRole="button"
+        accessibilityLabel="Eliminar mi perfil"
+        accessibilityState={{ disabled: deleting, busy: deleting }}
+      >
+        {deleting ? <ActivityIndicator size="small" color={Colors.negative} /> : null}
+        <Text style={styles.deletePerfilText}>{deleting ? "Eliminando..." : "Eliminar mi perfil"}</Text>
       </AnimatedPressable>
     </SafeAreaView>
   );
@@ -141,5 +151,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: Colors.accent,
+  },
+  deletePerfil: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,82,82,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,82,82,0.34)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+  },
+  deletePerfilText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.negative,
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });

@@ -1,7 +1,7 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 
 export type AppleSignInResult =
-  | { outcome: "token"; idToken: string; fullName: string | null }
+  | { outcome: "token"; idToken: string; authorizationCode: string | null; fullName: string | null }
   | { outcome: "cancelled" }
   | { outcome: "offline" }
   | { outcome: "failed" };
@@ -25,6 +25,7 @@ export async function signInWithApple(): Promise<AppleSignInResult> {
     return {
       outcome: "token",
       idToken: credential.identityToken,
+      authorizationCode: credential.authorizationCode,
       fullName: formattedName || null,
     };
   } catch (error) {

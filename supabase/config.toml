@@ -417,6 +417,13 @@ verify_jwt = false
 [functions.resolve-stock]
 verify_jwt = true
 
+# The platform rejects forged user JWTs before delete-profile boots. The function
+# then resolves that token through Auth and derives the Perfil id from it; no user
+# id supplied by the app is trusted. Apple and service-role secrets stay inside
+# the function.
+[functions.delete-profile]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
