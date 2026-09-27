@@ -23,15 +23,18 @@ Everything Apple-facing is in `app.json`. The native project is derived from it,
 "ios": {
   "bundleIdentifier": "com.mauroquinteros.pulso",
   "appleTeamId": "297MPWT757",
-  "buildNumber": "1",
-  "supportsTablet": true,
+  "buildNumber": "4",
+  "supportsTablet": false,
+  "usesAppleSignIn": true,
   "config": { "usesNonExemptEncryption": false }
 }
 ```
 
-- **`bundleIdentifier`** must match the App ID registered with Apple and the bundle ID chosen in App Store Connect. It is the join key between al three.
+- **`bundleIdentifier`** must match the App ID registered with Apple and the bundle ID chosen in App Store Connect. It is the join key between all three.
 - **`appleTeamId`** is what writes `DEVELOPMENT_TEAM` into the Xcode project. Because it lives here, regenerating `ios/` does not lose the team - which is what makes `prebuild --clean` cheap.
-- **`buildNumber`** must be **unique per upload**. App Store Connect rejects a repeat. Bump it before every archive; `version` only changes for a real release.
+- **`buildNumber`** must be **unique per upload**. App Store Connect rejects a repeat. Bump it before every archive, and never reset it when `version` changes - Apple would allow that, but a number that only climbs means "build 7" names exactly one upload.
+- **`version`** is what testers and the store see, and it groups builds in TestFlight as `1.0.0 (4)`. It follows semver: **minor** for a new feature, **patch** for a fix testers should notice, **major** for a redesign. A small fix that nobody needs to hear about ships as a new build under the same version. Every version used in TestFlight also raises the eventual App Store launch number - a beta that reaches `1.4.0` launches as `1.4.0`.
+- **`usesAppleSignIn: true`** is what puts the `com.apple.developer.applesignin` entitlement into `ios/Pulso/Pulso.entitlements`. Because it lives here, `prebuild --clean` keeps the capability, and automatic signing enables it on the App ID.
 - **`usesNonExemptEncryption: false`** writes `ITSAppUsesNonExemptEncryption` into `Info.plist`, which answers the export-compliance question ahead of time. Without it, every single upload stops to ask. The iOS deployment target is **15.1**, set by the Expo template.
 
 ## Environment variables
@@ -114,12 +117,31 @@ The app record goes in **App Store Connect** -> My Apps -> **+** -> New App:
 
 ## Every release
 
-1. **Bump `ios.buildNumber`** in `app.json`. A repeated build number is rejected at the end of the upload, after the wait.
-2. Set the destination to **Any iOS Device (arm64)**. With a simulator selected, **Product -> Archive** is greyed out; with a specific phone selected, the build is not generic enough to distribute.
-3. **Product -> Archive.** Several minutes - it compiles Release including all Pods. The Organizer opens on success.
-4. **Validate App** -> _App Store Connect_ -> defaults -> automatic signing. This runs the same checks as the upload without spending the upload. On the first run Xcode creates the **Apple Distribution** certificate here; allow the keychain prompt.
-5. **Distribute App** -> **App Store Connect** -> defaults -> **Upload**. Choose _App Store Connect_, **not** _TestFlight Internal Only_. The latter produces a build that can never be promoted to the App Store.
-6. The build appears under TestFlight as _Processing_, then _Ready to Submit_. Minutes to half an hour, with an email at the end. **Uploading publishes nothing.** The build lands in TestFlight only. Reaching the App Store requires filling the store metadata and pressing _Submit for Review_ explicitly.
+1. **Deploy the backend first.** The binary calls the Edge Functions, so the Supabase project has to be ahead of it before anything is archived - a tester who reaches a function that is missing, outdated or missing a secret gets a failure, and Beta App Review checks account deletion (`delete-profile`) directly. From the linked project:
+
+   ```bash
+   supabase db push                # pending migrations
+   supabase functions deploy       # every function under supabase/functions, with the verify_jwt from config.toml
+   supabase functions list         # each one ACTIVE, with a fresh updated_at
+   supabase secrets list           # FINNHUB_KEY, CRON_KEY, APPLE_PRIVATE_KEY, APPLE_KEY_ID, APPLE_TEAM_ID, APPLE_CLIENT_ID
+   ```
+
+   A secret missing from that list is set with `supabase secrets set NAME=value`. The functions read them with a non-null assertion, so a missing one does not fail the deploy - it fails the first request.
+
+2. **Bump the numbers** in `app.json`. Commit the bump, so the numbers in git are always the last ones uploaded.
+   - **`ios.buildNumber` - every archive, not every release.** This is the step that gets forgotten: a fix made after the last upload, however small, goes out as a new archive and needs a new number. A repeated build number is rejected at the end of the upload, after the wait.
+   - **`version` - when the build carries a new feature** (minor) or a fix worth announcing (patch); see [the configuration](#the-configuration-that-lives-in-the-repo). Bump it deliberately rather than per upload: the first build of a new version goes back through Beta App Review before external testers get it, while later builds of the same version usually pass faster.
+3. **Regenerate `ios/`** with `npx expo prebuild -p ios`, then `open ios/Pulso.xcworkspace`. The bump lives in `app.json`; Xcode only sees it once prebuild writes it into `ios/Pulso/Info.plist` - `buildNumber` as `CFBundleVersion`, `version` as `CFBundleShortVersionString`. Skipping this archives the old numbers with the new code. Check it before archiving:
+
+   ```bash
+   grep -A1 -E "CFBundleVersion|CFBundleShortVersionString" ios/Pulso/Info.plist
+   ```
+
+4. Set the destination to **Any iOS Device (arm64)**. With a simulator selected, **Product -> Archive** is greyed out; with a specific phone selected, the build is not generic enough to distribute.
+5. **Product -> Archive.** Several minutes - it compiles Release including all Pods. The Organizer opens on success.
+6. **Validate App** -> _App Store Connect_ -> defaults -> automatic signing. This runs the same checks as the upload without spending the upload. On the first run Xcode creates the **Apple Distribution** certificate here; allow the keychain prompt.
+7. **Distribute App** -> **App Store Connect** -> defaults -> **Upload**. Choose _App Store Connect_, **not** _TestFlight Internal Only_. The latter produces a build that can never be promoted to the App Store.
+8. The build appears under TestFlight as _Processing_, then _Ready to Submit_. Minutes to half an hour, with an email at the end. **Uploading publishes nothing.** The build lands in TestFlight only. Reaching the App Store requires filling the store metadata and pressing _Submit for Review_ explicitly.
 
 ## Warnings that are not problems
 
@@ -136,18 +158,20 @@ Filled in App Store Connect -> Distribution -> **App Privacy**. Required before 
 
 The "Optional Disclosure" exemption does **not** apply here: it requires the data to be outside the app's primary functionality and optional for the user, and sign-in plus movements are neither.
 
-| Category       | Data type            | Where it comes from                         |
-| -------------- | -------------------- | ------------------------------------------- |
-| Contact Info   | Email Address        | Google Sign-In; shown in Ajustes            |
-| Contact Info   | Name                 | Google Sign-In; drives the avatar initials  |
-| Financial Info | Other Financial Info | Movements the user records                  |
-| Identifiers    | User ID              | Supabase `auth.uid()`, the key on every row |
+| Category       | Data type            | Where it comes from                                                                                                                      |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Contact Info   | Email Address        | Google or Apple sign-in (with Apple, possibly a private relay address); shown in Ajustes                                                 |
+| Contact Info   | Name                 | Google sign-in, or Apple on the first sign-in only (saved to `user_metadata` by `lib/apple-profile-name.ts`); drives the avatar initials |
+| Financial Info | Other Financial Info | Movements the user records                                                                                                               |
+| Identifiers    | User ID              | Supabase `auth.uid()`, the key on every row                                                                                              |
 
 For **each** of the four, the answers are identical:
 
 - **Purpose:** App Functionality only. Not Analytics, not Product Personalization, not advertising.
 - **Linked to the user's identity:** Yes. Everything hangs off `user_id`.
 - **Used for tracking:** No. Nothing is cross-referenced with third-party data or shared with data brokers - which is also why the app needs no ATT prompt.
+
+Adding Sign in with Apple changed none of these answers - it is a second source for the same email and name, not new data - so the form in App Store Connect did not need refilling.
 
 Everything else is unchecked. There is no analytics, crash-reporting or advertising SDK in `package.json`, and **Phone Number is not collected** - `Profile` is `{ name, email }` and nothing anywhere stores a phone.
 
@@ -206,9 +230,9 @@ Nothing breaks in the meantime. The Audience page keeps a yellow _"Your app requ
 
 ## Still open
 
-- **Guideline 4.8.** `app/(auth)/sign-in.tsx` offers Google as the only sign-in. Apple requires an equivalent privacy-preserving option - in practice Sign in with Apple - for apps using third-party login. Does not block internal testing; can surface in Beta App Review; **does** block App Store release.
-- **In-app account deletion.** Guideline 5.1.1(v): an app that lets accounts be created must let them be deleted from inside it. `app/(tabs)/settings.tsx` offers only "Cerrar sesión", whose own comment is explicit that nothing is destroyed. Not a TestFlight blocker; an automatic App Store rejection, and reviewers check it directly. The schema keeps it small - every user-owned table is `ON DELETE CASCADE` from `auth.users`, so deleting the auth user empties the Perfil - which makes the work one Edge Function holding `service_role` to call `auth.admin.deleteUser`, shaped like `resolve-stock`, plus a destructive entry in Ajustes.
-- **Beta App Review sign-in credentials.** A dedicated review account now exists, but the fragility does not go away: Google can challenge a login from an unfamiliar location, and there is nothing to do about it from this side when it happens.
+- **Beta App Review sign-in credentials.** A dedicated Google review account exists, but the fragility does not go away: Google can challenge a login from an unfamiliar location, and there is nothing to do about it from this side when it happens. Sign in with Apple softens it - a reviewer can get in with their own Apple ID - so the review notes should say that both work.
+
+Guideline 4.8 (Sign in with Apple, `78eb618`) and in-app account deletion under 5.1.1(v) (`a788a11`) were listed here until they shipped.
 
 ## Verification commands
 
