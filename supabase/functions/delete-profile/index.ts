@@ -148,13 +148,17 @@ async function revokeAppleToken(token: string, clientSecret: string, tokenType: 
 }
 
 Deno.serve(async (request) => {
+  console.log(JSON.stringify({ event: "delete_profile_started" }));
+
   if (request.method !== "POST") {
+    console.warn(JSON.stringify({ event: "delete_profile_failed", error: "method_not_allowed", status: 405 }));
     return Response.json({ error: "method_not_allowed" }, { status: 405 });
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
   const user = await signedInUser(request, supabase);
   if (!user) {
+    console.warn(JSON.stringify({ event: "delete_profile_failed", error: "unauthorized", status: 401 }));
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -166,6 +170,9 @@ Deno.serve(async (request) => {
       authorizationCode = null;
     }
     if (typeof authorizationCode !== "string" || !authorizationCode) {
+      console.warn(
+        JSON.stringify({ event: "delete_profile_failed", error: "apple_authorization_required", status: 400 }),
+      );
       return Response.json({ error: "apple_authorization_required" }, { status: 400 });
     }
 
@@ -175,23 +182,31 @@ Deno.serve(async (request) => {
       const linkedSubject = appleSubjectOf(user);
       const authorizedSubject = tokens?.id_token ? decodeJwtPayload(tokens.id_token)?.sub : null;
       if (!linkedSubject || !authorizedSubject || linkedSubject !== authorizedSubject) {
+        console.warn(JSON.stringify({ event: "delete_profile_failed", error: "apple_identity_mismatch", status: 403 }));
         return Response.json({ error: "apple_identity_mismatch" }, { status: 403 });
       }
 
       const token = tokens?.refresh_token ?? tokens?.access_token;
       const tokenType = tokens?.refresh_token ? "refresh_token" : "access_token";
       if (!token || !(await revokeAppleToken(token, clientSecret, tokenType))) {
+        console.error(
+          JSON.stringify({ event: "delete_profile_failed", error: "apple_revocation_failed", status: 502 }),
+        );
         return Response.json({ error: "apple_revocation_failed" }, { status: 502 });
       }
+      console.log(JSON.stringify({ event: "apple_token_revoked" }));
     } catch {
+      console.error(JSON.stringify({ event: "delete_profile_failed", error: "apple_revocation_failed", status: 502 }));
       return Response.json({ error: "apple_revocation_failed" }, { status: 502 });
     }
   }
 
   const { error } = await supabase.auth.admin.deleteUser(user.id, false);
   if (error) {
+    console.error(JSON.stringify({ event: "delete_profile_failed", error: "delete_failed", status: 500 }));
     return Response.json({ error: "delete_failed" }, { status: 500 });
   }
+  console.log(JSON.stringify({ event: "delete_profile_completed", status: 200 }));
 
   return Response.json({ deleted: true });
 });
