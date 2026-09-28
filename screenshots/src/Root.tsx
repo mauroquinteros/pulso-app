@@ -2,6 +2,7 @@ import "./index.css";
 import { Composition, Still } from "remotion";
 import { StoreFrame } from "./StoreFrame";
 import { FPS, PROMO_FRAMES, Promo } from "./Promo";
+import { AppPreview, PREVIEW_FRAMES } from "./AppPreview";
 
 /**
  * One <Still> per App Store screenshot. 1320x2868 is the iPhone 6.9" slot, which
@@ -94,6 +95,16 @@ export const RemotionRoot: React.FC = () => {
         height={1920}
         fps={FPS}
         durationInFrames={PROMO_FRAMES}
+      />
+
+      {/* The App Store app preview: the promo's framing over a cut of a simulator recording. */}
+      <Composition
+        id="preview"
+        component={AppPreview}
+        width={886}
+        height={1920}
+        fps={FPS}
+        durationInFrames={PREVIEW_FRAMES}
       />
     </>
   );

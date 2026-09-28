@@ -17,6 +17,7 @@ const { fontFamily } = loadFont("normal", {
 
 const INK_TOP = "#0A3A33";
 const INK = "#04211E";
+export const BACKGROUND = `linear-gradient(180deg, ${INK_TOP} 0%, ${INK} 100%)`;
 const ACCENT = "#00E5CC";
 
 export const FPS = 30;
@@ -37,7 +38,7 @@ export const PROMO_FRAMES = SCENES.length * SCENE_FRAMES + OUTRO_FRAMES;
 /** 1080x1920 vertical, which is what WhatsApp plays back without letterboxing. */
 export const Promo: React.FC = () => {
   return (
-    <AbsoluteFill style={{ background: `linear-gradient(180deg, ${INK_TOP} 0%, ${INK} 100%)` }}>
+    <AbsoluteFill style={{ background: BACKGROUND }}>
       {SCENES.map((scene, i) => (
         <Sequence
           key={scene.clip}
@@ -45,7 +46,12 @@ export const Promo: React.FC = () => {
           durationInFrames={SCENE_FRAMES}
           layout="absolute-fill"
         >
-          <Scene {...scene} />
+          <Scene
+            src={staticFile(`clips/${scene.clip}`)}
+            frames={SCENE_FRAMES}
+            title={scene.title}
+            accent={scene.accent}
+          />
         </Sequence>
       ))}
       <Sequence from={SCENES.length * SCENE_FRAMES} durationInFrames={OUTRO_FRAMES} layout="absolute-fill">
@@ -58,11 +64,14 @@ export const Promo: React.FC = () => {
 const DEVICE_WIDTH = 600;
 const BEZEL = 8;
 
-const Scene: React.FC<{ clip: string; title: string; accent: string }> = ({
-  clip,
-  title,
-  accent,
-}) => {
+/** `trimBefore` is where the scene starts in `src`, in frames; `frames` is how long it runs. */
+export const Scene: React.FC<{
+  src: string;
+  trimBefore?: number;
+  frames: number;
+  title: string;
+  accent: string;
+}> = ({ src, trimBefore = 0, frames, title, accent }) => {
   const frame = useCurrentFrame();
 
   return (
@@ -80,7 +89,7 @@ const Scene: React.FC<{ clip: string; title: string; accent: string }> = ({
           margin: 0,
           opacity: interpolate(
             frame,
-            [0, 12, SCENE_FRAMES - 12, SCENE_FRAMES],
+            [0, 12, frames - 12, frames],
             [0, 1, 1, 0],
             { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
           ),
@@ -106,8 +115,9 @@ const Scene: React.FC<{ clip: string; title: string; accent: string }> = ({
       >
         <div style={{ borderRadius: 40, overflow: "hidden", display: "flex" }}>
           <Video
-            src={staticFile(`clips/${clip}`)}
-            trimAfter={SCENE_FRAMES}
+            src={src}
+            trimBefore={trimBefore}
+            trimAfter={trimBefore + frames}
             style={{ width: DEVICE_WIDTH, height: "auto", display: "block" }}
           />
         </div>
@@ -121,7 +131,7 @@ const Scene: React.FC<{ clip: string; title: string; accent: string }> = ({
  * teal disc. Geometry copied verbatim from assets/brand/README.md - the mark has
  * exactly one construction and this is it.
  */
-const Outro: React.FC = () => {
+export const Outro: React.FC = () => {
   const frame = useCurrentFrame();
   const appear = interpolate(frame, [0, 20], [0, 1], {
     extrapolateLeft: "clamp",
